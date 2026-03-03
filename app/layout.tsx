@@ -7,7 +7,7 @@ const _inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const _spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
 
 export const metadata: Metadata = {
-  title: 'Smart Uvs – Local Digital Solutions',
+  title: 'Smart Uvs – Ухаалаг Увс',
   description: 'Smart Uvs introduces intelligent systems to local government and private sector organizations, automating service processes and delivering digital solutions in Uvs province.',
   generator: 'v0.app',
   icons: {
