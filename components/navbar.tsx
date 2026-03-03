@@ -70,7 +70,7 @@ export function Navbar() {
               </a>
             ))}
             <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 w-fit">
-              <a href="#contact" onClick={() => setMobileOpen(false)}>Contact Us</a>
+              <a href="#contact" onClick={() => setMobileOpen(false)}>Холбоо барих</a>
             </Button>
           </nav>
         </div>
