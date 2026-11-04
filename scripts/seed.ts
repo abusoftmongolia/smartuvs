@@ -69,6 +69,15 @@ async function seedTenant(p: { slug: string; name: string; industry: Industry; p
   console.log(`✓ ${p.name} → /${p.slug}`);
 }
 
-await seedTenant({ slug: "hatan-salon", name: "Хатан Салон", industry: "barber", people: ["Болормаа", "Тэмүүлэн", "Нандин"] });
-await seedTenant({ slug: "uvs-wash", name: "Увс Авто Угаалга", industry: "carwash", people: ["Бокс 1", "Бокс 2"] });
-process.exit(0);
+async function main() {
+  await seedTenant({ slug: "hatan-salon", name: "Хатан Салон", industry: "barber", people: ["Болормаа", "Тэмүүлэн", "Нандин"] });
+  await seedTenant({ slug: "uvs-wash", name: "Увс Авто Угаалга", industry: "carwash", people: ["Бокс 1", "Бокс 2"] });
+}
+
+main().then(
+  () => process.exit(0),
+  (e) => {
+    console.error(e);
+    process.exit(1);
+  },
+);

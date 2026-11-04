@@ -9,6 +9,7 @@ import { z } from "zod";
 import { db, pgErrorCode, PG_EXCLUSION_VIOLATION, schema } from "@/db";
 import { getTenantBySlug } from "@/db/tenant";
 import { getAvailability } from "./availability";
+import { isPhoneVerified } from "./phone-verification";
 import { normalizePhone, sms, smsText } from "@/lib/sms";
 import { formatDayMn, formatHm } from "@/lib/time";
 
@@ -23,12 +24,13 @@ const BookingInput = z.object({
   name: z.string().trim().min(1, "Нэрээ оруулна уу").max(80),
   phone: z.string().min(8),
   answers: z.record(z.string(), z.string().max(200)).default({}),
-  // TODO(Үе шат 1): otpToken — утас баталгаажсаныг нотлох. Одоогоор шалгахгүй.
+  /** Утас баталгаажсаныг нотлох токен (verify-actions.ts → startPhoneVerification) */
+  verifyToken: z.string().min(1).max(1024),
 });
 
 export type BookingResult =
   | { ok: true; bookingId: string; status: "pending" | "confirmed"; day: string; time: string }
-  | { ok: false; reason: "invalid" | "not_found" | "slot_taken" | "error"; message: string };
+  | { ok: false; reason: "invalid" | "unverified" | "not_found" | "slot_taken" | "error"; message: string };
 
 export async function createBooking(raw: unknown): Promise<BookingResult> {
   const parsed = BookingInput.safeParse(raw);
@@ -38,6 +40,9 @@ export async function createBooking(raw: unknown): Promise<BookingResult> {
   const input = parsed.data;
   const phone = normalizePhone(input.phone);
   if (!phone) return { ok: false, reason: "invalid", message: "Утасны дугаар 8 оронтой байх ёстой" };
+  if (!(await isPhoneVerified(input.verifyToken, phone))) {
+    return { ok: false, reason: "unverified", message: "Утасны дугаараа баталгаажуулна уу" };
+  }
 
   const tenant = await getTenantBySlug(input.slug);
   if (!tenant) return { ok: false, reason: "not_found", message: "Байгууллага олдсонгүй" };
