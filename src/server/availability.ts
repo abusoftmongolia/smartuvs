@@ -17,6 +17,9 @@ export async function getAvailability(p: {
   staffId: string | null;
   date: string;
   now?: Date;
+  /** Ажилтны самбарт: "хамгийн эрт" хязгаар хэрэглэхгүй (гараар захиалах, шилжүүлэх) */
+  ignoreLead?: boolean;
+  excludeBookingId?: string;
 }): Promise<Slot[]> {
   const { tenant, service, date } = p;
   const now = p.now ?? new Date();
@@ -45,6 +48,7 @@ export async function getAvailability(p: {
     weekday: weekdayOf(date),
     dayStartUtc,
     dayEndUtc,
+    excludeBookingId: p.excludeBookingId,
   });
 
   const owners: OwnerDay[] = ownerIds.map((id) => {
@@ -66,7 +70,7 @@ export async function getAvailability(p: {
     durationMin: service.durationMin,
     bufferMin: service.bufferMin,
     stepMin: s.slotStepMin,
-    minLeadMin: s.minLeadMin,
+    minLeadMin: p.ignoreLead ? 0 : s.minLeadMin,
     now,
   });
 }

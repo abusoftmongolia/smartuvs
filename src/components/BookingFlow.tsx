@@ -3,22 +3,9 @@
  * Захиалгын урсгал: 1. Үйлчилгээ → 2. Ажилтан ба цаг → 3. Баталгаажуулах
  * Утсанд нэг багана, компьютерт гурван багана (flex-wrap). Загвар: canvas-ын Main.dc.html
  */
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { createBooking, type BookingResult } from "@/server/bookings";
-import { checkPhoneVerification, startPhoneVerification } from "@/server/verify-actions";
-
-/** verify.mn: үйлчлүүлэгч өөрийн утаснаас shortcode руу код илгээнэ */
-type Verification = {
-  token: string;
-  phone: string;
-  shortcode: string;
-  code: string;
-  smsUri: string;
-  expiresAt: number;
-  state: "pending" | "verified" | "expired";
-};
-
-const POLL_MS = 3000;
+import { ExpiredNotice, PhoneVerifyPanel, usePhoneVerification } from "./PhoneVerify";
 
 export type BookingFlowProps = {
   slug: string;
@@ -78,15 +65,12 @@ export function BookingFlow(p: BookingFlowProps) {
 
   const selectedLabel = slots?.find((s) => s.startMin === startMin)?.label;
 
-  const [verification, setVerification] = useState<Verification | null>(null);
-  const [now, setNow] = useState(() => Date.now());
-
   function book(verifyToken: string) {
     if (startMin == null) return;
     startTransition(async () => {
       const r = await createBooking({ slug: p.slug, serviceId, staffId, date, startMin, name, phone, answers, verifyToken });
       setResult(r);
-      if (!r.ok && r.reason === "unverified") setVerification(null);
+      if (!r.ok && r.reason === "unverified") pv.reset();
       if (!r.ok && r.reason === "slot_taken") {
         // Сул цагийг дахин ачаална
         setDate((d) => d);
@@ -95,9 +79,10 @@ export function BookingFlow(p: BookingFlowProps) {
       }
     });
   }
-  // Polling-ийн callback хамгийн сүүлийн сонголтоор захиалахын тулд
-  const bookRef = useRef(book);
-  bookRef.current = book;
+
+  // Баталгаажмагц автоматаар захиална
+  const pv = usePhoneVerification((token) => book(token));
+  const verification = pv.verification;
 
   function submit() {
     if (startMin == null) return;
@@ -106,45 +91,13 @@ export function BookingFlow(p: BookingFlowProps) {
       return;
     }
     setResult(null);
-    startTransition(async () => {
-      const r = await startPhoneVerification({ phone });
-      if (!r.ok) {
-        setResult({ ok: false, reason: "invalid", message: r.message });
-        return;
-      }
-      setVerification({
-        token: r.token, phone, shortcode: r.shortcode, code: r.code, smsUri: r.smsUri,
-        expiresAt: Date.parse(r.expiresAt), state: "pending",
-      });
-    });
+    void pv.start(phone);
   }
-
-  // SMS ирэхийг хүлээж, 3 секунд тутам шалгана. Баталгаажмагц автоматаар захиална.
-  const pendingToken = verification?.state === "pending" ? verification.token : null;
-  useEffect(() => {
-    if (!pendingToken) return;
-    let stopped = false;
-    const tick = setInterval(() => setNow(Date.now()), 1000);
-    const poll = setInterval(async () => {
-      const s = await checkPhoneVerification(pendingToken).catch(() => "pending" as const);
-      if (stopped || s === "pending") return;
-      stopped = true;
-      if (s === "verified") {
-        setVerification((v) => (v && v.token === pendingToken ? { ...v, state: "verified" } : v));
-        bookRef.current(pendingToken);
-      } else {
-        setVerification((v) => (v && v.token === pendingToken ? { ...v, state: "expired" } : v));
-      }
-    }, POLL_MS);
-    return () => { stopped = true; clearInterval(tick); clearInterval(poll); };
-  }, [pendingToken]);
 
   function changePhone(v: string) {
     setPhone(v);
-    if (verification && verification.phone !== v) setVerification(null);
+    if (verification && verification.phone !== v) pv.reset();
   }
-
-  const secondsLeft = verification ? Math.max(0, Math.round((verification.expiresAt - now) / 1000)) : 0;
 
   if (result?.ok) {
     return (
@@ -253,39 +206,15 @@ export function BookingFlow(p: BookingFlowProps) {
         ))}
         {result && !result.ok && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-800">{result.message}</p>}
 
+        {pv.error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-800">{pv.error}</p>}
         {verification?.state === "pending" ? (
-          <div className="flex flex-col gap-3 rounded-xl border-2 border-brand bg-brand-tint p-4">
-            <p className="text-[15px] font-extrabold">Утсаа баталгаажуулна уу</p>
-            <p className="text-sm">
-              Өөрийн <b>{verification.phone}</b> дугаараас <b>{verification.shortcode}</b> руу доорх кодыг SMS-ээр илгээнэ үү:
-            </p>
-            <p className="text-center text-3xl font-extrabold tracking-[0.2em]" aria-label={`Код ${verification.code.split("").join(" ")}`}>
-              {verification.code}
-            </p>
-            <a href={verification.smsUri}
-              className="flex min-h-12 items-center justify-center rounded-card bg-brand text-base font-extrabold text-ink">
-              SMS бичих
-            </a>
-            <p className="text-xs text-muted">
-              Операторын SMS-ийн төлбөр (≈150₮) таны утаснаас гарна. 2 SIM-тэй бол зөв SIM-ээ сонгоно уу.
-            </p>
-            <p className="text-sm font-semibold" aria-live="polite">
-              SMS хүлээж байна… {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}
-            </p>
-            <button onClick={() => setVerification(null)} className="min-h-11 rounded-xl border border-line bg-white text-sm font-bold">
-              Болих
-            </button>
-          </div>
+          <PhoneVerifyPanel v={verification} onCancel={pv.reset} />
         ) : (
           <>
-            {verification?.state === "expired" && (
-              <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-800">
-                Баталгаажуулах хугацаа дууслаа. Дахин оролдоно уу.
-              </p>
-            )}
-            <button onClick={submit} disabled={startMin == null || pending || !name || !phone}
+            {verification?.state === "expired" && <ExpiredNotice />}
+            <button onClick={submit} disabled={startMin == null || pending || pv.starting || !name || !phone}
               className="min-h-13 rounded-card bg-brand py-3.5 text-base font-extrabold text-ink disabled:cursor-not-allowed disabled:opacity-50">
-              {pending ? "Түр хүлээнэ үү…" : "Цаг захиалах"}
+              {pending || pv.starting ? "Түр хүлээнэ үү…" : "Цаг захиалах"}
             </button>
           </>
         )}

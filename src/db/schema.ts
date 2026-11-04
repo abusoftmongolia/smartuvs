@@ -201,6 +201,14 @@ export const notifications = pgTable("notifications", {
   error: text("error"),
 }, (t) => [index("notifications_due_idx").on(t.status, t.sendAt)]);
 
+/** Нэвтэрсэн session. Cookie-д түүхий токен, санд зөвхөн sha256 hash-ийг хадгална. */
+export const sessions = pgTable("sessions", {
+  id: text("id").primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: createdAt(),
+}, (t) => [index("sessions_user_idx").on(t.userId)]);
+
 /** OTP кодууд — кодыг hash хэлбэрээр хадгална */
 export const otpCodes = pgTable("otp_codes", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -222,4 +230,4 @@ export const auditLogs = pgTable("audit_logs", {
   entityId: text("entity_id"),
   diff: jsonb("diff"),
   at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [index("audit_action_entity_idx").on(t.action, t.entityId, t.at)]);

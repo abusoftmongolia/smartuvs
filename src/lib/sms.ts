@@ -8,7 +8,7 @@ export interface SmsProvider {
 
 class ConsoleSmsProvider implements SmsProvider {
   async send(to: string, text: string) {
-    console.log(`\n[SMS → ${to}]\n${text}\n`);
+    console.log(`\n[SMS → ${to.slice(0, 2)}****${to.slice(-2)}]\n${text}\n`);
     return { ok: true as const };
   }
 }
@@ -57,6 +57,8 @@ export const smsText = {
     `${p.tenant}: ${p.day} ${p.time} цаг баталгаажлаа. Өөрчлөх: ${p.link}`,
   pending: (p: { tenant: string; day: string; time: string }) =>
     `${p.tenant}: ${p.day} ${p.time} захиалга хүлээн авлаа. Батлахад SMS ирнэ.`,
+  rescheduled: (p: { tenant: string; day: string; time: string; link: string }) =>
+    `${p.tenant}: таны цагийг ${p.day} ${p.time} болгож өөрчиллөө. Тохирохгүй бол: ${p.link}`,
   reminder: (p: { tenant: string; day: string; time: string; link: string }) =>
     `Сануулга: ${p.tenant}, ${p.day} ${p.time}. Өөрчлөх: ${p.link}`,
   cancelled: (p: { tenant: string; day: string; time: string }) =>
