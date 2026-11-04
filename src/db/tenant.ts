@@ -2,7 +2,7 @@
  * Tenant-аар шүүсэн query-ууд. Байгууллагын өгөгдлийг ЗӨВХӨН эндээс уншина —
  * ингэснээр нэг байгууллага нөгөөгийнхөө өгөгдлийг санамсаргүй харах эрсдэлгүй.
  */
-import { and, asc, eq, gte, inArray, lt, ne, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { db, schema } from "./index";
 
 const { tenants, services, staff, staffServices, schedules, timeOff, bookings, resources, customers, notifications } = schema;
@@ -69,7 +69,15 @@ export async function loadAvailabilityInputs(params: {
     db()
       .select()
       .from(timeOff)
-      .where(and(eq(timeOff.tenantId, tenantId), inArray(offOwner, ownerIds), lt(timeOff.startsAt, dayEndUtc), gte(timeOff.endsAt, dayStartUtc))),
+      .where(
+        and(
+          eq(timeOff.tenantId, tenantId),
+          // Тухайн ажилтны чөлөө, эсвэл бүх байгууллагын амралт (хэнд ч оноогоогүй)
+          or(inArray(offOwner, ownerIds), and(isNull(timeOff.staffId), isNull(timeOff.resourceId))),
+          lt(timeOff.startsAt, dayEndUtc),
+          gte(timeOff.endsAt, dayStartUtc),
+        ),
+      ),
     db()
       .select({ staffId: bookings.staffId, resourceId: bookings.resourceId, startsAt: bookings.startsAt, endsAt: bookings.endsAt })
       .from(bookings)
@@ -254,4 +262,210 @@ export async function cancelScheduledNotifications(tenantId: string, bookingId: 
         ),
       ),
     );
+}
+
+// ── Бүртгэл ба тохиргоо ────────────────────────────────────────────────────
+
+export type SetupService = { name: string; durationMin: number; bufferMin: number; price: number | null };
+export type ScheduleRow = { weekday: number; startMin: number; endMin: number };
+
+export async function isSlugTaken(slug: string) {
+  const [r] = await db().select({ id: tenants.id }).from(tenants).where(eq(tenants.slug, slug)).limit(1);
+  return !!r;
+}
+
+/**
+ * Байгууллага + эзэмшигч + үйлчилгээ + ажилтан/нөөц + ажлын цагийг нэг транзакцаар үүсгэнэ.
+ * Ажилтан бүр бүх үйлчилгээг хийнэ (дараа тохиргооноос өөрчилнө).
+ */
+export async function insertTenantSetup(p: {
+  tenant: typeof tenants.$inferInsert;
+  ownerUserId: string;
+  services: SetupService[];
+  owners: string[];
+  schedule: ScheduleRow[];
+}) {
+  return db().transaction(async (tx) => {
+    const [t] = await tx.insert(tenants).values(p.tenant).returning();
+    await tx.insert(schema.memberships).values({ userId: p.ownerUserId, tenantId: t.id, role: "owner" });
+
+    const svc = p.services.length
+      ? await tx
+          .insert(services)
+          .values(p.services.map((s, i) => ({ tenantId: t.id, ...s, sortOrder: i })))
+          .returning({ id: services.id })
+      : [];
+
+    const isResource = t.bookingMode === "resource";
+    for (const [i, name] of p.owners.entries()) {
+      let ownerId: string;
+      if (isResource) {
+        const [r] = await tx.insert(resources).values({ tenantId: t.id, type: "bay", name, sortOrder: i }).returning();
+        ownerId = r.id;
+      } else {
+        const [s] = await tx.insert(staff).values({ tenantId: t.id, name, sortOrder: i }).returning();
+        ownerId = s.id;
+        if (svc.length) await tx.insert(staffServices).values(svc.map((x) => ({ staffId: s.id, serviceId: x.id })));
+      }
+      if (p.schedule.length) {
+        await tx.insert(schedules).values(
+          p.schedule.map((w) => ({
+            tenantId: t.id,
+            staffId: isResource ? null : ownerId,
+            resourceId: isResource ? ownerId : null,
+            ...w,
+          })),
+        );
+      }
+    }
+    return t;
+  });
+}
+
+export async function updateTenantInfo(
+  tenantId: string,
+  p: Partial<Pick<typeof tenants.$inferInsert, "name" | "address" | "phone" | "timezone" | "settings">>,
+) {
+  const [t] = await db().update(tenants).set(p).where(eq(tenants.id, tenantId)).returning();
+  return t ?? null;
+}
+
+/** Тохиргооны хуудсанд: идэвхгүйг ч оруулна */
+export async function listAllServices(tenantId: string) {
+  return db().select().from(services).where(eq(services.tenantId, tenantId)).orderBy(asc(services.sortOrder), asc(services.name));
+}
+
+export async function listAllOwners(tenantId: string, kind: "staff" | "resource") {
+  if (kind === "resource") {
+    return db()
+      .select({ id: resources.id, name: resources.name, active: resources.active, title: sql<string | null>`null` })
+      .from(resources)
+      .where(eq(resources.tenantId, tenantId))
+      .orderBy(asc(resources.sortOrder));
+  }
+  return db()
+    .select({ id: staff.id, name: staff.name, active: staff.active, title: staff.title })
+    .from(staff)
+    .where(eq(staff.tenantId, tenantId))
+    .orderBy(asc(staff.sortOrder), asc(staff.name));
+}
+
+export async function listTenantSchedules(tenantId: string) {
+  return db()
+    .select({ staffId: schedules.staffId, resourceId: schedules.resourceId, weekday: schedules.weekday, startMin: schedules.startMin, endMin: schedules.endMin })
+    .from(schedules)
+    .where(eq(schedules.tenantId, tenantId));
+}
+
+export async function upsertService(tenantId: string, p: SetupService & { id?: string; active: boolean }) {
+  if (p.id) {
+    const [s] = await db()
+      .update(services)
+      .set({ name: p.name, durationMin: p.durationMin, bufferMin: p.bufferMin, price: p.price, active: p.active })
+      .where(and(eq(services.id, p.id), eq(services.tenantId, tenantId)))
+      .returning();
+    return s ?? null;
+  }
+  return db().transaction(async (tx) => {
+    const [{ n }] = await tx.select({ n: sql<number>`count(*)::int` }).from(services).where(eq(services.tenantId, tenantId));
+    const [s] = await tx
+      .insert(services)
+      .values({ tenantId, name: p.name, durationMin: p.durationMin, bufferMin: p.bufferMin, price: p.price, active: p.active, sortOrder: n })
+      .returning();
+    // Шинэ үйлчилгээг бүх идэвхтэй ажилтанд онооно
+    const st = await tx.select({ id: staff.id }).from(staff).where(eq(staff.tenantId, tenantId));
+    if (st.length) await tx.insert(staffServices).values(st.map((x) => ({ staffId: x.id, serviceId: s.id })));
+    return s;
+  });
+}
+
+/** Ажилтан/бокс нэмэх эсвэл засах. Шинэ бол бүх үйлчилгээ + байгууллагын ердийн цагийг онооно. */
+export async function upsertOwner(
+  tenantId: string,
+  kind: "staff" | "resource",
+  p: { id?: string; name: string; title?: string | null; active: boolean },
+  defaultSchedule: ScheduleRow[],
+) {
+  if (p.id) {
+    if (kind === "resource") {
+      const [r] = await db()
+        .update(resources)
+        .set({ name: p.name, active: p.active })
+        .where(and(eq(resources.id, p.id), eq(resources.tenantId, tenantId)))
+        .returning();
+      return r ?? null;
+    }
+    const [s] = await db()
+      .update(staff)
+      .set({ name: p.name, title: p.title ?? null, active: p.active })
+      .where(and(eq(staff.id, p.id), eq(staff.tenantId, tenantId)))
+      .returning();
+    return s ?? null;
+  }
+  return db().transaction(async (tx) => {
+    let ownerId: string;
+    if (kind === "resource") {
+      const [{ n }] = await tx.select({ n: sql<number>`count(*)::int` }).from(resources).where(eq(resources.tenantId, tenantId));
+      const [r] = await tx.insert(resources).values({ tenantId, type: "bay", name: p.name, active: p.active, sortOrder: n }).returning();
+      ownerId = r.id;
+    } else {
+      const [{ n }] = await tx.select({ n: sql<number>`count(*)::int` }).from(staff).where(eq(staff.tenantId, tenantId));
+      const [s] = await tx.insert(staff).values({ tenantId, name: p.name, title: p.title ?? null, active: p.active, sortOrder: n }).returning();
+      ownerId = s.id;
+      const svc = await tx.select({ id: services.id }).from(services).where(eq(services.tenantId, tenantId));
+      if (svc.length) await tx.insert(staffServices).values(svc.map((x) => ({ staffId: s.id, serviceId: x.id })));
+    }
+    if (defaultSchedule.length) {
+      await tx.insert(schedules).values(
+        defaultSchedule.map((w) => ({
+          tenantId,
+          staffId: kind === "staff" ? ownerId : null,
+          resourceId: kind === "resource" ? ownerId : null,
+          ...w,
+        })),
+      );
+    }
+    return { id: ownerId };
+  });
+}
+
+/** Бүх ажилтан/боксын долоо хоногийн цагийг нэг дор солино */
+export async function replaceAllSchedules(tenantId: string, kind: "staff" | "resource", schedule: ScheduleRow[]) {
+  await db().transaction(async (tx) => {
+    await tx.delete(schedules).where(eq(schedules.tenantId, tenantId));
+    const owners =
+      kind === "resource"
+        ? await tx.select({ id: resources.id }).from(resources).where(eq(resources.tenantId, tenantId))
+        : await tx.select({ id: staff.id }).from(staff).where(eq(staff.tenantId, tenantId));
+    const rows = owners.flatMap((o) =>
+      schedule.map((w) => ({
+        tenantId,
+        staffId: kind === "staff" ? o.id : null,
+        resourceId: kind === "resource" ? o.id : null,
+        ...w,
+      })),
+    );
+    if (rows.length) await tx.insert(schedules).values(rows);
+  });
+}
+
+// ── Чөлөө, баяр ───────────────────────────────────────────────────────────
+
+/** Ирээдүйн чөлөөнүүд. staffId/resourceId хоёулаа null = бүх байгууллага амарна. */
+export async function listUpcomingTimeOff(tenantId: string, now = new Date()) {
+  return db()
+    .select()
+    .from(timeOff)
+    .where(and(eq(timeOff.tenantId, tenantId), gte(timeOff.endsAt, now)))
+    .orderBy(asc(timeOff.startsAt))
+    .limit(100);
+}
+
+export async function insertTimeOff(p: typeof timeOff.$inferInsert) {
+  const [r] = await db().insert(timeOff).values(p).returning();
+  return r;
+}
+
+export async function deleteTimeOff(tenantId: string, id: string) {
+  await db().delete(timeOff).where(and(eq(timeOff.id, id), eq(timeOff.tenantId, tenantId)));
 }

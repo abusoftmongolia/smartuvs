@@ -11,7 +11,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await requireUser();
   return (
     <div className="min-h-dvh">
-      <header className="border-b border-line bg-white">
+      <header className="border-b border-line bg-white print:hidden">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <Link href="/dashboard" aria-label="Самбар — нүүр" className="flex items-center gap-3">
             <Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={206} height={32} className="h-7 w-auto" priority />

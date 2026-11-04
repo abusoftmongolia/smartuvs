@@ -58,7 +58,7 @@ export async function getAvailability(p: {
       ownerId: id,
       windows: inputs.schedules.filter((r) => ownerOf(r) === id).map((r) => ({ start: r.startMin, end: r.endMin })),
       busy: [
-        ...inputs.timeOff.filter((r) => ownerOf(r) === id),
+        ...inputs.timeOff.filter((r) => ownerOf(r) === id || (r.staffId == null && r.resourceId == null)),
         ...inputs.bookings.filter((r) => ownerOf(r) === id),
       ].map((r) => ({ startsAt: r.startsAt, endsAt: r.endsAt })),
     };

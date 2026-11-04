@@ -1,0 +1,318 @@
+"use client";
+import Link from "next/link";
+import { useState, useTransition } from "react";
+import { HoursEditor } from "@/components/HoursEditor";
+import { QrCode } from "@/components/QrCode";
+import { ErrorBox, Field, btnPrimary, btnSecondary } from "@/components/ui";
+import type { DayHours } from "@/lib/hours";
+import {
+  addTimeOff,
+  removeTimeOff,
+  saveHours,
+  saveOwner,
+  saveService,
+  saveTenantInfo,
+  type SettingsResult,
+} from "@/server/settings-actions";
+
+type Info = {
+  name: string;
+  address: string;
+  phone: string;
+  timezone: "Asia/Hovd" | "Asia/Ulaanbaatar";
+  approval: "auto" | "manual";
+  cancellationHours: number;
+  slotStepMin: number;
+  minLeadMin: number;
+  maxAdvanceDays: number;
+};
+type Svc = { id?: string; name: string; durationMin: number; bufferMin: number; price: number | null; active: boolean };
+type Owner = { id?: string; name: string; title: string; active: boolean };
+type Off = { id: string; from: string; to: string; partial: boolean; owner: string | null; reason: string | null };
+
+type Props = {
+  slug: string;
+  bookingUrl: string;
+  term: string;
+  kind: "staff" | "resource";
+  info: Info;
+  services: Svc[];
+  owners: Owner[];
+  hours: DayHours[];
+  timeOff: Off[];
+};
+
+const select = "min-h-12 rounded-xl border-[1.5px] border-[#d6d3cc] bg-white px-3 text-[15px] font-normal";
+const num = "min-h-11 w-full rounded-lg border-[1.5px] border-[#d6d3cc] px-2.5 text-[15px] font-normal";
+
+/** Хадгалах товч + алдаа/амжилтын мэдэгдэл */
+function useSave() {
+  const [pending, start] = useTransition();
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const save = (fn: () => Promise<SettingsResult>, okText = "Хадгалагдлаа", after?: () => void) =>
+    start(async () => {
+      setMsg(null);
+      const r = await fn();
+      setMsg(r.ok ? { ok: true, text: okText } : { ok: false, text: r.message });
+      if (r.ok) after?.();
+    });
+  const status = msg && (msg.ok
+    ? <p role="status" className="text-sm font-semibold text-green-800">✓ {msg.text}</p>
+    : <ErrorBox>{msg.text}</ErrorBox>);
+  return { pending, save, status };
+}
+
+function Card({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+  return (
+    <section aria-labelledby={id} className="flex flex-col gap-4 rounded-[18px] border border-line bg-white p-5">
+      <h2 id={id} className="text-lg font-extrabold">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+export function Settings(p: Props) {
+  return (
+    <>
+      <Share slug={p.slug} url={p.bookingUrl} />
+      <InfoForm slug={p.slug} info={p.info} />
+      {/* Хадгалсны дараа серверээс шинэ ID-тай өгөгдөл ирэхэд дахин mount хийнэ */}
+      <Services key={JSON.stringify(p.services)} slug={p.slug} initial={p.services} />
+      <Owners key={JSON.stringify(p.owners)} slug={p.slug} term={p.term} initial={p.owners} />
+      <Hours slug={p.slug} initial={p.hours} />
+      <TimeOff slug={p.slug} owners={p.owners} list={p.timeOff} />
+    </>
+  );
+}
+
+function Share({ slug, url }: { slug: string; url: string }) {
+  const [copied, setCopied] = useState(false);
+  const pretty = url.replace(/^https?:\/\//, "");
+  return (
+    <Card id="h-share" title="Захиалгын холбоос">
+      <div className="flex flex-wrap items-center gap-4">
+        <QrCode url={url} size={128} label={`${pretty} хаягийн QR код`} />
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <a href={url} target="_blank" className="break-all text-lg font-extrabold underline">{pretty}</a>
+          <div className="flex flex-wrap gap-2">
+            <button className={btnSecondary} onClick={() => navigator.clipboard?.writeText(url).then(() => setCopied(true))}>
+              {copied ? "Хуулагдлаа ✓" : "Хуулах"}
+            </button>
+            <Link href={`/dashboard/${slug}/poster`} className={btnSecondary}>A4 постер</Link>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function InfoForm({ slug, info }: { slug: string; info: Info }) {
+  const [v, setV] = useState(info);
+  const set = <K extends keyof Info>(k: K, x: Info[K]) => setV({ ...v, [k]: x });
+  const { pending, save, status } = useSave();
+  return (
+    <Card id="h-info" title="Байгууллага ба бодлого">
+      <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); save(() => saveTenantInfo({ slug, ...v })); }}>
+        <Field id="i-name" label="Нэр" value={v.name} onChange={(x) => set("name", x)} />
+        <Field id="i-addr" label="Хаяг" value={v.address} onChange={(x) => set("address", x)} />
+        <Field id="i-phone" label="Холбогдох утас" type="tel" value={v.phone} onChange={(x) => set("phone", x)} />
+        <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+          Цагийн бүс
+          <select className={select} value={v.timezone} onChange={(e) => set("timezone", e.target.value as Info["timezone"])}>
+            <option value="Asia/Hovd">Баруун аймгууд — UTC+7</option>
+            <option value="Asia/Ulaanbaatar">Улаанбаатар — UTC+8</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+          Онлайн захиалга
+          <select className={select} value={v.approval} onChange={(e) => set("approval", e.target.value as Info["approval"])}>
+            <option value="auto">Сул цаг байвал шууд баталгаажна</option>
+            <option value="manual">Ажилтан батлах хүртэл хүлээнэ</option>
+          </select>
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+            Цагийн алхам
+            <select className={select} value={v.slotStepMin} onChange={(e) => set("slotStepMin", Number(e.target.value))}>
+              {[5, 10, 15, 20, 30, 60].map((n) => <option key={n} value={n}>{n} минут</option>)}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+            Хамгийн эрт (минутын өмнө)
+            <input type="number" inputMode="numeric" min={0} className={num} value={v.minLeadMin} onChange={(e) => set("minLeadMin", Number(e.target.value))} />
+          </label>
+          <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+            Хэдэн хоногийн өмнөөс
+            <input type="number" inputMode="numeric" min={1} max={365} className={num} value={v.maxAdvanceDays} onChange={(e) => set("maxAdvanceDays", Number(e.target.value))} />
+          </label>
+          <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+            Цуцлах боломж (цагийн өмнө)
+            <input type="number" inputMode="numeric" min={0} max={168} className={num} value={v.cancellationHours} onChange={(e) => set("cancellationHours", Number(e.target.value))} />
+          </label>
+        </div>
+        {status}
+        <button disabled={pending} className={`${btnPrimary} self-start`}>{pending ? "Хадгалж байна…" : "Хадгалах"}</button>
+      </form>
+    </Card>
+  );
+}
+
+function Services({ slug, initial }: { slug: string; initial: Svc[] }) {
+  const [list, setList] = useState<Svc[]>(initial);
+  const [editing, setEditing] = useState<number | null>(null);
+  const { pending, save, status } = useSave();
+  const upd = (i: number, patch: Partial<Svc>) => setList(list.map((s, j) => (j === i ? { ...s, ...patch } : s)));
+
+  return (
+    <Card id="h-svc" title="Үйлчилгээ">
+      <ul className="flex flex-col gap-2">
+        {list.map((s, i) => (
+          <li key={s.id ?? `new-${i}`} className={`flex flex-col gap-2 rounded-xl border border-line p-3 ${s.active ? "" : "opacity-60"}`}>
+            {editing === i ? (
+              <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => {
+                e.preventDefault();
+                save(() => saveService({ slug, ...s }), "Хадгалагдлаа", () => setEditing(null));
+              }}>
+                <label className="flex min-w-40 flex-[2] flex-col gap-1 text-xs font-bold">Нэр
+                  <input className={num} value={s.name} onChange={(e) => upd(i, { name: e.target.value })} />
+                </label>
+                <label className="flex w-20 flex-col gap-1 text-xs font-bold">Минут
+                  <input type="number" inputMode="numeric" className={num} value={s.durationMin} onChange={(e) => upd(i, { durationMin: Number(e.target.value) })} />
+                </label>
+                <label className="flex w-20 flex-col gap-1 text-xs font-bold">Завсар
+                  <input type="number" inputMode="numeric" className={num} value={s.bufferMin} onChange={(e) => upd(i, { bufferMin: Number(e.target.value) })} />
+                </label>
+                <label className="flex w-28 flex-col gap-1 text-xs font-bold">Үнэ ₮
+                  <input inputMode="numeric" className={num} value={s.price ?? ""} placeholder="—"
+                    onChange={(e) => { const d = e.target.value.replace(/\D/g, ""); upd(i, { price: d ? Number(d) : null }); }} />
+                </label>
+                <button disabled={pending} className={btnPrimary}>Хадгалах</button>
+              </form>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="flex-1 font-bold">{s.name} <span className="font-normal text-muted">· {s.durationMin} мин{s.price != null ? ` · ₮${s.price.toLocaleString("en-US")}` : ""}</span></span>
+                <button className={btnSecondary} onClick={() => setEditing(i)}>Засах</button>
+                {s.id && (
+                  <button className={btnSecondary} disabled={pending}
+                    onClick={() => { const next = { ...s, active: !s.active }; upd(i, next); save(() => saveService({ slug, ...next })); }}>
+                    {s.active ? "Нуух" : "Идэвхжүүлэх"}
+                  </button>
+                )}
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+      {status}
+      <button className={`${btnSecondary} self-start`} onClick={() => { setList([...list, { name: "", durationMin: 30, bufferMin: 5, price: null, active: true }]); setEditing(list.length); }}>
+        + Үйлчилгээ нэмэх
+      </button>
+    </Card>
+  );
+}
+
+function Owners({ slug, term, initial }: { slug: string; term: string; initial: Owner[] }) {
+  const [list, setList] = useState<Owner[]>(initial);
+  const [editing, setEditing] = useState<number | null>(null);
+  const { pending, save, status } = useSave();
+  const upd = (i: number, patch: Partial<Owner>) => setList(list.map((s, j) => (j === i ? { ...s, ...patch } : s)));
+
+  return (
+    <Card id="h-own" title={term}>
+      <ul className="flex flex-col gap-2">
+        {list.map((o, i) => (
+          <li key={o.id ?? `new-${i}`} className={`flex flex-wrap items-center gap-2 rounded-xl border border-line p-3 ${o.active ? "" : "opacity-60"}`}>
+            {editing === i ? (
+              <form className="flex flex-1 flex-wrap items-end gap-2" onSubmit={(e) => {
+                e.preventDefault();
+                save(() => saveOwner({ slug, ...o }), "Хадгалагдлаа", () => setEditing(null));
+              }}>
+                <label className="flex min-w-40 flex-1 flex-col gap-1 text-xs font-bold">Нэр
+                  <input className={num} value={o.name} onChange={(e) => upd(i, { name: e.target.value })} />
+                </label>
+                <button disabled={pending} className={btnPrimary}>Хадгалах</button>
+              </form>
+            ) : (
+              <>
+                <span className="flex-1 font-bold">{o.name}{!o.active && <span className="font-normal text-muted"> · идэвхгүй</span>}</span>
+                <button className={btnSecondary} onClick={() => setEditing(i)}>Засах</button>
+                {o.id && (
+                  <button className={btnSecondary} disabled={pending}
+                    onClick={() => { const next = { ...o, active: !o.active }; upd(i, next); save(() => saveOwner({ slug, ...next })); }}>
+                    {o.active ? "Идэвхгүй болгох" : "Идэвхжүүлэх"}
+                  </button>
+                )}
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+      {status}
+      <button className={`${btnSecondary} self-start`} onClick={() => { setList([...list, { name: "", title: "", active: true }]); setEditing(list.length); }}>
+        + {term} нэмэх
+      </button>
+    </Card>
+  );
+}
+
+function Hours({ slug, initial }: { slug: string; initial: DayHours[] }) {
+  const [hours, setHours] = useState(initial);
+  const { pending, save, status } = useSave();
+  return (
+    <Card id="h-hours" title="Ажлын цаг">
+      <p className="text-sm text-muted">Бүх ажилтан/бокст ижил хэрэглэгдэнэ. Аль хэдийн орсон захиалгад нөлөөлөхгүй.</p>
+      <HoursEditor value={hours} onChange={setHours} />
+      {status}
+      <button disabled={pending} onClick={() => save(() => saveHours({ slug, hours }))} className={`${btnPrimary} self-start`}>
+        {pending ? "Хадгалж байна…" : "Ажлын цаг хадгалах"}
+      </button>
+    </Card>
+  );
+}
+
+function TimeOff({ slug, owners, list }: { slug: string; owners: Owner[]; list: Off[] }) {
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [ownerId, setOwnerId] = useState("");
+  const [reason, setReason] = useState("");
+  const { pending, save, status } = useSave();
+  return (
+    <Card id="h-off" title="Чөлөө, баяр">
+      <p className="text-sm text-muted">Энэ хугацаанд онлайн захиалга авахгүй. Аль хэдийн орсон захиалгыг календараас шилжүүлнэ үү.</p>
+      {list.length > 0 && (
+        <ul className="flex flex-col gap-2">
+          {list.map((t) => (
+            <li key={t.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-line p-3">
+              <span className="flex-1 text-sm">
+                <b>{t.from === t.to ? t.from : `${t.from} – ${t.to}`}</b>{t.partial ? " (цагаар)" : ""} · {t.owner ?? "Бүх байгууллага"}{t.reason ? ` · ${t.reason}` : ""}
+              </span>
+              <button disabled={pending} className={btnSecondary} onClick={() => save(() => removeTimeOff({ slug, id: t.id }), "Устгагдлаа")}>Устгах</button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => {
+        e.preventDefault();
+        save(() => addTimeOff({ slug, from, to: to || from, ownerId: ownerId || null, reason }), "Нэмэгдлээ", () => { setFrom(""); setTo(""); setReason(""); });
+      }}>
+        <label className="flex flex-col gap-1 text-xs font-bold">Эхлэх
+          <input type="date" required className={num} value={from} onChange={(e) => setFrom(e.target.value)} />
+        </label>
+        <label className="flex flex-col gap-1 text-xs font-bold">Дуусах
+          <input type="date" className={num} value={to} min={from} onChange={(e) => setTo(e.target.value)} />
+        </label>
+        <label className="flex flex-col gap-1 text-xs font-bold">Хэн
+          <select className={select} value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
+            <option value="">Бүх байгууллага</option>
+            {owners.filter((o) => o.id).map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+          </select>
+        </label>
+        <label className="flex min-w-32 flex-1 flex-col gap-1 text-xs font-bold">Шалтгаан
+          <input className={num} value={reason} placeholder="Цагаан сар" onChange={(e) => setReason(e.target.value)} />
+        </label>
+        <button disabled={pending || !from} className={btnPrimary}>Нэмэх</button>
+      </form>
+      {status}
+    </Card>
+  );
+}
