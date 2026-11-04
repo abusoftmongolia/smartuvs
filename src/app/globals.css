@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/* SmartUvs брэнд өнгө — логоны хар, шар. Canvas загвартай ижил. */
+@theme {
+  --color-brand: #f5a800;        /* шар — үндсэн товч, сонгосон төлөв */
+  --color-brand-tint: #fff4d6;   /* сонгосон картын дэвсгэр */
+  --color-brand-deep: #8a5a00;   /* шар өнгөтэй холбоос, цагаан дээр уншигдана */
+  --color-ink: #111111;          /* хар — бичиг, шар товч дээрх бичиг */
+  --color-muted: #5c6370;        /* туслах бичиг (цагаан дээр 6:1) */
+  --color-line: #e4e2dd;
+  --color-ground: #f6f5f2;       /* хуудасны дэвсгэр */
+  --color-pending: #2563eb;      /* батлах хүлээж буй (календарь) */
+  --color-danger: #dc2626;
+  --font-sans: "Manrope Variable", system-ui, sans-serif;
+  --radius-card: 14px;
+}
+
+html, body {
+  background: var(--color-ground);
+  color: var(--color-ink);
+}
+
+/* Хуруунд ээлтэй: товч, линк хамгийн багадаа 44px */
+button, a { -webkit-tap-highlight-color: transparent; }
