@@ -98,5 +98,6 @@ export function defaultSettings(industry: Industry): TenantSettings {
     maxAdvanceDays: 60,
     terminology: { staff: p.terminology.staff },
     customFields: p.customFields,
+    listed: true,
   };
 }

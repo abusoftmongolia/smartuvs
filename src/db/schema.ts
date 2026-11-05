@@ -58,6 +58,8 @@ export type TenantSettings = {
   terminology: { staff: string };
   /** Захиалгын формд нэмэх асуулт (машины дугаар гэх мэт) */
   customFields: { key: string; label: string; required: boolean }[];
+  /** tsag.smartuvs.mn нүүрний жагсаалтад харагдах эсэх. Байхгүй (хуучин мөр) = харагдана. */
+  listed?: boolean;
 };
 
 export const tenants = pgTable("tenants", {

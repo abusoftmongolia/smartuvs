@@ -497,3 +497,24 @@ export async function getBookingByManageToken(token: string) {
     .limit(1);
   return row ?? null;
 }
+
+// ── Нүүр хуудасны жагсаалт ────────────────────────────────────────────────
+
+/**
+ * Үйлчлүүлэгчид харагдах байгууллагууд: идэвхтэй, жагсаалтаас нуугаагүй,
+ * ядаж нэг идэвхтэй үйлчилгээтэй. Зөвхөн нийтэд харагддаг талбарууд.
+ */
+export async function listPublicTenants() {
+  return db()
+    .select({ slug: tenants.slug, name: tenants.name, industry: tenants.industry, address: tenants.address })
+    .from(tenants)
+    .where(
+      and(
+        eq(tenants.status, "active"),
+        sql`coalesce((${tenants.settings}->>'listed')::boolean, true)`,
+        sql`exists (select 1 from ${services} where ${services.tenantId} = ${tenants.id} and ${services.active})`,
+      ),
+    )
+    .orderBy(asc(tenants.name))
+    .limit(500);
+}

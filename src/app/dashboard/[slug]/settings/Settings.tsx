@@ -25,6 +25,7 @@ type Info = {
   slotStepMin: number;
   minLeadMin: number;
   maxAdvanceDays: number;
+  listed: boolean;
 };
 type Svc = { id?: string; name: string; durationMin: number; bufferMin: number; price: number | null; active: boolean };
 type Owner = { id?: string; name: string; title: string; active: boolean };
@@ -150,6 +151,10 @@ function InfoForm({ slug, info }: { slug: string; info: Info }) {
             <input type="number" inputMode="numeric" min={0} max={168} className={num} value={v.cancellationHours} onChange={(e) => set("cancellationHours", Number(e.target.value))} />
           </label>
         </div>
+        <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
+          <input type="checkbox" checked={v.listed} onChange={(e) => set("listed", e.target.checked)} className="size-5 accent-[#f5a800]" />
+          tsag.smartuvs.mn нүүр хуудасны жагсаалтад харагдах
+        </label>
         {status}
         <button disabled={pending} className={`${btnPrimary} self-start`}>{pending ? "Хадгалж байна…" : "Хадгалах"}</button>
       </form>

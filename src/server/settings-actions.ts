@@ -38,6 +38,7 @@ async function audit(tenantId: string, actorId: string, action: string, entity: 
 function done(slug: string): SettingsResult {
   revalidatePath(`/dashboard/${slug}`, "layout");
   revalidatePath(`/${slug}`);
+  revalidatePath("/");
   return { ok: true };
 }
 
@@ -54,6 +55,7 @@ const InfoInput = z.object({
   slotStepMin: z.union([z.literal(5), z.literal(10), z.literal(15), z.literal(20), z.literal(30), z.literal(60)]),
   minLeadMin: z.number().int().min(0).max(7 * 24 * 60),
   maxAdvanceDays: z.number().int().min(1).max(365),
+  listed: z.boolean(),
 });
 
 export async function saveTenantInfo(raw: unknown): Promise<SettingsResult> {
@@ -77,6 +79,7 @@ export async function saveTenantInfo(raw: unknown): Promise<SettingsResult> {
       slotStepMin: i.slotStepMin,
       minLeadMin: i.minLeadMin,
       maxAdvanceDays: i.maxAdvanceDays,
+      listed: i.listed,
     },
   });
   await audit(m.tenant.id, m.user.id, "tenant.update", "tenant", m.tenant.id);

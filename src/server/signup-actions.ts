@@ -4,6 +4,7 @@
  *  1. registerAccount — verify.mn-ээр баталгаажсан утсаар хэрэглэгч үүсгэж нэвтрүүлнэ
  *  2. createTenant    — нэвтэрсэн хэрэглэгч байгууллагаа бүх тохиргоотой нь нэг дор үүсгэнэ
  */
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db, pgErrorCode, PG_UNIQUE_VIOLATION, schema } from "@/db";
 import { insertTenantSetup, isSlugTaken } from "@/db/tenant";
@@ -129,6 +130,7 @@ export async function createTenant(raw: unknown): Promise<SignupResult<{ slug: s
         schedule: weekHoursToWindows(input.hours),
       });
       await recordEvent({ action: "tenant.create", entity: "tenant", key, tenantId: t.id, actorId: user.id });
+      revalidatePath("/");
       return { ok: true, slug: t.slug };
     } catch (err) {
       if (pgErrorCode(err) === PG_UNIQUE_VIOLATION) continue;
