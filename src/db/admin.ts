@@ -58,15 +58,17 @@ export async function listTenantsForAdmin() {
       status: tenants.status,
       address: tenants.address,
       createdAt: tenants.createdAt,
-      ownerName: sql<string | null>`(select ${users.name} from ${memberships} join ${users} on ${users.id} = ${memberships.userId}
-        where ${memberships.tenantId} = ${tenants.id} and ${memberships.role} = 'owner' order by ${memberships.createdAt} limit 1)`,
-      ownerPhone: sql<string | null>`(select ${users.phone} from ${memberships} join ${users} on ${users.id} = ${memberships.userId}
-        where ${memberships.tenantId} = ${tenants.id} and ${memberships.role} = 'owner' order by ${memberships.createdAt} limit 1)`,
-      bookings30d: sql<number>`(select count(*)::int from ${bookings} where ${bookings.tenantId} = ${tenants.id}
-        and ${bookings.createdAt} >= ${since}::timestamptz)`,
-      noShow30d: sql<number>`(select count(*)::int from ${bookings} where ${bookings.tenantId} = ${tenants.id}
-        and ${bookings.createdAt} >= ${since}::timestamptz and ${bookings.status} = 'no_show')`,
-      services: sql<number>`(select count(*)::int from ${schema.services} where ${schema.services.tenantId} = ${tenants.id} and ${schema.services.active})`,
+      // Дэд query-д хүснэгтийн нэрийг бүрэн бичнэ: ганц хүснэгтийн select-д Drizzle баганыг
+      // "id" гэж нэргүй гаргадаг тул дэд query дотор тодорхойгүй (ambiguous) болдог.
+      ownerName: sql<string | null>`(select u.name from memberships m join users u on u.id = m.user_id
+        where m.tenant_id = "tenants"."id" and m.role = 'owner' order by m.created_at limit 1)`,
+      ownerPhone: sql<string | null>`(select u.phone from memberships m join users u on u.id = m.user_id
+        where m.tenant_id = "tenants"."id" and m.role = 'owner' order by m.created_at limit 1)`,
+      bookings30d: sql<number>`(select count(*)::int from bookings b where b.tenant_id = "tenants"."id"
+        and b.created_at >= ${since}::timestamptz)`,
+      noShow30d: sql<number>`(select count(*)::int from bookings b where b.tenant_id = "tenants"."id"
+        and b.created_at >= ${since}::timestamptz and b.status = 'no_show')`,
+      services: sql<number>`(select count(*)::int from services s where s.tenant_id = "tenants"."id" and s.active)`,
     })
     .from(tenants)
     .orderBy(desc(tenants.createdAt))
@@ -121,8 +123,8 @@ export async function listUsersForAdmin(q?: string) {
       phone: users.phone,
       isSuperAdmin: users.isSuperAdmin,
       createdAt: users.createdAt,
-      tenants: sql<string | null>`(select string_agg(${tenants.name}, ', ' order by ${tenants.name}) from ${memberships}
-        join ${tenants} on ${tenants.id} = ${memberships.tenantId} where ${memberships.userId} = ${users.id})`,
+      tenants: sql<string | null>`(select string_agg(t.name, ', ' order by t.name) from memberships m
+        join tenants t on t.id = m.tenant_id where m.user_id = "users"."id")`,
     })
     .from(users)
     .where(term ? or(ilike(users.name, `%${term}%`), ilike(users.phone, `%${term.replace(/\D/g, "") || term}%`)) : undefined)
