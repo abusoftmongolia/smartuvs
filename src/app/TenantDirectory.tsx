@@ -1,6 +1,7 @@
 "use client";
 /** Байгууллагын жагсаалт: хайлт + салбараар шүүх. Карт дээр дарахад /<slug> захиалгын хуудас руу. */
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { TenantLogo } from "@/components/TenantLogo";
 import { matchesQuery } from "@/lib/search";
@@ -8,13 +9,21 @@ import { matchesQuery } from "@/lib/search";
 type Tenant = { slug: string; name: string; industry: string; industryLabel: string; address: string | null; logoUrl: string | null };
 
 export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; industries: { id: string; label: string }[] }) {
-  const [q, setQ] = useState("");
+  // smartuvs.mn-ийн хайлтаас ирэхэд: tsag.smartuvs.mn/?q=Үсчин
+  const params = useSearchParams();
+  const [q, setQ] = useState(() => params.get("q")?.slice(0, 80) ?? "");
   const [industry, setIndustry] = useState<string | null>(null);
 
   // Зөвхөн байгууллагатай салбаруудыг шүүлтүүрт харуулна
   const present = industries.filter((i) => tenants.some((t) => t.industry === i.id));
   const list = useMemo(
-    () => tenants.filter((t) => (!industry || t.industry === industry) && matchesQuery(t, q)),
+    () =>
+      tenants.filter(
+        (t) =>
+          (!industry || t.industry === industry) &&
+          // Нэр, хаяг эсвэл салбараар ("Үсчин" → бүх үсчин)
+          (matchesQuery(t, q) || matchesQuery({ name: t.industryLabel, slug: "", address: null }, q)),
+      ),
     [tenants, industry, q],
   );
 

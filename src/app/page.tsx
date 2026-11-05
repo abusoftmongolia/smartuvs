@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { isTsagMaintenance } from "@/db/platform";
 import { listPublicTenants } from "@/db/tenant";
@@ -25,10 +26,13 @@ export default async function Home() {
             Систем засвартай байна — онлайн захиалга түр зогссон. Удахгүй сэргэнэ.
           </p>
         )}
-        <TenantDirectory
-          tenants={tenants.map((t) => ({ ...t, industryLabel: INDUSTRY_PRESETS[t.industry].label }))}
-          industries={Object.values(INDUSTRY_PRESETS).map((p) => ({ id: p.id, label: p.label }))}
-        />
+        {/* useSearchParams (?q=) — хуудас статик хэвээр, хайлт хөтөч дээр */}
+        <Suspense>
+          <TenantDirectory
+            tenants={tenants.map((t) => ({ ...t, industryLabel: INDUSTRY_PRESETS[t.industry].label }))}
+            industries={Object.values(INDUSTRY_PRESETS).map((p) => ({ id: p.id, label: p.label }))}
+          />
+        </Suspense>
 
         <section aria-labelledby="h-biz" className="mt-4 flex flex-col items-start gap-3 rounded-[18px] border border-line bg-white p-5">
           <h2 id="h-biz" className="text-lg font-extrabold">Байгууллага эрхэлдэг үү?</h2>
