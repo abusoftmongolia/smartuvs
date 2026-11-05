@@ -4,6 +4,7 @@
  */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { isTsagMaintenance } from "@/db/platform";
 import { getTenantBySlug, listResources, listServices, listStaffForService } from "@/db/tenant";
 import { isValidSlug } from "@/lib/slug";
 import { addDays, formatPrice, todayIn, weekdayName } from "@/lib/time";
@@ -27,7 +28,7 @@ export default async function TenantBookingPage({ params }: Props) {
   const tenant = await getTenantBySlug(slug);
   if (!tenant) notFound();
 
-  const svc = await listServices(tenant.id);
+  const [svc, maintenance] = await Promise.all([listServices(tenant.id), isTsagMaintenance()]);
   const staffByService: BookingFlowProps["staffByService"] = {};
   if (tenant.bookingMode === "staff") {
     for (const s of svc) staffByService[s.id] = await listStaffForService(tenant.id, s.id);
@@ -48,7 +49,11 @@ export default async function TenantBookingPage({ params }: Props) {
           <h1 className="text-3xl font-extrabold tracking-tight">Цаг захиалах</h1>
           <p className="mt-1 text-[15px] text-muted">Төлбөргүй — утасны дугаараа баталгаажуулаад л болно.</p>
         </div>
-        {svc.length === 0 || !hasResources ? (
+        {maintenance ? (
+          <p role="status" className="rounded-card border border-line bg-white p-6 text-muted">
+            Систем засвартай байна. Түр хүлээгээд дахин оролдоно уу{tenant.phone ? <> эсвэл <a href={`tel:${tenant.phone}`} className="font-bold text-ink underline">{tenant.phone}</a> руу залгана уу</> : ""}.
+          </p>
+        ) : svc.length === 0 || !hasResources ? (
           <p className="rounded-card border border-line bg-white p-6 text-muted">Энэ байгууллага одоогоор онлайн захиалга авахгүй байна.</p>
         ) : (
           <BookingFlow

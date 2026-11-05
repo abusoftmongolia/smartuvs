@@ -61,6 +61,10 @@ export const smsText = {
     `${p.tenant}: таны цагийг ${p.day} ${p.time} болгож өөрчиллөө. Тохирохгүй бол: ${p.link}`,
   reminder: (p: { tenant: string; day: string; time: string; link: string }) =>
     `Сануулга: ${p.tenant}, ${p.day} ${p.time}. Өөрчлөх: ${p.link}`,
+  tenantApproved: (p: { tenant: string; link: string }) =>
+    `${p.tenant} батлагдлаа! Захиалгын хуудас: ${p.link}`,
+  tenantRejected: (p: { tenant: string }) =>
+    `${p.tenant}-ийн бүртгэл батлагдсангүй. Лавлах: tsag.smartuvs.mn`,
   cancelled: (p: { tenant: string; day: string; time: string }) =>
     `${p.tenant}: ${p.day} ${p.time} захиалга цуцлагдлаа.`,
 };

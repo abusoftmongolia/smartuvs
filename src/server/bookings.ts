@@ -6,6 +6,7 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@/db";
+import { isTsagMaintenance } from "@/db/platform";
 import { getTenantBySlug, upsertCustomer } from "@/db/tenant";
 import { normalizePhone } from "@/lib/sms";
 import { getAvailability } from "./availability";
@@ -42,6 +43,8 @@ export async function createBooking(raw: unknown): Promise<BookingResult> {
   if (!(await isPhoneVerified(input.verifyToken, phone))) {
     return { ok: false, reason: "unverified", message: "Утасны дугаараа баталгаажуулна уу" };
   }
+
+  if (await isTsagMaintenance()) return { ok: false, reason: "error", message: "Систем засвартай байна. Түр хүлээгээд дахин оролдоно уу." };
 
   const tenant = await getTenantBySlug(input.slug);
   if (!tenant) return { ok: false, reason: "not_found", message: "Байгууллага олдсонгүй" };

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
+import { isTsagMaintenance } from "@/db/platform";
 import { listPublicTenants } from "@/db/tenant";
 import { INDUSTRY_PRESETS } from "@/lib/presets";
 import { TenantDirectory } from "./TenantDirectory";
@@ -9,7 +10,7 @@ export const revalidate = 300;
 
 /** tsag.smartuvs.mn нүүр — үйлчлүүлэгч байгууллагаа сонгоод цаг захиална */
 export default async function Home() {
-  const tenants = await listPublicTenants();
+  const [tenants, maintenance] = await Promise.all([listPublicTenants(), isTsagMaintenance()]);
   return (
     <div className="min-h-dvh">
       <SiteHeader />
@@ -19,6 +20,11 @@ export default async function Home() {
           <p className="mt-1 text-[15px] text-muted">Байгууллагаа сонгоод утаснаасаа захиална. Төлбөргүй, бүртгэл шаардахгүй.</p>
         </div>
 
+        {maintenance && (
+          <p role="status" className="rounded-card border-2 border-brand bg-brand-tint p-4 font-semibold">
+            Систем засвартай байна — онлайн захиалга түр зогссон. Удахгүй сэргэнэ.
+          </p>
+        )}
         <TenantDirectory
           tenants={tenants.map((t) => ({ ...t, industryLabel: INDUSTRY_PRESETS[t.industry].label }))}
           industries={Object.values(INDUSTRY_PRESETS).map((p) => ({ id: p.id, label: p.label }))}

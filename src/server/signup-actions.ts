@@ -123,6 +123,8 @@ export async function createTenant(raw: unknown): Promise<SignupResult<{ slug: s
           address: input.address || null,
           phone: contactPhone,
           settings: defaultSettings(input.industry),
+          // Super Admin батлах хүртэл нийтэд харагдахгүй (/admin → Батлах)
+          status: "pending",
         },
         ownerUserId: user.id,
         services: input.services,

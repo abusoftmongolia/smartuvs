@@ -272,8 +272,11 @@ function Ready({ slug, name, siteUrl }: { slug: string; name: string; siteUrl: s
       <div aria-hidden className="flex size-16 items-center justify-center rounded-full bg-ink">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f5a800" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
       </div>
-      <h1 className="text-2xl font-extrabold">Бэлэн боллоо!</h1>
-      <p className="text-muted">{name}-ийн захиалгын хуудас:</p>
+      <h1 className="text-2xl font-extrabold">Бүртгэл илгээгдлээ!</h1>
+      <p className="rounded-xl bg-brand-tint p-3 text-[15px]">
+        SmartUvs таны байгууллагыг шалгаад <b>батлах</b> бөгөөд батлагдмагц SMS ирнэ. Тэр хүртэл доорх хаяг нийтэд нээгдэхгүй — энэ хооронд самбартаа үйлчилгээ, ажилтнаа тохируулаарай.
+      </p>
+      <p className="text-muted">{name}-ийн захиалгын хуудас (батлагдсаны дараа):</p>
       <p className="break-all text-xl font-extrabold">{pretty}</p>
       <QrCode url={url} label={`${pretty} хаягийн QR код`} />
       <div className="flex w-full flex-col gap-2 sm:flex-row">
@@ -283,7 +286,7 @@ function Ready({ slug, name, siteUrl }: { slug: string; name: string; siteUrl: s
         <Link href={`/dashboard/${slug}/poster`} className={`${btnSecondary} flex-1`}>A4 постер хэвлэх</Link>
         <Link href={`/dashboard/${slug}`} className={`${btnPrimary} flex-1`}>Самбар руу</Link>
       </div>
-      <p className="text-sm text-muted">Холбоосыг Facebook хуудас, Instagram bio-доо тавьж, постерыг үүдэндээ наагаарай.</p>
+      <p className="text-sm text-muted">Батлагдсаны дараа холбоосыг Facebook хуудас, Instagram bio-доо тавьж, постерыг үүдэндээ наагаарай.</p>
     </section>
   );
 }

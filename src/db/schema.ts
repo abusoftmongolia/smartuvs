@@ -73,7 +73,7 @@ export const tenants = pgTable("tenants", {
   address: text("address"),
   logoUrl: text("logo_url"),
   settings: jsonb("settings").$type<TenantSettings>().notNull(),
-  /** "active" | "suspended" — Super Admin сэжигтэйг идэвхгүй болгоно */
+  /** "pending" (админ хянаж буй) | "active" | "rejected" | "suspended" — src/lib/tenant-status.ts */
   status: text("status").notNull().default("active"),
   createdAt: createdAt(),
 }, (t) => [uniqueIndex("tenants_slug_uq").on(t.slug)]);
@@ -222,6 +222,13 @@ export const otpCodes = pgTable("otp_codes", {
   usedAt: timestamp("used_at", { withTimezone: true }),
   createdAt: createdAt(),
 }, (t) => [index("otp_phone_idx").on(t.phone, t.createdAt)]);
+
+/** Платформын тохиргоо (key → JSON). Жишээ: "maintenance.tsag" = true → захиалгын хуудас "Засвартай". */
+export const platformSettings = pgTable("platform_settings", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const auditLogs = pgTable("audit_logs", {
   id: uuid("id").primaryKey().defaultRandom(),

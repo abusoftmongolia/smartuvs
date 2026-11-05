@@ -86,6 +86,16 @@ export default async function TenantDashboard({ params, searchParams }: Props) {
         )}
       </div>
 
+      {tenant.status !== "active" && (
+        <p role="status" className="rounded-card border-2 border-brand bg-brand-tint p-4 text-[15px]">
+          {tenant.status === "pending"
+            ? <><b>Таны байгууллага хянагдаж байна.</b> Батлагдмагц захиалгын хуудас нээгдэж, танд SMS ирнэ. Энэ хооронд үйлчилгээ, ажлын цагаа тохируулж болно.</>
+            : tenant.status === "rejected"
+              ? <><b>Бүртгэл батлагдаагүй.</b> Дэлгэрэнгүйг SmartUvs-ээс лавлана уу.</>
+              : <><b>Байгууллага түр хаагдсан.</b> Захиалгын хуудас нийтэд харагдахгүй байна.</>}
+        </p>
+      )}
+
       <DayBoard
         slug={tenant.slug}
         date={date}

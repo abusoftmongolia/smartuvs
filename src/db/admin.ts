@@ -2,10 +2,10 @@
  * Super Admin-ы query-ууд — бүх байгууллагыг хамарна. ЗӨВХӨН requireSuperAdmin()-ээр хамгаалсан
  * хуудас/action болон ADMIN_API_TOKEN-тэй /api/admin/stats-аас дуудна.
  */
-import { and, count, desc, eq, gte, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, ilike, inArray, lt, or, sql } from "drizzle-orm";
 import { db, schema } from "./index";
 
-const { tenants, bookings, users, memberships } = schema;
+const { tenants, bookings, users, memberships, auditLogs, services, customers } = schema;
 
 const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 3600_000);
 
@@ -16,6 +16,7 @@ export async function platformStats() {
       total: count(),
       active: sql<number>`count(*) filter (where ${tenants.status} = 'active')::int`,
       suspended: sql<number>`count(*) filter (where ${tenants.status} = 'suspended')::int`,
+      pending: sql<number>`count(*) filter (where ${tenants.status} = 'pending')::int`,
       new7d: sql<number>`count(*) filter (where ${tenants.createdAt} >= ${daysAgo(7).toISOString()}::timestamptz)::int`,
     })
     .from(tenants);
@@ -29,11 +30,17 @@ export async function platformStats() {
     })
     .from(bookings)
     .where(gte(bookings.createdAt, daysAgo(30)));
-  const [u] = await db().select({ total: count() }).from(users);
+  const [u] = await db()
+    .select({
+      total: count(),
+      new30d: sql<number>`count(*) filter (where ${users.createdAt} >= ${daysAgo(30).toISOString()}::timestamptz)::int`,
+    })
+    .from(users);
   return {
     tenants: t,
     bookings: b,
     users: u.total,
+    usersNew30d: u.new30d,
     /** Ирээгүй хувь: ирээгүй / (ирсэн + ирээгүй), 30 хоног */
     noShowRate30d: b.noShow30d + b.attended30d > 0 ? b.noShow30d / (b.noShow30d + b.attended30d) : null,
   };
@@ -66,7 +73,7 @@ export async function listTenantsForAdmin() {
     .limit(1000);
 }
 
-export async function setTenantStatus(tenantId: string, status: "active" | "suspended") {
+export async function setTenantStatus(tenantId: string, status: "pending" | "active" | "rejected" | "suspended") {
   const [t] = await db().update(tenants).set({ status }).where(eq(tenants.id, tenantId)).returning();
   return t ?? null;
 }
@@ -80,4 +87,68 @@ export async function getTenantById(tenantId: string) {
 export async function getTenantBySlugAnyStatus(slug: string) {
   const [t] = await db().select().from(tenants).where(and(eq(tenants.slug, slug))).limit(1);
   return t ?? null;
+}
+
+/** Өнөөдөр (Улаанбаатарын өдрөөр) эхлэх захиалга — цуцлагдсаныг оруулахгүй */
+export async function bookingsOnDay(fromUtc: Date, toUtc: Date) {
+  const [r] = await db()
+    .select({ n: count() })
+    .from(bookings)
+    .where(and(gte(bookings.startsAt, fromUtc), lt(bookings.startsAt, toUtc), sql`${bookings.status} <> 'cancelled'`));
+  return r?.n ?? 0;
+}
+
+/** Сүүлийн үйл ажиллагаа (audit_logs) — платформын түвшний үйлдлүүд */
+const ACTIVITY_ACTIONS = ["tenant.create", "signup", "tenant.approve", "tenant.reject", "tenant.suspend", "tenant.activate", "maintenance.on", "maintenance.off"];
+
+export async function recentActivity(limit = 12) {
+  return db()
+    .select({ action: auditLogs.action, at: auditLogs.at, tenantName: tenants.name, actorName: users.name })
+    .from(auditLogs)
+    .leftJoin(tenants, eq(tenants.id, auditLogs.tenantId))
+    .leftJoin(users, eq(users.id, auditLogs.actorId))
+    .where(inArray(auditLogs.action, ACTIVITY_ACTIONS))
+    .orderBy(desc(auditLogs.at))
+    .limit(limit);
+}
+
+export async function listUsersForAdmin(q?: string) {
+  const term = q?.trim();
+  return db()
+    .select({
+      id: users.id,
+      name: users.name,
+      phone: users.phone,
+      isSuperAdmin: users.isSuperAdmin,
+      createdAt: users.createdAt,
+      tenants: sql<string | null>`(select string_agg(${tenants.name}, ', ' order by ${tenants.name}) from ${memberships}
+        join ${tenants} on ${tenants.id} = ${memberships.tenantId} where ${memberships.userId} = ${users.id})`,
+    })
+    .from(users)
+    .where(term ? or(ilike(users.name, `%${term}%`), ilike(users.phone, `%${term.replace(/\D/g, "") || term}%`)) : undefined)
+    .orderBy(desc(users.createdAt))
+    .limit(500);
+}
+
+/** Сүүлийн захиалгууд (бүх байгууллага). Үйлчлүүлэгчийн утсыг буцаахгүй. */
+export async function listRecentBookingsForAdmin(limit = 200) {
+  return db()
+    .select({
+      id: bookings.id,
+      startsAt: bookings.startsAt,
+      createdAt: bookings.createdAt,
+      status: bookings.status,
+      source: bookings.source,
+      tenantName: tenants.name,
+      tenantSlug: tenants.slug,
+      timezone: tenants.timezone,
+      serviceName: services.name,
+      customerName: customers.name,
+    })
+    .from(bookings)
+    .innerJoin(tenants, eq(tenants.id, bookings.tenantId))
+    .innerJoin(services, eq(services.id, bookings.serviceId))
+    .innerJoin(customers, eq(customers.id, bookings.customerId))
+    .orderBy(desc(bookings.createdAt))
+    .limit(limit);
 }
