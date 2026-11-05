@@ -6,7 +6,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import {
+  deleteTenantLogo,
   deleteTimeOff,
+  saveTenantLogo,
   insertTimeOff,
   listAllOwners,
   replaceAllSchedules,
@@ -16,6 +18,7 @@ import {
   listTenantSchedules,
 } from "@/db/tenant";
 import { weekHoursProblem, weekHoursToWindows, windowsToWeekHours } from "@/lib/hours";
+import { detectImageMime, LOGO_MAX_BYTES } from "@/lib/logo";
 import { normalizePhone } from "@/lib/sms";
 import { addDays, localToUtc } from "@/lib/time";
 import { memberOrNull } from "./auth";
@@ -210,5 +213,39 @@ export async function removeTimeOff(raw: unknown): Promise<SettingsResult> {
   if (!m) return NO_ACCESS;
   await deleteTimeOff(m.tenant.id, parsed.data.id);
   await audit(m.tenant.id, m.user.id, "timeoff.delete", "time_off", parsed.data.id);
+  return done(parsed.data.slug);
+}
+
+// ── Лого ──────────────────────────────────────────────────────────────────
+
+const LogoInput = z.object({
+  slug: Slug,
+  /** base64 (data: угтваргүй) — хөтөч дээр 256px болгож жижигрүүлсэн */
+  data: z.string().min(16).max(Math.ceil((LOGO_MAX_BYTES * 4) / 3) + 8),
+});
+
+export async function saveLogo(raw: unknown): Promise<SettingsResult> {
+  const parsed = LogoInput.safeParse(raw);
+  if (!parsed.success) return { ok: false, message: "Зураг хэт том байна (300KB хүртэл)" };
+  const m = await manager(parsed.data.slug);
+  if (!m) return NO_ACCESS;
+  const buf = Buffer.from(parsed.data.data, "base64");
+  if (buf.length > LOGO_MAX_BYTES) return { ok: false, message: "Зураг хэт том байна (300KB хүртэл)" };
+  const mime = detectImageMime(buf);
+  if (!mime) return { ok: false, message: "PNG, JPG эсвэл WebP зураг оруулна уу" };
+  await saveTenantLogo(m.tenant.id, m.tenant.slug, mime, buf);
+  await audit(m.tenant.id, m.user.id, "logo.update", "tenant", m.tenant.id);
+  revalidatePath("/");
+  return done(parsed.data.slug);
+}
+
+export async function removeLogo(raw: unknown): Promise<SettingsResult> {
+  const parsed = z.object({ slug: Slug }).safeParse(raw);
+  if (!parsed.success) return { ok: false, message: "Мэдээлэл буруу" };
+  const m = await manager(parsed.data.slug);
+  if (!m) return NO_ACCESS;
+  await deleteTenantLogo(m.tenant.id);
+  await audit(m.tenant.id, m.user.id, "logo.delete", "tenant", m.tenant.id);
+  revalidatePath("/");
   return done(parsed.data.slug);
 }

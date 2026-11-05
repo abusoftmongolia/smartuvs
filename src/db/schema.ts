@@ -12,6 +12,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  customType,
   index,
   integer,
   jsonb,
@@ -222,6 +223,16 @@ export const otpCodes = pgTable("otp_codes", {
   usedAt: timestamp("used_at", { withTimezone: true }),
   createdAt: createdAt(),
 }, (t) => [index("otp_phone_idx").on(t.phone, t.createdAt)]);
+
+const bytea = customType<{ data: Buffer }>({ dataType: () => "bytea" });
+
+/** Байгууллагын лого — жижигрүүлсэн зураг (≤ 300KB). /api/logo/<slug>-аар өгнө; tenants.logo_url = тэр хаяг. */
+export const tenantLogos = pgTable("tenant_logos", {
+  tenantId: uuid("tenant_id").primaryKey().references(() => tenants.id, { onDelete: "cascade" }),
+  mime: text("mime").notNull(),
+  data: bytea("data").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 /** Платформын тохиргоо (key → JSON). Жишээ: "maintenance.tsag" = true → захиалгын хуудас "Засвартай". */
 export const platformSettings = pgTable("platform_settings", {

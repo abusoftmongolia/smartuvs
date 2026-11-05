@@ -35,6 +35,8 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
       </div>
       <Settings
         slug={slug}
+        name={tenant.name}
+        logoUrl={tenant.logoUrl}
         bookingUrl={`${siteUrl}/${slug}`}
         term={tenant.settings.terminology.staff}
         kind={kind}

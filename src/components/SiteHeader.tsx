@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
+import { TenantLogo } from "./TenantLogo";
 
 /** Толгой: SmartUvs лого | байгууллагын нэр. Лого хар-шар тул үргэлж цагаан дэвсгэр дээр. */
-export function SiteHeader(p: { tenantName?: string; subtitle?: string; phone?: string }) {
+export function SiteHeader(p: { tenantName?: string; tenantSlug?: string; tenantLogo?: string | null; subtitle?: string; phone?: string }) {
   return (
     <header className="border-b border-line bg-white">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
@@ -13,6 +14,7 @@ export function SiteHeader(p: { tenantName?: string; subtitle?: string; phone?: 
           {p.tenantName && (
             <>
               <span aria-hidden className="h-8 w-px bg-line" />
+              {p.tenantSlug && <TenantLogo name={p.tenantName} slug={p.tenantSlug} logoUrl={p.tenantLogo ?? null} size={44} />}
               <div>
                 <div className="text-lg font-extrabold leading-tight">{p.tenantName}</div>
                 {p.subtitle && <div className="text-[13px] text-muted">{p.subtitle}</div>}

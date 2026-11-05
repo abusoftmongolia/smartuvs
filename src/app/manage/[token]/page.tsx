@@ -50,7 +50,7 @@ export default async function ManagePage({ params }: { params: Promise<{ token: 
 
   return (
     <div className="min-h-dvh">
-      <SiteHeader tenantName={tenant.name} subtitle={tenant.address ?? undefined} phone={tenant.phone ?? undefined} />
+      <SiteHeader tenantName={tenant.name} tenantSlug={tenant.slug} tenantLogo={tenant.logoUrl} subtitle={tenant.address ?? undefined} phone={tenant.phone ?? undefined} />
       <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-6">
         <h1 className="text-2xl font-extrabold">Таны захиалга</h1>
         <dl className="flex flex-col gap-2.5 rounded-[18px] border border-line bg-white p-5 text-sm">

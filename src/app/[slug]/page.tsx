@@ -43,7 +43,7 @@ export default async function TenantBookingPage({ params }: Props) {
 
   return (
     <div className="min-h-dvh">
-      <SiteHeader tenantName={tenant.name} subtitle={tenant.address ?? undefined} phone={tenant.phone ?? undefined} />
+      <SiteHeader tenantName={tenant.name} tenantSlug={tenant.slug} tenantLogo={tenant.logoUrl} subtitle={tenant.address ?? undefined} phone={tenant.phone ?? undefined} />
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">Цаг захиалах</h1>

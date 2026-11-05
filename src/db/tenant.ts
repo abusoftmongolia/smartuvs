@@ -506,7 +506,7 @@ export async function getBookingByManageToken(token: string) {
  */
 export async function listPublicTenants() {
   return db()
-    .select({ slug: tenants.slug, name: tenants.name, industry: tenants.industry, address: tenants.address })
+    .select({ slug: tenants.slug, name: tenants.name, industry: tenants.industry, address: tenants.address, logoUrl: tenants.logoUrl })
     .from(tenants)
     .where(
       and(
@@ -517,4 +517,36 @@ export async function listPublicTenants() {
     )
     .orderBy(asc(tenants.name))
     .limit(500);
+}
+
+// ── Лого ──────────────────────────────────────────────────────────────────
+
+/** Логог хадгалж, tenants.logo_url-д кэш эвдэх хувилбартай хаягийг бичнэ */
+export async function saveTenantLogo(tenantId: string, slug: string, mime: string, data: Buffer) {
+  const now = new Date();
+  await db().transaction(async (tx) => {
+    await tx
+      .insert(schema.tenantLogos)
+      .values({ tenantId, mime, data, updatedAt: now })
+      .onConflictDoUpdate({ target: schema.tenantLogos.tenantId, set: { mime, data, updatedAt: now } });
+    await tx.update(tenants).set({ logoUrl: `/api/logo/${slug}?v=${now.getTime()}` }).where(eq(tenants.id, tenantId));
+  });
+}
+
+export async function deleteTenantLogo(tenantId: string) {
+  await db().transaction(async (tx) => {
+    await tx.delete(schema.tenantLogos).where(eq(schema.tenantLogos.tenantId, tenantId));
+    await tx.update(tenants).set({ logoUrl: null }).where(eq(tenants.id, tenantId));
+  });
+}
+
+/** /api/logo/<slug> — лого нь нийтийн мэдээлэл (захиалгын хуудсанд харагддаг) */
+export async function getLogoBySlug(slug: string) {
+  const [r] = await db()
+    .select({ mime: schema.tenantLogos.mime, data: schema.tenantLogos.data })
+    .from(schema.tenantLogos)
+    .innerJoin(tenants, eq(tenants.id, schema.tenantLogos.tenantId))
+    .where(eq(tenants.slug, slug))
+    .limit(1);
+  return r ?? null;
 }

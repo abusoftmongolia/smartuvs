@@ -3,11 +3,14 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { HoursEditor } from "@/components/HoursEditor";
 import { QrCode } from "@/components/QrCode";
+import { TenantLogo } from "@/components/TenantLogo";
 import { ErrorBox, Field, btnPrimary, btnSecondary } from "@/components/ui";
 import type { DayHours } from "@/lib/hours";
 import {
   addTimeOff,
+  removeLogo,
   removeTimeOff,
+  saveLogo,
   saveHours,
   saveOwner,
   saveService,
@@ -33,6 +36,8 @@ type Off = { id: string; from: string; to: string; partial: boolean; owner: stri
 
 type Props = {
   slug: string;
+  name: string;
+  logoUrl: string | null;
   bookingUrl: string;
   term: string;
   kind: "staff" | "resource";
@@ -76,6 +81,7 @@ export function Settings(p: Props) {
   return (
     <>
       <Share slug={p.slug} url={p.bookingUrl} />
+      <Logo slug={p.slug} name={p.name} logoUrl={p.logoUrl} />
       <InfoForm slug={p.slug} info={p.info} />
       {/* Хадгалсны дараа серверээс шинэ ID-тай өгөгдөл ирэхэд дахин mount хийнэ */}
       <Services key={JSON.stringify(p.services)} slug={p.slug} initial={p.services} />
@@ -317,6 +323,65 @@ function TimeOff({ slug, owners, list }: { slug: string; owners: Owner[]; list: 
         </label>
         <button disabled={pending || !from} className={btnPrimary}>Нэмэх</button>
       </form>
+      {status}
+    </Card>
+  );
+}
+
+/** Зургийг хөтөч дээр 256px дөрвөлжин (WebP, дэмжихгүй бол PNG) болгоно — файл жижиг, сервер ачаалалгүй */
+async function resizeToSquare(file: File, size = 256): Promise<string> {
+  const bmp = await createImageBitmap(file);
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, size, size);
+  // Харьцааг хадгалж төвд нь багтаана (тайрахгүй)
+  const scale = Math.min(size / bmp.width, size / bmp.height);
+  const w = bmp.width * scale;
+  const h = bmp.height * scale;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(bmp, (size - w) / 2, (size - h) / 2, w, h);
+  let url = canvas.toDataURL("image/webp", 0.9);
+  if (!url.startsWith("data:image/webp")) url = canvas.toDataURL("image/png");
+  return url.slice(url.indexOf(",") + 1);
+}
+
+function Logo({ slug, name, logoUrl }: { slug: string; name: string; logoUrl: string | null }) {
+  const { pending, save, status } = useSave();
+  const [busy, setBusy] = useState(false);
+  return (
+    <Card id="h-logo" title="Лого">
+      <div className="flex flex-wrap items-center gap-4">
+        <TenantLogo name={name} slug={slug} logoUrl={logoUrl} size={96} />
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <p className="text-sm text-muted">tsag.smartuvs.mn нүүр хуудас болон захиалгын хуудсанд харагдана. PNG, JPG эсвэл WebP — дөрвөлжин зураг хамгийн гоё харагдана.</p>
+          <div className="flex flex-wrap gap-2">
+            <label className={`${btnSecondary} cursor-pointer ${pending || busy ? "pointer-events-none opacity-50" : ""}`}>
+              {logoUrl ? "Солих" : "Лого оруулах"}
+              <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!f) return;
+                  setBusy(true);
+                  try {
+                    const data = await resizeToSquare(f);
+                    save(() => saveLogo({ slug, data }), "Лого хадгалагдлаа");
+                  } catch {
+                    save(async () => ({ ok: false, message: "Зургийг уншиж чадсангүй" }));
+                  } finally {
+                    setBusy(false);
+                  }
+                }} />
+            </label>
+            {logoUrl && (
+              <button className={btnSecondary} disabled={pending} onClick={() => save(() => removeLogo({ slug }), "Лого устгагдлаа")}>Устгах</button>
+            )}
+          </div>
+        </div>
+      </div>
       {status}
     </Card>
   );
