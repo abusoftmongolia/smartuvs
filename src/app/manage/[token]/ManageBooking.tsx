@@ -97,13 +97,13 @@ function MovePicker(p: {
 
   return (
     <div className="flex flex-col gap-3 rounded-[18px] border border-line bg-white p-4">
-      <h2 className="font-extrabold">Шинэ цаг</h2>
+      <h2 className="font-bold">Шинэ цаг</h2>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {p.days.map((d) => (
           <button key={d.date} onClick={() => setDate(d.date)} aria-pressed={d.date === date} aria-label={d.date}
             className={`flex min-h-[64px] w-14 flex-none flex-col items-center justify-center rounded-card border-[1.5px] ${d.date === date ? "border-brand bg-brand" : "border-line bg-white"}`}>
             <span className="text-xs font-bold">{d.wd}</span>
-            <span className="text-lg font-extrabold">{d.num}</span>
+            <span className="text-lg font-bold">{d.num}</span>
             <span className="text-[10px] font-semibold">{d.sub}</span>
           </button>
         ))}

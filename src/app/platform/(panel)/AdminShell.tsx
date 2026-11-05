@@ -43,12 +43,12 @@ export function AdminShell(p: { userName: string; pending: number; children: Rea
       <Link href="/" className="flex items-center gap-2 px-2">
         {/* Лого хар-шар тул хар sidebar дээр цагаан хавтан дотор */}
         <span className="rounded-lg bg-white px-2.5 py-2"><Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={1200} height={175} className="h-5 w-auto" priority /></span>
-        <span className="rounded-md bg-brand px-1.5 py-0.5 text-[11px] font-extrabold text-ink">АДМИН</span>
+        <span className="rounded-md bg-brand px-1.5 py-0.5 text-[11px] font-bold text-ink">АДМИН</span>
       </Link>
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto">
         {groups.map((g, i) => (
           <div key={i} className="flex flex-col gap-1">
-            {g.title && <div className="px-3 pb-1 text-[11px] font-extrabold uppercase tracking-wider text-white/50">{g.title}</div>}
+            {g.title && <div className="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-white/50">{g.title}</div>}
             {g.items.map((it) =>
               it.soon ? (
                 <span key={it.label} className="flex min-h-11 items-center justify-between rounded-xl px-3 text-[15px] font-bold text-white/40" aria-disabled>
@@ -59,7 +59,7 @@ export function AdminShell(p: { userName: string; pending: number; children: Rea
                   className={`flex min-h-11 items-center justify-between rounded-xl px-3 text-[15px] font-bold ${isActive(it.href) ? "bg-brand text-ink" : "text-white hover:bg-white/10"}`}>
                   {it.label}
                   {!!it.badge && (
-                    <span className={`flex min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-extrabold ${isActive(it.href) ? "bg-ink text-brand" : "bg-brand text-ink"}`}>{it.badge}</span>
+                    <span className={`flex min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold ${isActive(it.href) ? "bg-ink text-brand" : "bg-brand text-ink"}`}>{it.badge}</span>
                   )}
                 </Link>
               ),
@@ -68,7 +68,7 @@ export function AdminShell(p: { userName: string; pending: number; children: Rea
         ))}
       </div>
       <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3">
-        <span aria-hidden className="flex size-10 flex-none items-center justify-center rounded-full bg-brand text-lg font-extrabold text-ink">
+        <span aria-hidden className="flex size-10 flex-none items-center justify-center rounded-full bg-brand text-lg font-bold text-ink">
           {/* "Г.Батжаргал" → "Б" (овгийн үсгийг алгасна) */}
           {(p.userName.split(".").pop()?.trim() || p.userName).slice(0, 1).toUpperCase()}
         </span>

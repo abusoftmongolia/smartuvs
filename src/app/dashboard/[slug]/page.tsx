@@ -71,7 +71,7 @@ export default async function TenantDashboard({ params, searchParams }: Props) {
     <main className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold">{tenant.name}</h1>
+          <h1 className="text-2xl font-bold">{tenant.name}</h1>
           <p className="text-sm text-muted">
             Захиалгын хуудас:{" "}
             <Link href={`/${tenant.slug}`} className="font-semibold text-brand-deep underline" target="_blank">

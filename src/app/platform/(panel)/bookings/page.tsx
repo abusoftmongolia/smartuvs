@@ -15,12 +15,12 @@ export default async function AdminBookings() {
   return (
     <>
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight">Захиалгууд</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Захиалгууд</h1>
         <p className="mt-1 text-[15px] text-muted">Сүүлд үүссэн 200 захиалга · бүх байгууллага</p>
       </div>
       <div className="overflow-x-auto rounded-[22px] border border-line bg-white">
         <table className="w-full min-w-[820px] text-left text-[15px]">
-          <thead className="border-b border-line text-xs font-extrabold uppercase tracking-wider text-muted">
+          <thead className="border-b border-line text-xs font-bold uppercase tracking-wider text-muted">
             <tr><th className="px-5 py-3">Байгууллага</th><th className="px-3 py-3">Үйлчилгээ</th><th className="px-3 py-3">Цаг</th><th className="px-3 py-3">Төлөв</th><th className="px-5 py-3">Үүссэн</th></tr>
           </thead>
           <tbody>

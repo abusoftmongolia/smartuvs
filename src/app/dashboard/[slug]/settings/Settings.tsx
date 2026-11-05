@@ -48,8 +48,8 @@ type Props = {
   timeOff: Off[];
 };
 
-const select = "min-h-12 rounded-xl border-[1.5px] border-[#d6d3cc] bg-white px-3 text-[15px] font-normal";
-const num = "min-h-11 w-full rounded-lg border-[1.5px] border-[#d6d3cc] px-2.5 text-[15px] font-normal";
+const select = "min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-[15px] font-normal";
+const num = "min-h-11 w-full rounded-lg border-[1.5px] border-[#d4d4d4] px-2.5 text-[15px] font-normal";
 
 /** Хадгалах товч + алдаа/амжилтын мэдэгдэл */
 function useSave() {
@@ -71,7 +71,7 @@ function useSave() {
 function Card({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-4 rounded-[18px] border border-line bg-white p-5">
-      <h2 id={id} className="text-lg font-extrabold">{title}</h2>
+      <h2 id={id} className="text-lg font-bold">{title}</h2>
       {children}
     </section>
   );
@@ -100,7 +100,7 @@ function Share({ slug, url }: { slug: string; url: string }) {
       <div className="flex flex-wrap items-center gap-4">
         <QrCode url={url} size={128} label={`${pretty} хаягийн QR код`} />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <a href={url} target="_blank" className="break-all text-lg font-extrabold underline">{pretty}</a>
+          <a href={url} target="_blank" className="break-all text-lg font-bold underline">{pretty}</a>
           <div className="flex flex-wrap gap-2">
             <button className={btnSecondary} onClick={() => navigator.clipboard?.writeText(url).then(() => setCopied(true))}>
               {copied ? "Хуулагдлаа ✓" : "Хуулах"}

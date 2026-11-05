@@ -10,12 +10,12 @@ export default async function AdminSearch({ searchParams }: { searchParams: Prom
   const found = tenants.filter((t) => matchesQuery(t, q));
   return (
     <>
-      <h1 className="text-3xl font-extrabold tracking-tight">Хайлт{q ? `: “${q}”` : ""}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Хайлт{q ? `: “${q}”` : ""}</h1>
       {!q ? <p className="text-muted">Дээрх хайлтын талбарт бичнэ үү.</p> : (
         <>
-          <h2 className="text-xl font-extrabold">Байгууллага ({found.length})</h2>
+          <h2 className="text-xl font-bold">Байгууллага ({found.length})</h2>
           <TenantList rows={found} />
-          <h2 className="text-xl font-extrabold">Хэрэглэгч ({users.length})</h2>
+          <h2 className="text-xl font-bold">Хэрэглэгч ({users.length})</h2>
           {users.length === 0 ? <p className="text-muted">Олдсонгүй.</p> : (
             <ul className="flex flex-col gap-2">
               {users.map((u) => (

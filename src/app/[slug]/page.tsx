@@ -46,7 +46,7 @@ export default async function TenantBookingPage({ params }: Props) {
       <SiteHeader tenantName={tenant.name} tenantSlug={tenant.slug} tenantLogo={tenant.logoUrl} subtitle={tenant.address ?? undefined} phone={tenant.phone ?? undefined} />
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Цаг захиалах</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Цаг захиалах</h1>
           <p className="mt-1 text-[15px] text-muted">Төлбөргүй — утасны дугаараа баталгаажуулаад л болно.</p>
         </div>
         {maintenance ? (

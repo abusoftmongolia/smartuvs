@@ -9,13 +9,13 @@ export function SystemsCard({ tsagMaintenance }: { tsagMaintenance: boolean }) {
   ];
   return (
     <section aria-labelledby="h-systems" className="flex flex-col gap-4 rounded-[22px] border border-line bg-white p-6">
-      <h2 id="h-systems" className="text-xl font-extrabold">Дэд системүүд</h2>
+      <h2 id="h-systems" className="text-xl font-bold">Дэд системүүд</h2>
       <ul className="flex flex-col gap-3">
         {rows.map((r) => (
           <li key={r.key} className="flex items-center gap-3 rounded-2xl bg-ground p-4">
             <span aria-hidden className={`size-2.5 flex-none rounded-full ${r.live ? "bg-green-600" : "bg-muted/60"}`} />
             <div className="min-w-0 flex-1">
-              <div className="font-extrabold">{r.name}</div>
+              <div className="font-bold">{r.name}</div>
               <div className="truncate text-sm text-muted">{r.host} · {r.state}</div>
             </div>
             {r.control}

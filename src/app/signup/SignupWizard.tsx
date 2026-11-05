@@ -121,7 +121,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-3xl font-extrabold">Байгууллагаа бүртгүүлэх</h1>
+        <h1 className="text-3xl font-bold">Байгууллагаа бүртгүүлэх</h1>
         <p className="mt-1 text-[15px] text-muted">Үнэгүй · 5 минут · үйлчлүүлэгчид тань төлбөргүй захиална</p>
       </div>
 
@@ -140,7 +140,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
       >
         {step === 0 && (
           <>
-            <h2 className="text-lg font-extrabold">Таны бүртгэл</h2>
+            <h2 className="text-lg font-bold">Таны бүртгэл</h2>
             <Field id="su-name" label="Таны нэр" value={name} onChange={setName} autoComplete="name" />
             <Field id="su-phone" label="Утасны дугаар" type="tel" value={phone} onChange={(x) => { setPhone(x); pv.reset(); }} placeholder="9911 2233" autoComplete="username"
               hint="Самбарт энэ дугаараар нэвтэрнэ" />
@@ -154,7 +154,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
 
         {step === 1 && (
           <>
-            <h2 className="text-lg font-extrabold">Байгууллага</h2>
+            <h2 className="text-lg font-bold">Байгууллага</h2>
             {loggedInAs && <p className="text-sm text-muted">{loggedInAs} нэрээр бүртгүүлж байна.</p>}
             <Field id="org-name" label="Байгууллагын нэр" value={orgName} onChange={setOrgName} placeholder="Хатан Салон" />
             <fieldset className="flex flex-col gap-2">
@@ -171,7 +171,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
             <label className="flex flex-col gap-1.5 text-[13px] font-bold">
               Байршил (цагийн бүс)
               <select value={timezone} onChange={(e) => setTimezone(e.target.value as typeof timezone)}
-                className="min-h-12 rounded-xl border-[1.5px] border-[#d6d3cc] bg-white px-3 text-[15px] font-normal">
+                className="min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-[15px] font-normal">
                 <option value="Asia/Hovd">Баруун аймгууд (Увс, Ховд, Баян-Өлгий, Завхан, Говь-Алтай) — UTC+7</option>
                 <option value="Asia/Ulaanbaatar">Улаанбаатар ба бусад аймаг — UTC+8</option>
               </select>
@@ -183,7 +183,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
 
         {step === 2 && (
           <>
-            <h2 className="text-lg font-extrabold">Үйлчилгээ</h2>
+            <h2 className="text-lg font-bold">Үйлчилгээ</h2>
             <p className="text-sm text-muted">Үнэ зөвхөн мэдээлэл — үйлчлүүлэгч урьдчилж төлөхгүй.</p>
             <ul className="flex flex-col gap-2">
               {services.map((s, i) => (
@@ -191,19 +191,19 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
                   <label className="flex min-w-40 flex-[2] flex-col gap-1 text-xs font-bold">
                     Нэр
                     <input value={s.name} onChange={(e) => setServices(services.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))}
-                      className="min-h-11 rounded-lg border-[1.5px] border-[#d6d3cc] px-2.5 text-[15px] font-normal" />
+                      className="min-h-11 rounded-lg border-[1.5px] border-[#d4d4d4] px-2.5 text-[15px] font-normal" />
                   </label>
                   <label className="flex w-24 flex-col gap-1 text-xs font-bold">
                     Минут
                     <input type="number" inputMode="numeric" min={5} step={5} value={s.durationMin}
                       onChange={(e) => setServices(services.map((x, j) => (j === i ? { ...x, durationMin: Number(e.target.value) } : x)))}
-                      className="min-h-11 rounded-lg border-[1.5px] border-[#d6d3cc] px-2.5 text-[15px] font-normal" />
+                      className="min-h-11 rounded-lg border-[1.5px] border-[#d4d4d4] px-2.5 text-[15px] font-normal" />
                   </label>
                   <label className="flex w-28 flex-col gap-1 text-xs font-bold">
                     Үнэ ₮
                     <input inputMode="numeric" value={s.price} placeholder="—"
                       onChange={(e) => setServices(services.map((x, j) => (j === i ? { ...x, price: e.target.value.replace(/\D/g, "") } : x)))}
-                      className="min-h-11 rounded-lg border-[1.5px] border-[#d6d3cc] px-2.5 text-[15px] font-normal" />
+                      className="min-h-11 rounded-lg border-[1.5px] border-[#d4d4d4] px-2.5 text-[15px] font-normal" />
                   </label>
                   <button type="button" onClick={() => setServices(services.filter((_, j) => j !== i))} aria-label={`${s.name || "Үйлчилгээ"} хасах`}
                     className="inline-flex size-11 items-center justify-center rounded-lg border border-line text-lg">×</button>
@@ -214,14 +214,14 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
               onClick={() => setServices([...services, { name: "", durationMin: 30, bufferMin: 5, price: "" }])}>
               + Үйлчилгээ нэмэх
             </button>
-            <h2 className="mt-2 text-lg font-extrabold">Ажлын цаг</h2>
+            <h2 className="mt-2 text-lg font-bold">Ажлын цаг</h2>
             <HoursEditor value={hours} onChange={setHours} />
           </>
         )}
 
         {step === 3 && (
           <>
-            <h2 className="text-lg font-extrabold">{term}</h2>
+            <h2 className="text-lg font-bold">{term}</h2>
             <p className="text-sm text-muted">
               {preset.bookingMode === "resource"
                 ? `Үйлчлүүлэгч сул ${term.toLowerCase()}оор захиална. Хэдэн ${term.toLowerCase()} зэрэг ажиллахыг оруулна уу.`
@@ -233,7 +233,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
                   <label className="sr-only" htmlFor={`own-${i}`}>{term} {i + 1}</label>
                   <input id={`own-${i}`} value={o} placeholder={`${term} ${i + 1}-н нэр`}
                     onChange={(e) => setOwners(owners.map((x, j) => (j === i ? e.target.value : x)))}
-                    className="min-h-12 flex-1 rounded-xl border-[1.5px] border-[#d6d3cc] px-3.5 text-[15px]" />
+                    className="min-h-12 flex-1 rounded-xl border-[1.5px] border-[#d4d4d4] px-3.5 text-[15px]" />
                   <button type="button" onClick={() => setOwners(owners.filter((_, j) => j !== i))} aria-label={`${o || term} хасах`}
                     className="inline-flex size-12 items-center justify-center rounded-xl border border-line text-lg">×</button>
                 </li>
@@ -272,12 +272,12 @@ function Ready({ slug, name, siteUrl }: { slug: string; name: string; siteUrl: s
       <div aria-hidden className="flex size-16 items-center justify-center rounded-full bg-ink">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f5a800" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
       </div>
-      <h1 className="text-2xl font-extrabold">Бүртгэл илгээгдлээ!</h1>
+      <h1 className="text-2xl font-bold">Бүртгэл илгээгдлээ!</h1>
       <p className="rounded-xl bg-brand-tint p-3 text-[15px]">
         SmartUvs таны байгууллагыг шалгаад <b>батлах</b> бөгөөд батлагдмагц SMS ирнэ. Тэр хүртэл доорх хаяг нийтэд нээгдэхгүй — энэ хооронд самбартаа үйлчилгээ, ажилтнаа тохируулаарай.
       </p>
       <p className="text-muted">{name}-ийн захиалгын хуудас (батлагдсаны дараа):</p>
-      <p className="break-all text-xl font-extrabold">{pretty}</p>
+      <p className="break-all text-xl font-bold">{pretty}</p>
       <QrCode url={url} label={`${pretty} хаягийн QR код`} />
       <div className="flex w-full flex-col gap-2 sm:flex-row">
         <button className={`${btnSecondary} flex-1`} onClick={() => navigator.clipboard?.writeText(url).then(() => setCopied(true))}>

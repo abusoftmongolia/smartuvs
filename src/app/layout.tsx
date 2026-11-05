@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 // Фонтыг өөр дээрээ байрлуулна (кирилл + латин) — build үед Google Fonts руу хандахгүй
-import "@fontsource-variable/manrope/index.css";
+import "@fontsource-variable/inter/index.css";
 import "./globals.css";
 
 export const metadata: Metadata = {

@@ -21,7 +21,7 @@ export default async function AdminTenants({ searchParams }: { searchParams: Pro
   return (
     <>
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight">Байгууллагууд</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Байгууллагууд</h1>
         <p className="mt-1 text-[15px] text-muted">tsag.smartuvs.mn · шинэ бүртгэлийг батлах, хаах</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">

@@ -21,7 +21,7 @@ export function TenantList({ rows }: { rows: Row[] }) {
   return (
     <div className="overflow-x-auto rounded-[22px] border border-line bg-white">
       <table className="w-full min-w-[920px] text-left text-[15px]">
-        <thead className="border-b border-line text-xs font-extrabold uppercase tracking-wider text-muted">
+        <thead className="border-b border-line text-xs font-bold uppercase tracking-wider text-muted">
           <tr>
             <th className="px-5 py-3">Байгууллага</th>
             <th className="px-3 py-3">Эзэмшигч</th>
@@ -36,7 +36,7 @@ export function TenantList({ rows }: { rows: Row[] }) {
           {rows.map((t) => (
             <tr key={t.id} className="border-b border-line align-top last:border-b-0">
               <td className="px-5 py-4">
-                <div className="font-extrabold">{t.name}</div>
+                <div className="font-bold">{t.name}</div>
                 <div className="text-sm text-muted">
                   {INDUSTRY_PRESETS[t.industry].label} · <Link href={`${TSAG}/${t.slug}`} target="_blank" className="underline">/{t.slug}</Link>
                   {t.address ? ` · ${t.address}` : ""}
@@ -51,7 +51,7 @@ export function TenantList({ rows }: { rows: Row[] }) {
               <td className="px-3 py-4 text-right tabular-nums">{t.bookings30d}</td>
               <td className="px-3 py-4 text-right tabular-nums">{t.noShow30d}</td>
               <td className="px-3 py-4">
-                <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-extrabold ${BADGE[t.status] ?? ""}`}>
+                <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${BADGE[t.status] ?? ""}`}>
                   {isTenantStatus(t.status) ? TENANT_STATUS_MN[t.status] : t.status}
                 </span>
               </td>

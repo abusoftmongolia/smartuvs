@@ -12,11 +12,11 @@ export default async function DashboardHome() {
 
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-4 px-4 py-10">
-      <h1 className="text-2xl font-extrabold">Байгууллага сонгох</h1>
+      <h1 className="text-2xl font-bold">Байгууллага сонгох</h1>
       {list.length === 0 ? (
         <div className="flex flex-col gap-3 rounded-[18px] border border-line bg-white p-5">
           <p className="text-muted">Та одоогоор ямар нэг байгууллагын гишүүн биш байна.</p>
-          <Link href="/signup" className="inline-flex min-h-12 items-center justify-center rounded-card bg-brand font-extrabold text-ink">
+          <Link href="/signup" className="inline-flex min-h-12 items-center justify-center rounded-card bg-brand font-bold text-ink">
             Байгууллага бүртгүүлэх
           </Link>
         </div>

@@ -105,14 +105,14 @@ export function BookingFlow(p: BookingFlowProps) {
         <div aria-hidden className="flex size-16 items-center justify-center rounded-full bg-ink">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f5a800" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
         </div>
-        <h2 className="text-xl font-extrabold">{result.status === "confirmed" ? "Таны цаг баталгаажлаа" : "Захиалга хүлээн авлаа"}</h2>
+        <h2 className="text-xl font-bold">{result.status === "confirmed" ? "Таны цаг баталгаажлаа" : "Захиалга хүлээн авлаа"}</h2>
         <p className="text-sm text-muted">{service?.name} · {p.bookingMode === "staff" ? staffName : ""}</p>
-        <p className="text-2xl font-extrabold">{result.day}, {result.time}</p>
+        <p className="text-2xl font-bold">{result.day}, {result.time}</p>
         <p className="text-[13px] text-muted">
           {result.status === "confirmed" ? "Дэлгэрэнгүйг SMS-ээр илгээлээ. 24 цагийн өмнө сануулна." : "Ажилтан батлахад SMS ирнэ."}
         </p>
         <div className="mt-2 flex w-full flex-col gap-2">
-          <a href={`${result.managePath}/ics`} className="flex min-h-12 items-center justify-center rounded-card bg-brand font-extrabold text-ink">
+          <a href={`${result.managePath}/ics`} className="flex min-h-12 items-center justify-center rounded-card bg-brand font-bold text-ink">
             📅 Календарьт нэмэх
           </a>
           <a href={result.managePath} className="flex min-h-12 items-center justify-center rounded-xl border border-line text-sm font-bold">
@@ -130,7 +130,7 @@ export function BookingFlow(p: BookingFlowProps) {
     <div className="flex flex-wrap items-start gap-6">
       {/* 1. Үйлчилгээ */}
       <section aria-labelledby="h-svc" className="flex min-w-0 flex-[1_1_300px] flex-col gap-3">
-        <h2 id="h-svc" className="text-lg font-extrabold">1. Үйлчилгээ</h2>
+        <h2 id="h-svc" className="text-lg font-bold">1. Үйлчилгээ</h2>
         {p.services.map((s) => (
           <button
             key={s.id}
@@ -147,7 +147,7 @@ export function BookingFlow(p: BookingFlowProps) {
 
       {/* 2. Ажилтан ба цаг */}
       <section aria-labelledby="h-time" className="flex min-w-0 flex-[2_1_440px] flex-col gap-5 rounded-[18px] border border-line bg-white p-5">
-        <h2 id="h-time" className="text-lg font-extrabold">2. {p.bookingMode === "staff" ? `${p.staffTerm} ба цаг` : "Цаг"}</h2>
+        <h2 id="h-time" className="text-lg font-bold">2. {p.bookingMode === "staff" ? `${p.staffTerm} ба цаг` : "Цаг"}</h2>
 
         {p.bookingMode === "staff" && staffList.length > 1 && (
           <div className="flex flex-col gap-2.5">
@@ -170,7 +170,7 @@ export function BookingFlow(p: BookingFlowProps) {
               <button key={d.date} onClick={() => setDate(d.date)} aria-pressed={d.date === date} aria-label={d.date}
                 className={`flex min-h-[72px] w-16 flex-none flex-col items-center justify-center rounded-card border-[1.5px] ${chip(d.date === date)}`}>
                 <span className="text-xs font-bold">{d.wd}</span>
-                <span className="text-xl font-extrabold">{d.num}</span>
+                <span className="text-xl font-bold">{d.num}</span>
                 <span className="text-[11px] font-semibold">{d.sub}</span>
               </button>
             ))}
@@ -200,7 +200,7 @@ export function BookingFlow(p: BookingFlowProps) {
 
       {/* 3. Баталгаажуулах */}
       <aside aria-labelledby="h-sum" className="flex min-w-0 flex-[1_1_280px] flex-col gap-4 rounded-[18px] border border-line bg-white p-5">
-        <h2 id="h-sum" className="text-lg font-extrabold">3. Баталгаажуулах</h2>
+        <h2 id="h-sum" className="text-lg font-bold">3. Баталгаажуулах</h2>
         <dl className="flex flex-col gap-2.5 rounded-xl bg-ground p-3.5 text-sm">
           <Row k="Үйлчилгээ" v={service ? `${service.name} (${service.duration})` : "—"} />
           {p.bookingMode === "staff" && <Row k={p.staffTerm} v={staffName ?? "—"} />}
@@ -221,7 +221,7 @@ export function BookingFlow(p: BookingFlowProps) {
           <>
             {verification?.state === "expired" && <ExpiredNotice />}
             <button onClick={submit} disabled={startMin == null || pending || pv.starting || !name || !phone}
-              className="min-h-13 rounded-card bg-brand py-3.5 text-base font-extrabold text-ink disabled:cursor-not-allowed disabled:opacity-50">
+              className="min-h-13 rounded-card bg-brand py-3.5 text-base font-bold text-ink disabled:cursor-not-allowed disabled:opacity-50">
               {pending || pv.starting ? "Түр хүлээнэ үү…" : "Цаг захиалах"}
             </button>
           </>
@@ -244,7 +244,7 @@ function Field(p: { id: string; label: string; value: string; onChange: (v: stri
       <label htmlFor={p.id} className="text-[13px] font-bold">{p.label}</label>
       <input id={p.id} type={p.type ?? "text"} value={p.value} onChange={(e) => p.onChange(e.target.value)} placeholder={p.placeholder}
         inputMode={p.type === "tel" ? "numeric" : undefined}
-        className="min-h-12 rounded-xl border-[1.5px] border-[#d6d3cc] bg-white px-3.5 text-[15px] outline-none focus:border-ink" />
+        className="min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3.5 text-[15px] outline-none focus:border-ink" />
       {p.hint && <span className="text-xs text-muted">{p.hint}</span>}
     </div>
   );

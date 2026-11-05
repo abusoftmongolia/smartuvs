@@ -77,14 +77,14 @@ export function PhoneVerifyPanel({ v, onCancel }: { v: Verification; onCancel: (
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border-2 border-brand bg-brand-tint p-4">
-      <p className="text-[15px] font-extrabold">Утсаа баталгаажуулна уу</p>
+      <p className="text-[15px] font-bold">Утсаа баталгаажуулна уу</p>
       <p className="text-sm">
         Өөрийн <b>{v.phone}</b> дугаараас <b>{v.shortcode}</b> руу доорх кодыг SMS-ээр илгээнэ үү:
       </p>
-      <p className="text-center text-3xl font-extrabold tracking-[0.2em]" aria-label={`Код ${v.code.split("").join(" ")}`}>
+      <p className="text-center text-3xl font-bold tracking-[0.2em]" aria-label={`Код ${v.code.split("").join(" ")}`}>
         {v.code}
       </p>
-      <a href={v.smsUri} className="flex min-h-12 items-center justify-center rounded-card bg-brand text-base font-extrabold text-ink">
+      <a href={v.smsUri} className="flex min-h-12 items-center justify-center rounded-card bg-brand text-base font-bold text-ink">
         SMS бичих
       </a>
       <p className="text-xs text-muted">

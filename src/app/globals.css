@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
-/* SmartUvs брэнд өнгө — логоны хар, шар. Canvas загвартай ижил. */
+/* SmartUvs брэнд — логоны шар + uvsmarket.mn-тэй ижил саарал өнгө, Inter фонт (нэг платформ) */
 @theme {
   --color-brand: #f5a800;        /* шар — үндсэн товч, сонгосон төлөв */
   --color-brand-tint: #fff4d6;   /* сонгосон картын дэвсгэр */
   --color-brand-deep: #8a5a00;   /* шар өнгөтэй холбоос, цагаан дээр уншигдана */
-  --color-ink: #111111;          /* хар — бичиг, шар товч дээрх бичиг */
-  --color-muted: #5c6370;        /* туслах бичиг (цагаан дээр 6:1) */
-  --color-line: #e4e2dd;
-  --color-ground: #f6f5f2;       /* хуудасны дэвсгэр */
+  --color-ink: #0b0b0b;          /* хар — бичиг, шар товч дээрх бичиг */
+  --color-muted: #555555;        /* туслах бичиг (цагаан дээр 7:1) */
+  --color-line: #e4e4e4;
+  --color-ground: #f2f2f2;       /* дотор дүүргэлт (хуудасны дэвсгэр #fcfcfc) */
   --color-pending: #2563eb;      /* батлах хүлээж буй (календарь) */
   --color-danger: #dc2626;
-  --font-sans: "Manrope Variable", system-ui, sans-serif;
-  --radius-card: 14px;
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --radius-card: 0.75rem;
 }
 
 html, body {
-  background: var(--color-ground);
+  background: #fcfcfc;
   color: var(--color-ink);
 }
 
