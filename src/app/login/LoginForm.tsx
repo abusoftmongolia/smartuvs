@@ -19,6 +19,7 @@ export function LoginForm({ next, scope = "tenant" }: { next?: string; scope?: "
         start(async () => {
           const r = await login({ phone, password, next, scope });
           if (r && !r.ok) setError(r.message);
+          else if (r?.ok) window.location.assign(r.to);
         });
       }}
     >

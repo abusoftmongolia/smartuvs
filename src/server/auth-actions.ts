@@ -19,7 +19,7 @@ const MAX_FAILS = 5;
 /** Хэрэглэгч байхгүй үед ч ижил хугацаа зарцуулж, дугаар бүртгэлтэй эсэхийг задруулахгүй */
 const DUMMY_HASH = "scrypt$16384$8$1$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
-export type AuthResult = { ok: false; message: string } | undefined;
+export type AuthResult = { ok: false; message: string } | { ok: true; to: string } | undefined;
 
 const LoginInput = z.object({
   phone: z.string().max(32),
@@ -52,7 +52,10 @@ export async function login(raw: unknown): Promise<AuthResult> {
 
   await startSession(user.id);
   await recordEvent({ action: "login", entity: "user", key: user.id, actorId: user.id });
-  redirect(parsed.data.scope === "admin" ? "/" : await afterLoginPath(user.id, parsed.data.next));
+  // admin.smartuvs.mn: middleware rewrite-тэй хост дээр серверийн redirect нь өөр рүүгээ fetch хийж
+  // унадаг ("failed to get redirect response") тул хөтөч өөрөө шилжинэ.
+  if (parsed.data.scope === "admin") return { ok: true, to: "/" };
+  redirect(await afterLoginPath(user.id, parsed.data.next));
 }
 
 async function afterLoginPath(userId: string, next?: string) {
@@ -68,9 +71,9 @@ export async function logout() {
 }
 
 /** admin.smartuvs.mn-ээс гарах — админы нэвтрэх хуудас руу буцна */
-export async function logoutAdmin() {
+export async function logoutAdmin(): Promise<{ ok: true; to: string }> {
   await endSession();
-  redirect("/login");
+  return { ok: true, to: "/login" }; // хөтөч шилжинэ (дээрх шалтгаанаар)
 }
 
 const ResetInput = z.object({

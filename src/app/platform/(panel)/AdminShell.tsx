@@ -74,7 +74,7 @@ export function AdminShell(p: { userName: string; pending: number; children: Rea
           <div className="truncate text-sm font-bold">{p.userName}</div>
           <div className="text-xs text-white/60">Супер админ</div>
         </div>
-        <form action={logoutAdmin}>
+        <form action={async () => { const r = await logoutAdmin(); window.location.assign(r.to); }}>
           <button aria-label="Гарах" className="inline-flex size-11 items-center justify-center rounded-xl text-white/80 hover:bg-white/10">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>
           </button>
