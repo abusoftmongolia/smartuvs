@@ -8,7 +8,7 @@ export default async function ResetPage({ searchParams }: { searchParams: Promis
   const { next } = await searchParams;
   return (
     <div className="min-h-dvh">
-      <SiteHeader />
+      <SiteHeader showLogin={false} />
       <main className="mx-auto flex max-w-sm flex-col gap-6 px-4 py-12">
         <div>
           <h1 className="text-3xl font-extrabold">Нууц үг сэргээх</h1>
