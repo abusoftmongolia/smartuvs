@@ -148,7 +148,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
             {v?.state === "pending" && <PhoneVerifyPanel v={v} onCancel={pv.reset} />}
             {v?.state === "expired" && <ExpiredNotice />}
             {pv.error && <ErrorBox>{pv.error}</ErrorBox>}
-            <p className="text-sm text-muted">Бүртгэлтэй юу? <Link href="/login" className="font-semibold text-brand-deep underline">Нэвтрэх</Link></p>
+            <p className="text-sm text-muted">Бүртгэлтэй юу? <Link href="/admin/login" className="font-semibold text-brand-deep underline">Нэвтрэх</Link></p>
           </>
         )}
 

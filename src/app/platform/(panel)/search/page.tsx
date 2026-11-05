@@ -26,7 +26,7 @@ export default async function AdminSearch({ searchParams }: { searchParams: Prom
               ))}
             </ul>
           )}
-          <Link href="/admin" className="font-bold underline">← Тойм</Link>
+          <Link href="/" className="font-bold underline">← Тойм</Link>
         </>
       )}
     </>

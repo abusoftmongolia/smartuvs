@@ -21,7 +21,7 @@ export async function GET(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const s = await platformStats();
   return NextResponse.json(
-    { system: "tsag", url: "https://tsag.smartuvs.mn/admin", generatedAt: new Date().toISOString(), ...s },
+    { system: "tsag", url: "https://admin.smartuvs.mn", generatedAt: new Date().toISOString(), ...s },
     { headers: { "cache-control": "no-store" } },
   );
 }

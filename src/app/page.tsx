@@ -37,7 +37,7 @@ export default async function Home() {
           </p>
           <div className="flex flex-wrap gap-2">
             <Link href="/signup" className="inline-flex min-h-12 items-center rounded-card bg-brand px-5 font-extrabold text-ink">Байгууллагаа бүртгүүлэх</Link>
-            <Link href="/login" className="inline-flex min-h-12 items-center rounded-card border border-line bg-white px-5 font-bold">Ажилтан нэвтрэх</Link>
+            <Link href="/admin/login" className="inline-flex min-h-12 items-center rounded-card border border-line bg-white px-5 font-bold">Байгууллага нэвтрэх</Link>
           </div>
         </section>
       </main>

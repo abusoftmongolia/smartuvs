@@ -55,7 +55,7 @@ export async function tenantAction(raw: unknown): Promise<AdminResult> {
     }
   }
 
-  revalidatePath("/admin", "layout");
+  revalidatePath("/platform", "layout");
   revalidatePath("/");
   revalidatePath(`/${t.slug}`);
   return { ok: true };

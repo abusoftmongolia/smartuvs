@@ -5,6 +5,7 @@ import { isTenantStatus, TENANT_STATUS_MN } from "@/lib/tenant-status";
 import type { listTenantsForAdmin } from "@/db/admin";
 import { fmtDate, maskPhone } from "./fmt";
 import { TenantActions } from "./parts";
+import { TSAG } from "./fmt";
 
 type Row = Awaited<ReturnType<typeof listTenantsForAdmin>>[number];
 
@@ -37,7 +38,7 @@ export function TenantList({ rows }: { rows: Row[] }) {
               <td className="px-5 py-4">
                 <div className="font-extrabold">{t.name}</div>
                 <div className="text-sm text-muted">
-                  {INDUSTRY_PRESETS[t.industry].label} · <Link href={`/${t.slug}`} target="_blank" className="underline">/{t.slug}</Link>
+                  {INDUSTRY_PRESETS[t.industry].label} · <Link href={`${TSAG}/${t.slug}`} target="_blank" className="underline">/{t.slug}</Link>
                   {t.address ? ` · ${t.address}` : ""}
                 </div>
                 {t.services === 0 && <div className="text-xs font-bold text-red-800">Үйлчилгээ бүртгээгүй</div>}
@@ -57,7 +58,7 @@ export function TenantList({ rows }: { rows: Row[] }) {
               <td className="px-5 py-4">
                 <div className="flex flex-col items-end gap-2">
                   <TenantActions id={t.id} name={t.name} status={t.status} />
-                  <Link href={`/dashboard/${t.slug}`} className="inline-flex min-h-11 items-center text-sm font-bold underline">Самбар руу →</Link>
+                  <Link href={`${TSAG}/dashboard/${t.slug}`} className="inline-flex min-h-11 items-center text-sm font-bold underline">Самбар руу →</Link>
                 </div>
               </td>
             </tr>

@@ -8,37 +8,38 @@ import { logoutAdmin } from "@/server/auth-actions";
 type NavItem = { href: string; label: string; badge?: number; soon?: boolean };
 
 export function AdminShell(p: { userName: string; pending: number; children: React.ReactNode }) {
-  const path = usePathname();
+  // admin.smartuvs.mn/tenants → дотооддоо /platform/tenants; аль ч хэлбэрээр ирсэн ижил болгоно
+  const path = usePathname().replace(/^\/platform(?=\/|$)/, "") || "/";
   const router = useRouter();
   const sp = useSearchParams();
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [path]);
 
   const groups: { title?: string; items: NavItem[] }[] = [
-    { items: [{ href: "/admin", label: "Тойм" }] },
+    { items: [{ href: "/", label: "Тойм" }] },
     {
       title: "Удирдлага",
       items: [
-        { href: "/admin/tenants", label: "Байгууллагууд", badge: p.pending },
-        { href: "/admin/users", label: "Хэрэглэгчид" },
-        { href: "/admin/bookings", label: "Захиалгууд" },
+        { href: "/tenants", label: "Байгууллагууд", badge: p.pending },
+        { href: "/users", label: "Хэрэглэгчид" },
+        { href: "/bookings", label: "Захиалгууд" },
         { href: "#", label: "Санал хүсэлт", soon: true },
       ],
     },
     {
       title: "Систем",
       items: [
-        { href: "/admin/systems", label: "Дэд системүүд" },
+        { href: "/systems", label: "Дэд системүүд" },
         { href: "#", label: "Эрх ба үүрэг", soon: true },
         { href: "#", label: "Тохиргоо", soon: true },
       ],
     },
   ];
-  const isActive = (href: string) => (href === "/admin" ? path === "/admin" : path.startsWith(href));
+  const isActive = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
 
   const sidebar = (
     <nav aria-label="Админ цэс" className="flex h-full flex-col gap-6 bg-ink px-4 py-6 text-white">
-      <Link href="/admin" className="flex items-center gap-2 px-2">
+      <Link href="/" className="flex items-center gap-2 px-2">
         <span className="text-[22px] font-extrabold tracking-tight">SmartUVS<span className="text-brand">.MN</span></span>
         <span className="rounded-md bg-brand px-1.5 py-0.5 text-[11px] font-extrabold text-ink">АДМИН</span>
       </Link>
@@ -96,15 +97,15 @@ export function AdminShell(p: { userName: string; pending: number; children: Rea
           <button aria-label="Цэс нээх" onClick={() => setOpen(true)} className="inline-flex size-11 flex-none items-center justify-center rounded-xl border border-line lg:hidden">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
-          <form action="/admin/search" className="relative min-w-0 flex-1 lg:max-w-xl" role="search">
+          <form action="/search" className="relative min-w-0 flex-1 lg:max-w-xl" role="search">
             <label htmlFor="admin-search" className="sr-only">Хайх</label>
             <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
-            <input id="admin-search" name="q" type="search" defaultValue={path === "/admin/search" ? (sp.get("q") ?? "") : ""} placeholder="Байгууллага, хэрэглэгч хайх…"
+            <input id="admin-search" name="q" type="search" defaultValue={path === "/search" ? (sp.get("q") ?? "") : ""} placeholder="Байгууллага, хэрэглэгч хайх…"
               className="min-h-11 w-full rounded-xl border border-line bg-ground pl-10 pr-3 text-[15px] outline-none focus:border-ink" />
           </form>
           <label className="ml-auto hidden items-center gap-2 text-sm font-bold text-muted md:flex">
             Систем
-            <select value={sp.get("system") ?? "all"} onChange={(e) => router.push(e.target.value === "all" ? "/admin" : `/admin?system=${e.target.value}`)}
+            <select value={sp.get("system") ?? "all"} onChange={(e) => router.push(e.target.value === "all" ? "/" : `/?system=${e.target.value}`)}
               className="min-h-11 rounded-xl border border-line bg-white px-3 text-[15px] font-bold text-ink">
               <option value="all">Бүх систем</option>
               <option value="tsag">Цаг захиалга</option>
@@ -112,7 +113,7 @@ export function AdminShell(p: { userName: string; pending: number; children: Rea
               <option value="ajil" disabled>Цагийн ажил (хөгжүүлэлтэд)</option>
             </select>
           </label>
-          <Link href="/admin/tenants?status=pending" aria-label={`Мэдэгдэл: ${p.pending} байгууллага хүлээгдэж буй`}
+          <Link href="/tenants?status=pending" aria-label={`Мэдэгдэл: ${p.pending} байгууллага хүлээгдэж буй`}
             className="relative inline-flex size-11 flex-none items-center justify-center rounded-xl border border-line bg-white">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></svg>
             {p.pending > 0 && <span className="absolute right-2 top-2 size-2.5 rounded-full bg-danger ring-2 ring-white" />}

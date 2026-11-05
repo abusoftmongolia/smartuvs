@@ -27,7 +27,7 @@ export default async function AdminTenants({ searchParams }: { searchParams: Pro
       <div className="flex flex-wrap items-center gap-2">
         {FILTERS.map((f) => {
           const on = status === f.id;
-          const href = `/admin/tenants?${new URLSearchParams({ ...(f.id !== "all" ? { status: f.id } : {}), ...(q ? { q } : {}) })}`;
+          const href = `/tenants?${new URLSearchParams({ ...(f.id !== "all" ? { status: f.id } : {}), ...(q ? { q } : {}) })}`;
           return (
             <Link key={f.id} href={href} aria-current={on ? "page" : undefined}
               className={`inline-flex min-h-11 items-center gap-2 rounded-full border-[1.5px] px-4 text-sm font-bold ${on ? "border-brand bg-brand text-ink" : "border-line bg-white"}`}>
@@ -35,7 +35,7 @@ export default async function AdminTenants({ searchParams }: { searchParams: Pro
             </Link>
           );
         })}
-        <form className="ml-auto flex min-w-60 flex-1 sm:max-w-sm" action="/admin/tenants">
+        <form className="ml-auto flex min-w-60 flex-1 sm:max-w-sm" action="/tenants">
           {status !== "all" && <input type="hidden" name="status" value={status} />}
           <label htmlFor="tq" className="sr-only">Байгууллага хайх</label>
           <input id="tq" name="q" type="search" defaultValue={q} placeholder="Нэр, хаяг…"

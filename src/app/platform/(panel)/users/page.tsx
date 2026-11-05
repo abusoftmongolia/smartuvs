@@ -11,7 +11,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
           <h1 className="text-3xl font-extrabold tracking-tight">Хэрэглэгчид</h1>
           <p className="mt-1 text-[15px] text-muted">Байгууллагын эзэмшигч, ажилтнууд · {users.length}</p>
         </div>
-        <form action="/admin/users" className="flex min-w-60 flex-1 sm:max-w-sm">
+        <form action="/users" className="flex min-w-60 flex-1 sm:max-w-sm">
           <label htmlFor="uq" className="sr-only">Хэрэглэгч хайх</label>
           <input id="uq" name="q" type="search" defaultValue={q} placeholder="Нэр эсвэл утас…"
             className="min-h-11 w-full rounded-xl border-[1.5px] border-line bg-white px-3 text-[15px]" />

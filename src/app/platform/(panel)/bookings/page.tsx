@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listRecentBookingsForAdmin } from "@/db/admin";
 import { formatDayMn, formatHm, todayIn, utcToLocalMinute } from "@/lib/time";
 import { fmtDateTime } from "../fmt";
+import { TSAG } from "../fmt";
 
 const STATUS: Record<string, string> = {
   pending: "Хүлээгдэж буй", confirmed: "Баталгаажсан", checked_in: "Ирсэн",
@@ -27,7 +28,7 @@ export default async function AdminBookings() {
               const d = todayIn(b.timezone, b.startsAt);
               return (
                 <tr key={b.id} className="border-b border-line last:border-b-0">
-                  <td className="px-5 py-4"><Link href={`/dashboard/${b.tenantSlug}?date=${d}`} className="font-bold underline">{b.tenantName}</Link></td>
+                  <td className="px-5 py-4"><Link href={`${TSAG}/dashboard/${b.tenantSlug}?date=${d}`} className="font-bold underline">{b.tenantName}</Link></td>
                   <td className="px-3 py-4">{b.serviceName}<div className="text-sm text-muted">{b.customerName} · {b.source === "online" ? "онлайн" : "гараар"}</div></td>
                   <td className="px-3 py-4 tabular-nums">{formatDayMn(d)} {formatHm(utcToLocalMinute(b.startsAt, b.timezone))}</td>
                   <td className="px-3 py-4">{STATUS[b.status] ?? b.status}</td>

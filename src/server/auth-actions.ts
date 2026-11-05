@@ -4,7 +4,6 @@ import { z } from "zod";
 import {
   countRecentEvents,
   deleteUserSessions,
-  getUserById,
   getUserByPhone,
   listUserTenants,
   recordEvent,
@@ -26,7 +25,7 @@ const LoginInput = z.object({
   phone: z.string().max(32),
   password: z.string().min(1, "Нууц үгээ оруулна уу").max(128),
   next: z.string().max(200).optional(),
-  /** "admin" = /admin/login: зөвхөн super admin нэвтэрч, шууд /admin руу орно */
+  /** "admin" = admin.smartuvs.mn/login: зөвхөн super admin нэвтэрч, админы нүүр рүү орно */
   scope: z.enum(["tenant", "admin"]).default("tenant"),
 });
 
@@ -53,28 +52,25 @@ export async function login(raw: unknown): Promise<AuthResult> {
 
   await startSession(user.id);
   await recordEvent({ action: "login", entity: "user", key: user.id, actorId: user.id });
-  redirect(parsed.data.scope === "admin" ? "/admin" : await afterLoginPath(user.id, parsed.data.next));
+  redirect(parsed.data.scope === "admin" ? "/" : await afterLoginPath(user.id, parsed.data.next));
 }
 
 async function afterLoginPath(userId: string, next?: string) {
   // Зөвхөн дотоод зам руу (open redirect-ээс сэргийлнэ)
-  if (next && /^\/admin(\/[a-z0-9-]+)*\/?$/.test(next) && (await getUserById(userId))?.isSuperAdmin) return next;
   if (next && /^\/dashboard(\/[a-z0-9-]+)*\/?$/.test(next)) return next;
   const list = await listUserTenants(userId);
-  if (list.length === 1) return `/dashboard/${list[0].slug}`;
-  const user = await getUserById(userId);
-  return list.length === 0 && user?.isSuperAdmin ? "/admin" : "/dashboard";
+  return list.length === 1 ? `/dashboard/${list[0].slug}` : "/dashboard";
 }
 
 export async function logout() {
   await endSession();
-  redirect("/login");
+  redirect("/admin/login");
 }
 
-/** Админ хэсгээс гарах — админы нэвтрэх хуудас руу буцна */
+/** admin.smartuvs.mn-ээс гарах — админы нэвтрэх хуудас руу буцна */
 export async function logoutAdmin() {
   await endSession();
-  redirect("/admin/login");
+  redirect("/login");
 }
 
 const ResetInput = z.object({

@@ -49,7 +49,7 @@ export const currentUser = cache(async () => {
 
 export async function requireUser() {
   const user = await currentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/admin/login");
   return user;
 }
 
@@ -92,7 +92,7 @@ export async function memberOrNull(slug: string, minRole: Role = "staff") {
 /** SmartUvs super admin. Эрхгүй бол 404 (админ хэсэг байгааг ч задруулахгүй). */
 export async function requireSuperAdmin() {
   const user = await currentUser();
-  if (!user) redirect("/admin/login");
+  if (!user) redirect("/login"); // admin.smartuvs.mn/login (middleware → /platform/login)
   if (!user.isSuperAdmin) notFound();
   return user;
 }

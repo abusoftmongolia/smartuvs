@@ -72,7 +72,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
               Баталгаажуулах байгууллага
               {pending.length > 0 && <span className="flex min-w-7 items-center justify-center rounded-full bg-brand px-2 text-sm font-extrabold text-ink">{pending.length}</span>}
             </h2>
-            <Link href="/admin/tenants?status=pending" className="inline-flex min-h-11 items-center font-bold underline">Бүгдийг харах</Link>
+            <Link href="/tenants?status=pending" className="inline-flex min-h-11 items-center font-bold underline">Бүгдийг харах</Link>
           </div>
           {pending.length === 0 ? (
             <p className="rounded-2xl bg-ground p-5 text-muted">Хүлээгдэж буй бүртгэл алга. ✓</p>

@@ -20,3 +20,6 @@ export function ago(x: Date, now = Date.now()): string {
   const days = Math.round(h / 24);
   return days < 30 ? `${days} өдрийн өмнө` : fmtDate(x);
 }
+
+/** tsag (байгууллагын хэсэг)-ийн бүтэн хаяг — админ хост дээрээс тийш холбоно */
+export const TSAG = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://tsag.smartuvs.mn").replace(/\/$/, "");
