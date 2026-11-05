@@ -28,7 +28,7 @@ const BookingInput = z.object({
 });
 
 export type BookingResult =
-  | { ok: true; bookingId: string; status: "pending" | "confirmed"; day: string; time: string }
+  | { ok: true; bookingId: string; status: "pending" | "confirmed"; day: string; time: string; managePath: string }
   | { ok: false; reason: "invalid" | "unverified" | "not_found" | "slot_taken" | "error"; message: string };
 
 export async function createBooking(raw: unknown): Promise<BookingResult> {
@@ -73,7 +73,8 @@ export async function createBooking(raw: unknown): Promise<BookingResult> {
     if (!b) return { ok: false, reason: "slot_taken", message: SLOT_TAKEN_MESSAGE };
     await notifyCustomer(tenant, b, phone, status);
     const { day, time } = bookingWhen(tenant, b.startsAt);
-    return { ok: true, bookingId: b.id, status, day, time };
+    // Захиалагч өөрийнх нь захиалгын холбоос — цуцлах, шилжүүлэх, календарьт нэмэх
+    return { ok: true, bookingId: b.id, status, day, time, managePath: `/manage/${b.manageToken}` };
   } catch (err) {
     console.error("createBooking", err);
     return { ok: false, reason: "error", message: "Алдаа гарлаа. Дахин оролдоно уу." };

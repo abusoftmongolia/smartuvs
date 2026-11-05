@@ -469,3 +469,31 @@ export async function insertTimeOff(p: typeof timeOff.$inferInsert) {
 export async function deleteTimeOff(tenantId: string, id: string) {
   await db().delete(timeOff).where(and(eq(timeOff.id, id), eq(timeOff.tenantId, tenantId)));
 }
+
+// ── Үйлчлүүлэгчийн /manage/<token> ─────────────────────────────────────────
+
+/**
+ * Нууц токеноор захиалга (SMS-ийн холбоосоор). Токен нь 18 байт санамсаргүй тул
+ * tenant-ыг токеноос тодорхойлно; цаашдын query бүр энэ tenant.id-аар шүүгдэнэ.
+ */
+export async function getBookingByManageToken(token: string) {
+  const [row] = await db()
+    .select({
+      booking: bookings,
+      tenant: tenants,
+      serviceName: services.name,
+      durationMin: services.durationMin,
+      customerName: customers.name,
+      staffName: staff.name,
+      resourceName: resources.name,
+    })
+    .from(bookings)
+    .innerJoin(tenants, eq(tenants.id, bookings.tenantId))
+    .innerJoin(services, eq(services.id, bookings.serviceId))
+    .innerJoin(customers, eq(customers.id, bookings.customerId))
+    .leftJoin(staff, eq(staff.id, bookings.staffId))
+    .leftJoin(resources, eq(resources.id, bookings.resourceId))
+    .where(eq(bookings.manageToken, token))
+    .limit(1);
+  return row ?? null;
+}

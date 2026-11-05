@@ -111,7 +111,15 @@ export function BookingFlow(p: BookingFlowProps) {
         <p className="text-[13px] text-muted">
           {result.status === "confirmed" ? "Дэлгэрэнгүйг SMS-ээр илгээлээ. 24 цагийн өмнө сануулна." : "Ажилтан батлахад SMS ирнэ."}
         </p>
-        <button onClick={() => { setResult(null); setStartMin(null); }} className="mt-2 min-h-12 rounded-xl border border-line px-5 text-sm font-bold">
+        <div className="mt-2 flex w-full flex-col gap-2">
+          <a href={`${result.managePath}/ics`} className="flex min-h-12 items-center justify-center rounded-card bg-brand font-extrabold text-ink">
+            📅 Календарьт нэмэх
+          </a>
+          <a href={result.managePath} className="flex min-h-12 items-center justify-center rounded-xl border border-line text-sm font-bold">
+            Захиалгаа харах · шилжүүлэх · цуцлах
+          </a>
+        </div>
+        <button onClick={() => { setResult(null); setStartMin(null); }} className="min-h-12 rounded-xl px-5 text-sm font-bold text-brand-deep underline">
           Өөр цаг захиалах
         </button>
       </section>
