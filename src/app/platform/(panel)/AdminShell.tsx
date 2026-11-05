@@ -1,5 +1,6 @@
 "use client";
 /** Super Admin хүрээ: хар sidebar (утсанд цэсээр нээгдэнэ) + хайлт, систем сонголт, мэдэгдэл. */
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -40,7 +41,8 @@ export function AdminShell(p: { userName: string; pending: number; children: Rea
   const sidebar = (
     <nav aria-label="Админ цэс" className="flex h-full flex-col gap-6 bg-ink px-4 py-6 text-white">
       <Link href="/" className="flex items-center gap-2 px-2">
-        <span className="text-[22px] font-extrabold tracking-tight">SmartUVS<span className="text-brand">.MN</span></span>
+        {/* Лого хар-шар тул хар sidebar дээр цагаан хавтан дотор */}
+        <span className="rounded-lg bg-white px-2.5 py-2"><Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={1200} height={175} className="h-5 w-auto" priority /></span>
         <span className="rounded-md bg-brand px-1.5 py-0.5 text-[11px] font-extrabold text-ink">АДМИН</span>
       </Link>
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto">
