@@ -28,9 +28,15 @@ export function LoginForm({ next, scope = "tenant" }: { next?: string; scope?: "
       {error && <ErrorBox>{error}</ErrorBox>}
       <button type="submit" disabled={pending} className={btnPrimary}>{pending ? "Түр хүлээнэ үү…" : "Нэвтрэх"}</button>
       <div className="flex flex-wrap justify-between gap-2 text-sm">
-        <Link href={scope === "admin" ? "/login/reset?next=/admin" : "/login/reset"} className="inline-flex min-h-11 items-center font-semibold text-brand-deep underline">
-          Нууц үгээ мартсан
-        </Link>
+        {scope === "admin" ? (
+          // admin.smartuvs.mn дээр сэргээх хуудас байхгүй — tsag дээр сэргээгээд энд буцаж нэвтэрнэ
+          <a href={`${(process.env.NEXT_PUBLIC_SITE_URL ?? "https://tsag.smartuvs.mn").replace(/\/$/, "")}/login/reset`}
+            className="inline-flex min-h-11 items-center font-semibold text-brand-deep underline">
+            Нууц үгээ мартсан
+          </a>
+        ) : (
+          <Link href="/login/reset" className="inline-flex min-h-11 items-center font-semibold text-brand-deep underline">Нууц үгээ мартсан</Link>
+        )}
         {scope === "tenant" && <Link href="/signup" className="inline-flex min-h-11 items-center font-semibold text-brand-deep underline">Бүртгүүлэх</Link>}
       </div>
     </form>
