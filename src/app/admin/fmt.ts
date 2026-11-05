@@ -1,8 +1,12 @@
 /** Админы харагдах цаг — Улаанбаатарын цагаар */
-const dt = new Intl.DateTimeFormat("mn-MN", { timeZone: "Asia/Ulaanbaatar", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+// "mn-MN" locale сарыг Ром тоогоор (XI) гаргадаг тул хэсгүүдээр нь угсарна: "11/05 17:46"
+const dt = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Ulaanbaatar", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const d = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ulaanbaatar", year: "numeric", month: "2-digit", day: "2-digit" });
 
-export const fmtDateTime = (x: Date) => dt.format(x);
+export function fmtDateTime(x: Date): string {
+  const p = Object.fromEntries(dt.formatToParts(x).map((q) => [q.type, q.value]));
+  return `${p.month}/${p.day} ${p.hour}:${p.minute}`;
+}
 export const fmtDate = (x: Date) => d.format(x);
 export const maskPhone = (p: string | null) => (p ? `${p.slice(0, 2)}****${p.slice(-2)}` : "—");
 
