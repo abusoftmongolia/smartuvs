@@ -4,7 +4,8 @@ import { ResetForm } from "./ResetForm";
 
 export const metadata: Metadata = { title: "Нууц үг сэргээх", robots: { index: false } };
 
-export default function ResetPage() {
+export default async function ResetPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const { next } = await searchParams;
   return (
     <div className="min-h-dvh">
       <SiteHeader />
@@ -13,7 +14,7 @@ export default function ResetPage() {
           <h1 className="text-3xl font-extrabold">Нууц үг сэргээх</h1>
           <p className="mt-1 text-[15px] text-muted">Утасны дугаараа SMS-ээр баталгаажуулаад шинэ нууц үг тохируулна.</p>
         </div>
-        <ResetForm />
+        <ResetForm next={next} />
       </main>
     </div>
   );

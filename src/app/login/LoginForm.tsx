@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { ErrorBox, Field, btnPrimary } from "@/components/ui";
 import { login } from "@/server/auth-actions";
 
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({ next, scope = "tenant" }: { next?: string; scope?: "tenant" | "admin" }) {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +17,7 @@ export function LoginForm({ next }: { next?: string }) {
         e.preventDefault();
         setError(null);
         start(async () => {
-          const r = await login({ phone, password, next });
+          const r = await login({ phone, password, next, scope });
           if (r && !r.ok) setError(r.message);
         });
       }}
@@ -27,8 +27,10 @@ export function LoginForm({ next }: { next?: string }) {
       {error && <ErrorBox>{error}</ErrorBox>}
       <button type="submit" disabled={pending} className={btnPrimary}>{pending ? "Түр хүлээнэ үү…" : "Нэвтрэх"}</button>
       <div className="flex flex-wrap justify-between gap-2 text-sm">
-        <Link href="/login/reset" className="inline-flex min-h-11 items-center font-semibold text-brand-deep underline">Нууц үгээ мартсан</Link>
-        <Link href="/signup" className="inline-flex min-h-11 items-center font-semibold text-brand-deep underline">Бүртгүүлэх</Link>
+        <Link href={scope === "admin" ? "/login/reset?next=/admin" : "/login/reset"} className="inline-flex min-h-11 items-center font-semibold text-brand-deep underline">
+          Нууц үгээ мартсан
+        </Link>
+        {scope === "tenant" && <Link href="/signup" className="inline-flex min-h-11 items-center font-semibold text-brand-deep underline">Бүртгүүлэх</Link>}
       </div>
     </form>
   );

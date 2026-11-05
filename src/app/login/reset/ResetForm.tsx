@@ -5,7 +5,7 @@ import { ErrorBox, Field, btnPrimary } from "@/components/ui";
 import { PASSWORD_MIN } from "@/lib/password-rules";
 import { resetPassword } from "@/server/auth-actions";
 
-export function ResetForm() {
+export function ResetForm({ next }: { next?: string }) {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +13,7 @@ export function ResetForm() {
 
   function save(verifyToken: string) {
     start(async () => {
-      const r = await resetPassword({ phone, password, verifyToken });
+      const r = await resetPassword({ phone, password, verifyToken, next });
       if (r && !r.ok) setError(r.message);
     });
   }

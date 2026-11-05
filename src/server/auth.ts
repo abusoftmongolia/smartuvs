@@ -92,7 +92,7 @@ export async function memberOrNull(slug: string, minRole: Role = "staff") {
 /** SmartUvs super admin. Эрхгүй бол 404 (админ хэсэг байгааг ч задруулахгүй). */
 export async function requireSuperAdmin() {
   const user = await currentUser();
-  if (!user) redirect("/login?next=/admin");
+  if (!user) redirect("/admin/login");
   if (!user.isSuperAdmin) notFound();
   return user;
 }
