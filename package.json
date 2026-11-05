@@ -13,6 +13,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:constraints": "tsx scripts/apply-sql.ts drizzle/custom/booking_constraints.sql",
     "db:seed": "tsx scripts/seed.ts",
+    "admin:grant": "tsx scripts/make-super-admin.ts",
     "db:setup": "npm run db:migrate && npm run db:constraints && npm run db:seed"
   },
   "dependencies": {

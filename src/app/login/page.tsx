@@ -7,8 +7,9 @@ import { LoginForm } from "./LoginForm";
 export const metadata: Metadata = { title: "Нэвтрэх", robots: { index: false } };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  if (await currentUser()) redirect("/dashboard");
   const { next } = await searchParams;
+  const user = await currentUser();
+  if (user) redirect(user.isSuperAdmin && next?.startsWith("/admin") ? "/admin" : "/dashboard");
   return (
     <div className="min-h-dvh">
       <SiteHeader />

@@ -14,6 +14,11 @@ export async function getUserByPhone(phone: string) {
   return u ?? null;
 }
 
+export async function getUserById(id: string) {
+  const [u] = await db().select().from(users).where(eq(users.id, id)).limit(1);
+  return u ?? null;
+}
+
 export async function insertSession(p: { id: string; userId: string; expiresAt: Date }) {
   await db().insert(sessions).values(p);
 }

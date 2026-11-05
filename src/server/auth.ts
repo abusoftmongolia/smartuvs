@@ -4,8 +4,9 @@ import "server-only";
  * Хуудас, action бүр requireUser / requireMember-ээр эрхээ шалгана.
  */
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
+import { getTenantBySlugAnyStatus } from "@/db/admin";
 import { deleteSession, getMembershipBySlug, getSessionUser, insertSession, type Role } from "@/db/users";
 import { hashSessionToken, newSessionToken, phoneKey, SESSION_COOKIE, SESSION_TTL_MS } from "@/lib/session-token";
 
@@ -55,12 +56,26 @@ export async function requireUser() {
 const RANK: Record<Role, number> = { staff: 1, manager: 2, owner: 3 };
 
 /**
+ * Хэрэглэгчийн энэ байгууллага дахь эрх. Super admin бүх байгууллагад "owner" эрхтэй
+ * (тусламж үзүүлэхэд); үйлдэл бүр audit_logs-д түүний нэрээр бичигдэнэ.
+ */
+async function resolveMembership(user: { id: string; isSuperAdmin: boolean }, slug: string) {
+  const m = await getMembershipBySlug(user.id, slug);
+  if (m) return m;
+  if (user.isSuperAdmin) {
+    const tenant = await getTenantBySlugAnyStatus(slug);
+    if (tenant) return { tenant, role: "owner" as Role };
+  }
+  return null;
+}
+
+/**
  * Байгууллагын самбарт хандах эрх. Гишүүн биш бол 404 мэт /dashboard руу буцаана
  * (өөр байгууллага байгаа эсэхийг ч задруулахгүй).
  */
 export const requireMember = cache(async (slug: string, minRole: Role = "staff") => {
   const user = await requireUser();
-  const m = await getMembershipBySlug(user.id, slug);
+  const m = await resolveMembership(user, slug);
   if (!m || RANK[m.role] < RANK[minRole]) redirect("/dashboard");
   return { user, tenant: m.tenant, role: m.role };
 });
@@ -69,7 +84,20 @@ export const requireMember = cache(async (slug: string, minRole: Role = "staff")
 export async function memberOrNull(slug: string, minRole: Role = "staff") {
   const user = await currentUser();
   if (!user) return null;
-  const m = await getMembershipBySlug(user.id, slug);
+  const m = await resolveMembership(user, slug);
   if (!m || RANK[m.role] < RANK[minRole]) return null;
   return { user, tenant: m.tenant, role: m.role };
+}
+
+/** SmartUvs super admin. Эрхгүй бол 404 (админ хэсэг байгааг ч задруулахгүй). */
+export async function requireSuperAdmin() {
+  const user = await currentUser();
+  if (!user) redirect("/login?next=/admin");
+  if (!user.isSuperAdmin) notFound();
+  return user;
+}
+
+export async function superAdminOrNull() {
+  const user = await currentUser();
+  return user?.isSuperAdmin ? user : null;
 }

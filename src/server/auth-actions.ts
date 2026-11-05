@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   countRecentEvents,
   deleteUserSessions,
+  getUserById,
   getUserByPhone,
   listUserTenants,
   recordEvent,
@@ -52,9 +53,11 @@ export async function login(raw: unknown): Promise<AuthResult> {
 
 async function afterLoginPath(userId: string, next?: string) {
   // Зөвхөн дотоод зам руу (open redirect-ээс сэргийлнэ)
-  if (next && /^\/dashboard(\/[a-z0-9-]+)*\/?$/.test(next)) return next;
+  if (next && /^\/(dashboard|admin)(\/[a-z0-9-]+)*\/?$/.test(next)) return next;
   const list = await listUserTenants(userId);
-  return list.length === 1 ? `/dashboard/${list[0].slug}` : "/dashboard";
+  if (list.length === 1) return `/dashboard/${list[0].slug}`;
+  const user = await getUserById(userId);
+  return list.length === 0 && user?.isSuperAdmin ? "/admin" : "/dashboard";
 }
 
 export async function logout() {
