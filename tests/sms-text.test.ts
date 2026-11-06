@@ -23,3 +23,18 @@ describe("салбарын preset", () => {
   });
   it("'Бусад' хамгийн сүүлд", () => expect(INDUSTRY_IDS.at(-1)).toBe("other"));
 });
+
+import { addMonths, daysOfMonth, formatDayMn, formatMonthMn } from "@/lib/time";
+
+describe("огноо — Он.Сар.Өдөр", () => {
+  it("formatDayMn", () => expect(formatDayMn("2026-11-06")).toBe("2026.11.06, Баасан"));
+  it("formatMonthMn", () => expect(formatMonthMn("2026-01")).toBe("2026 оны 1-р сар"));
+  it("сарын өдрүүд (өндөр жил)", () => {
+    expect(daysOfMonth("2028-02")).toHaveLength(29);
+    expect(daysOfMonth("2026-11").at(-1)).toBe("2026-11-30");
+  });
+  it("сар нэмэх, оны заагаар", () => {
+    expect(addMonths("2026-12", 1)).toBe("2027-01");
+    expect(addMonths("2026-01", -1)).toBe("2025-12");
+  });
+});

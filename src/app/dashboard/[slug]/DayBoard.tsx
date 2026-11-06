@@ -128,9 +128,7 @@ export function DayBoard(p: Props) {
           <button className={btnSecondary} onClick={() => go(shiftDate(p.date, -1))} aria-label="Өмнөх өдөр">‹</button>
           {p.date !== p.today && <button className={btnSecondary} onClick={() => go(p.today)}>Өнөөдөр</button>}
           <button className={btnSecondary} onClick={() => go(shiftDate(p.date, 1))} aria-label="Дараагийн өдөр">›</button>
-          <label className="sr-only" htmlFor="pick-date">Өдөр сонгох</label>
-          <input id="pick-date" type="date" value={p.date} onChange={(e) => e.target.value && go(e.target.value)}
-            className="min-h-11 rounded-xl border border-line bg-white px-3 text-sm font-semibold" />
+          <DatePickButton date={p.date} onPick={go} />
           <button className={btnPrimary} onClick={() => setCreating(true)}>+ Захиалга</button>
         </div>
 
@@ -195,6 +193,26 @@ export function DayBoard(p: Props) {
       )}
       {creating && <NewBookingDialog {...p} onClose={() => setCreating(false)} />}
     </>
+  );
+}
+
+/**
+ * Огноо сонгох: хөтчийн date input нь OS-ийн locale-аар (06/11/2026) харуулдаг тул
+ * товч дээр Он.Сар.Өдөр (2026.11.06) бичиж, дарахад хөтчийн сонгогчийг нээнэ.
+ */
+function DatePickButton({ date, onPick }: { date: string; onPick: (d: string) => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  return (
+    <span className="relative">
+      <button type="button" className={`${btnSecondary} gap-2 tabular-nums`} aria-label={`Өдөр сонгох, одоо ${date.replaceAll("-", ".")}`}
+        onClick={() => { const el = ref.current; if (!el) return; try { el.showPicker(); } catch { el.focus(); el.click(); } }}>
+        <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5" /><path d="M8 3v4M16 3v4M3 10h18" /></svg>
+        {date.replaceAll("-", ".")}
+      </button>
+      <input ref={ref} type="date" value={date} tabIndex={-1} aria-hidden
+        onChange={(e) => e.target.value && onPick(e.target.value)}
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-0 w-full opacity-0" />
+    </span>
   );
 }
 

@@ -1,13 +1,13 @@
 /** Админы харагдах цаг — Улаанбаатарын цагаар */
-// "mn-MN" locale сарыг Ром тоогоор (XI) гаргадаг тул хэсгүүдээр нь угсарна: "11/05 17:46"
-const dt = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Ulaanbaatar", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+// "mn-MN" locale сарыг Ром тоогоор (XI) гаргадаг тул хэсгүүдээр нь угсарна: "2026.11.05 17:46" (Он.Сар.Өдөр)
+const dt = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Ulaanbaatar", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const d = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ulaanbaatar", year: "numeric", month: "2-digit", day: "2-digit" });
 
 export function fmtDateTime(x: Date): string {
   const p = Object.fromEntries(dt.formatToParts(x).map((q) => [q.type, q.value]));
-  return `${p.month}/${p.day} ${p.hour}:${p.minute}`;
+  return `${p.year}.${p.month}.${p.day} ${p.hour}:${p.minute}`;
 }
-export const fmtDate = (x: Date) => d.format(x);
+export const fmtDate = (x: Date) => d.format(x).replaceAll("-", ".");
 export const maskPhone = (p: string | null) => (p ? `${p.slice(0, 2)}****${p.slice(-2)}` : "—");
 
 /** "5 мин", "3 цаг", "2 өдөр" өмнө */

@@ -65,9 +65,33 @@ export function weekdayName(date: string, short = false): string {
   return (short ? WEEKDAYS_MN_SHORT : WEEKDAYS_MN)[weekdayOf(date)];
 }
 
-/** "Баасан, 11/06" */
+/** Монгол журам — Он.Сар.Өдөр: "2026-11-06" → "2026.11.06" */
+export function formatDateMn(date: string): string {
+  return `${date.slice(0, 4)}.${date.slice(5, 7)}.${date.slice(8, 10)}`;
+}
+
+/** "2026.11.06, Баасан" */
 export function formatDayMn(date: string): string {
-  return `${weekdayName(date)}, ${date.slice(5, 7)}/${date.slice(8, 10)}`;
+  return `${formatDateMn(date)}, ${weekdayName(date)}`;
+}
+
+/** "2026-11" → "2026 оны 11-р сар" */
+export function formatMonthMn(month: string): string {
+  return `${month.slice(0, 4)} оны ${Number(month.slice(5, 7))}-р сар`;
+}
+
+/** Сарын бүх өдөр ("2026-11" → ["2026-11-01", …, "2026-11-30"]) */
+export function daysOfMonth(month: string): string[] {
+  const [y, m] = month.split("-").map(Number);
+  const n = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return Array.from({ length: n }, (_, i) => `${month}-${String(i + 1).padStart(2, "0")}`);
+}
+
+/** "2026-11" + 1 → "2026-12" */
+export function addMonths(month: string, delta: number): string {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
 /** Үнэ: 25000 → "₮25,000" */
