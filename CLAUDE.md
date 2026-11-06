@@ -29,6 +29,7 @@ npm run db:setup     # migrate + давхардлын constraint + туршил�
 src/app/[slug]/page.tsx        Үйлчлүүлэгчийн захиалгын хуудас (tsag.smartuvs.mn/<slug>)
 src/app/api/[slug]/slots/      Сул цагийн API
 src/components/BookingFlow.tsx Захиалгын 3 алхам (client)
+src/app/dashboard/[slug]/      Байгууллагын самбар: зүүн цэс (DashShell) + хуудсууд — тойм, calendar, pending, history, services, staff, hours, share, settings
 src/server/availability.ts     Өгөгдлийн сангаас уншиж сул цаг тооцно
 src/server/bookings.ts         createBooking server action
 src/lib/slots.ts               Сул цагийн алгоритм — ЦЭВЭР функц, тесттэй

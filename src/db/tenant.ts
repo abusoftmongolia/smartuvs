@@ -2,7 +2,7 @@
  * Tenant-аар шүүсэн query-ууд. Байгууллагын өгөгдлийг ЗӨВХӨН эндээс уншина —
  * ингэснээр нэг байгууллага нөгөөгийнхөө өгөгдлийг санамсаргүй харах эрсдэлгүй.
  */
-import { and, asc, eq, gte, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, isNull, lt, ne, or, sql, type SQL } from "drizzle-orm";
 import { db, schema } from "./index";
 
 const { tenants, services, staff, staffServices, schedules, timeOff, bookings, resources, customers, notifications } = schema;
@@ -587,4 +587,31 @@ export async function listBookingAlertPhones(tenant: { id: string; phone: string
     if (s) phones.add(s.phone);
   }
   return [...phones];
+}
+
+/**
+ * Захиалгын түүх (самбар): кодоор, нэрээр эсвэл утасны дугаараар хайна; хугацаа, төлөвөөр шүүнэ.
+ * Цуцлагдсаныг ч харуулна. Шинээс хуучин руу, дээд тал нь `limit`.
+ */
+export async function listBookingHistory(
+  tenantId: string,
+  f: { code?: string | null; text?: string; digits?: string; status?: (typeof bookings.status.enumValues)[number]; fromUtc?: Date; toUtc?: Date; limit?: number },
+) {
+  const conds: (SQL | undefined)[] = [eq(bookings.tenantId, tenantId)];
+  const search: SQL[] = [];
+  if (f.code) search.push(eq(bookings.code, f.code));
+  if (f.text) search.push(ilike(customers.name, `%${f.text.replace(/[%_\\]/g, (c) => `\\${c}`)}%`));
+  if (f.digits) search.push(ilike(customers.phone, `%${f.digits}%`));
+  if (search.length) conds.push(or(...search));
+  if (f.status) conds.push(eq(bookings.status, f.status));
+  if (f.fromUtc) conds.push(gte(bookings.startsAt, f.fromUtc));
+  if (f.toUtc) conds.push(lt(bookings.startsAt, f.toUtc));
+  return db()
+    .select(bookingView)
+    .from(bookings)
+    .innerJoin(services, eq(services.id, bookings.serviceId))
+    .innerJoin(customers, eq(customers.id, bookings.customerId))
+    .where(and(...conds))
+    .orderBy(desc(bookings.startsAt))
+    .limit(f.limit ?? 100);
 }

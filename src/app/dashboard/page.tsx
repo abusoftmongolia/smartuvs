@@ -1,7 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { listUserTenants } from "@/db/users";
 import { requireUser } from "@/server/auth";
+import { logout } from "@/server/auth-actions";
 
 const ROLE_MN = { owner: "Эзэмшигч", manager: "Менежер", staff: "Ажилтан" } as const;
 
@@ -11,6 +13,14 @@ export default async function DashboardHome() {
   if (list.length === 1) redirect(`/dashboard/${list[0].slug}`);
 
   return (
+    <div className="min-h-dvh bg-[#fcfcfc]">
+    <header className="flex h-14 items-center justify-between gap-3 border-b border-line bg-white px-4">
+      <Link href="/dashboard" aria-label="Самбар"><Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={1200} height={175} className="h-6 w-auto" priority /></Link>
+      <div className="flex items-center gap-2">
+        <span className="hidden text-sm text-muted sm:inline">{user.name}</span>
+        <form action={logout}><button className="inline-flex min-h-10 items-center rounded-lg border border-line px-3.5 text-sm font-medium">Гарах</button></form>
+      </div>
+    </header>
     <main className="mx-auto flex max-w-xl flex-col gap-4 px-4 py-10">
       <h1 className="text-2xl font-bold">Байгууллага сонгох</h1>
       {list.length === 0 ? (
@@ -33,5 +43,6 @@ export default async function DashboardHome() {
         </ul>
       )}
     </main>
+    </div>
   );
 }

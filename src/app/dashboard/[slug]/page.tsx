@@ -1,138 +1,140 @@
 /**
- * Ажилтны самбар — өдрийн календарь (ажилтан/боксоор баганалсан) + батлах хүлээж буй жагсаалт.
- * /dashboard/<slug>?date=YYYY-MM-DD
+ * Хянах самбар — өнөөдрийн тойм: тоон үзүүлэлт, өнөөдрийн хуваарь, батлах хүлээж буй.
+ * /dashboard/<slug>
  */
 import Link from "next/link";
-import {
-  getBookingByCode,
-  listBookingsInRange,
-  listOwners,
-  listPendingBookings,
-  listSchedulesForWeekday,
-  listServices,
-  type BookingView,
-} from "@/db/tenant";
-import { formatBookingCode, normalizeBookingCode } from "@/lib/booking-code";
-import { addDays, formatDayMn, formatHm, localToUtc, todayIn, utcToLocalMinute, weekdayOf } from "@/lib/time";
+import { redirect } from "next/navigation";
+import { listBookingsInRange, listPendingBookings } from "@/db/tenant";
+import { addDays, formatDayMn, formatHm, localToUtc, todayIn, utcToLocalMinute } from "@/lib/time";
 import { requireMember } from "@/server/auth";
-import { DayBoard, type BoardBooking } from "./DayBoard";
+import { PageBody, PageHeader, Panel } from "../PageHeader";
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ date?: string; code?: string }> };
+const STATUS = {
+  pending: { label: "Хүлээгдэж буй", cls: "bg-blue-50 text-blue-800" },
+  confirmed: { label: "Баталгаажсан", cls: "bg-brand-tint text-brand-deep" },
+  checked_in: { label: "Ирсэн", cls: "bg-green-50 text-green-800" },
+  completed: { label: "Дууссан", cls: "bg-ground text-muted" },
+  cancelled: { label: "Цуцлагдсан", cls: "bg-ground text-muted" },
+  no_show: { label: "Ирээгүй", cls: "bg-red-50 text-red-800" },
+} as const;
 
-export default async function TenantDashboard({ params, searchParams }: Props) {
+export default async function Overview({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ date?: string; code?: string }> }) {
   const { slug } = await params;
+  // Хуучин холбоос (/dashboard/<slug>?date=… эсвэл ?code=…) → календарь
+  const sp = await searchParams;
+  if (sp.date || sp.code) redirect(`/dashboard/${slug}/calendar?${new URLSearchParams(Object.entries(sp).filter(([, v]) => typeof v === "string") as [string, string][])}`);
   const { tenant, role } = await requireMember(slug);
   const tz = tenant.timezone;
   const today = todayIn(tz);
-  const sp = await searchParams;
-  // Кодоор хайлт (?code=X4K9M2): олдвол тэр өдрийг нээж, захиалгыг шууд харуулна
-  const codeQuery = sp.code?.slice(0, 20).trim() ?? "";
-  const code = codeQuery ? normalizeBookingCode(codeQuery) : null;
-  const found = code ? await getBookingByCode(tenant.id, code) : null;
-  const q = found ? todayIn(tz, found.startsAt) : sp.date;
-  const date = q && /^\d{4}-\d{2}-\d{2}$/.test(q) ? q : today;
+  const monthStart = `${today.slice(0, 8)}01`;
+  const now = new Date();
 
-  const kind = tenant.bookingMode === "resource" ? "resource" : "staff";
-  const [owners, schedules, dayBookings, pending, services] = await Promise.all([
-    listOwners(tenant.id, kind),
-    listSchedulesForWeekday(tenant.id, weekdayOf(date)),
-    listBookingsInRange(tenant.id, localToUtc(date, 0, tz), localToUtc(addDays(date, 1), 0, tz)),
+  const [todayList, week, month, pending] = await Promise.all([
+    listBookingsInRange(tenant.id, localToUtc(today, 0, tz), localToUtc(addDays(today, 1), 0, tz)),
+    listBookingsInRange(tenant.id, localToUtc(today, 0, tz), localToUtc(addDays(today, 7), 0, tz)),
+    listBookingsInRange(tenant.id, localToUtc(monthStart, 0, tz), now),
     listPendingBookings(tenant.id),
-    listServices(tenant.id),
   ]);
 
-  const toDto = (b: BookingView): BoardBooking => {
-    const bDate = todayIn(tz, b.startsAt);
-    const startMin = utcToLocalMinute(b.startsAt, tz);
-    return {
-      id: b.id,
-      code: b.code,
-      ownerId: (kind === "resource" ? b.resourceId : b.staffId) ?? "",
-      date: bDate,
-      dayLabel: formatDayMn(bDate),
-      startMin,
-      endMin: startMin + b.durationMin,
-      timeLabel: `${formatHm(startMin)}–${formatHm(startMin + b.durationMin)}`,
-      status: b.status,
-      source: b.source,
-      serviceId: b.serviceId,
-      serviceName: b.serviceName,
-      customerName: b.customerName,
-      customerPhone: b.customerPhone,
-      noShowCount: b.noShowCount,
-      answers: Object.entries(b.answers ?? {})
-        .filter(([, v]) => v)
-        .map(([k, v]) => ({ label: tenant.settings.customFields.find((f) => f.key === k)?.label ?? k, value: v })),
-      notes: b.notes,
-    };
-  };
+  // Энэ сард өнгөрсөн захиалгаас ирээгүй хувь
+  const done = month.filter((b) => b.startsAt < now && b.status !== "pending");
+  const noShow = done.filter((b) => b.status === "no_show").length;
+  const noShowPct = done.length ? Math.round((noShow / done.length) * 100) : null;
 
-  // Календарийн цагийн хүрээ: ажлын цаг + захиалгуудыг багтаана
-  const ownerSchedules = schedules.filter((s) => (kind === "resource" ? s.resourceId : s.staffId));
-  const items = dayBookings.map(toDto);
-  const starts = [...ownerSchedules.map((s) => s.startMin), ...items.map((b) => b.startMin)];
-  const ends = [...ownerSchedules.map((s) => s.endMin), ...items.map((b) => b.endMin)];
-  const fromMin = starts.length ? Math.floor(Math.min(...starts) / 60) * 60 : 9 * 60;
-  const toMin = ends.length ? Math.min(1440, Math.ceil(Math.max(...ends) / 60) * 60) : 18 * 60;
+  const base = `/dashboard/${slug}`;
+  const canManage = role === "owner" || role === "manager";
+  const stats = [
+    { label: "Өнөөдөр", value: String(todayList.length), sub: "захиалга", href: `${base}/calendar` },
+    { label: "Хүлээгдэж буй", value: String(pending.length), sub: "батлах шаардлагатай", href: `${base}/pending`, alert: pending.length > 0 },
+    { label: "Ирэх 7 хоног", value: String(week.length), sub: "захиалга", href: `${base}/calendar` },
+    { label: "Ирээгүй (энэ сар)", value: noShowPct == null ? "—" : `${noShowPct}%`, sub: noShowPct == null ? "өгөгдөл алга" : `${noShow} / ${done.length}`, href: `${base}/history?status=no_show` },
+  ];
 
   return (
-    <main className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">{tenant.name}</h1>
-          <p className="text-sm text-muted">
-            Захиалгын хуудас:{" "}
-            <Link href={`/${tenant.slug}`} className="font-semibold text-brand-deep underline" target="_blank">
-              tsag.smartuvs.mn/{tenant.slug}
-            </Link>
+    <>
+      <PageHeader title="Хянах самбар" subtitle={`${tenant.name} · ${formatDayMn(today)}`}>
+        <Link href={`${base}/calendar`} className="inline-flex min-h-11 items-center rounded-lg bg-brand px-4 text-sm font-semibold text-ink">Календарь нээх</Link>
+      </PageHeader>
+      <PageBody>
+        {tenant.status !== "active" && (
+          <p role="status" className="rounded-xl border border-brand bg-brand-tint p-4 text-sm">
+            {tenant.status === "pending"
+              ? <><b className="font-semibold">Таны байгууллага хянагдаж байна.</b> Батлагдмагц захиалгын хуудас нээгдэж, танд SMS ирнэ. Энэ хооронд үйлчилгээ, ажлын цагаа тохируулж болно.</>
+              : tenant.status === "rejected"
+                ? <><b className="font-semibold">Бүртгэл батлагдаагүй.</b> Дэлгэрэнгүйг SmartUvs-ээс лавлана уу.</>
+                : <><b className="font-semibold">Байгууллага түр хаагдсан.</b> Захиалгын хуудас нийтэд харагдахгүй байна.</>}
           </p>
-        </div>
-        <form action={`/dashboard/${tenant.slug}`} method="get" role="search" className="flex gap-2">
-          <label htmlFor="code-search" className="sr-only">Захиалгын кодоор хайх</label>
-          <input id="code-search" name="code" defaultValue={codeQuery} placeholder="Код: X4K9M2" autoComplete="off" maxLength={20}
-            className="min-h-11 w-36 rounded-xl border border-line bg-white px-3 font-mono text-sm uppercase outline-none focus:border-ink" />
-          <button className="inline-flex min-h-11 items-center rounded-xl border border-line bg-white px-4 text-sm font-medium">Хайх</button>
-        </form>
-        {(role === "owner" || role === "manager") && (
-          <Link href={`/dashboard/${tenant.slug}/settings`} className="inline-flex min-h-11 items-center rounded-xl border border-line bg-white px-4 text-sm font-medium">
-            Тохиргоо
-          </Link>
         )}
-      </div>
 
-      {codeQuery && !found && (
-        <p role="alert" className="rounded-card border border-line bg-white p-4 text-sm">
-          <b>{code ? formatBookingCode(code) : codeQuery}</b> кодтой захиалга олдсонгүй. Код 6 тэмдэгттэй (жишээ нь X4K9M2).
-        </p>
-      )}
+        <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {stats.map((s) => (
+            <li key={s.label}>
+              <Link href={s.href} className={`flex h-full flex-col gap-1 rounded-xl border bg-white p-4 transition hover:border-ink/25 ${s.alert ? "border-pending/40" : "border-line"}`}>
+                <span className="text-xs font-medium text-muted">{s.label}</span>
+                <span className={`text-2xl font-semibold tabular-nums ${s.alert ? "text-pending" : ""}`}>{s.value}</span>
+                <span className="text-xs text-muted">{s.sub}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
 
-      {tenant.status !== "active" && (
-        <p role="status" className="rounded-card border-2 border-brand bg-brand-tint p-4 text-sm">
-          {tenant.status === "pending"
-            ? <><b>Таны байгууллага хянагдаж байна.</b> Батлагдмагц захиалгын хуудас нээгдэж, танд SMS ирнэ. Энэ хооронд үйлчилгээ, ажлын цагаа тохируулж болно.</>
-            : tenant.status === "rejected"
-              ? <><b>Бүртгэл батлагдаагүй.</b> Дэлгэрэнгүйг SmartUvs-ээс лавлана уу.</>
-              : <><b>Байгууллага түр хаагдсан.</b> Захиалгын хуудас нийтэд харагдахгүй байна.</>}
-        </p>
-      )}
+        <div className="grid items-start gap-5 lg:grid-cols-[1.6fr_1fr]">
+          <Panel title="Өнөөдрийн хуваарь" subtitle={todayList.length ? `${todayList.length} захиалга` : undefined}>
+            {todayList.length === 0 ? (
+              <p className="text-sm text-muted">Өнөөдөр захиалга алга.</p>
+            ) : (
+              <ul className="-mx-2 flex flex-col">
+                {todayList.map((b) => {
+                  const m = utcToLocalMinute(b.startsAt, tz);
+                  return (
+                    <li key={b.id}>
+                      <Link href={`${base}/calendar?code=${b.code}`} className="flex min-h-12 items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#fafafa]">
+                        <span className="w-12 flex-none text-sm font-semibold tabular-nums">{formatHm(m)}</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium">{b.customerName}</span>
+                          <span className="block truncate text-xs text-muted">{b.serviceName}</span>
+                        </span>
+                        <span className={`flex-none rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS[b.status].cls}`}>{STATUS[b.status].label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Panel>
 
-      <DayBoard
-        key={found?.id ?? "board"} // өөр код хайхад диалог дахин нээгдэнэ
-        slug={tenant.slug}
-        date={date}
-        today={today}
-        dayLabel={formatDayMn(date)}
-        ownerTerm={tenant.settings.terminology.staff}
-        bookingMode={tenant.bookingMode}
-        owners={owners}
-        workHours={ownerSchedules.map((s) => ({ ownerId: (kind === "resource" ? s.resourceId : s.staffId)!, start: s.startMin, end: s.endMin }))}
-        fromMin={fromMin}
-        toMin={Math.max(toMin, fromMin + 60)}
-        bookings={items}
-        pending={pending.map(toDto)}
-        initialOpen={found ? toDto(found) : null}
-        services={services.map((s) => ({ id: s.id, name: s.name, durationMin: s.durationMin }))}
-      />
-    </main>
+          <div className="flex flex-col gap-5">
+            <Panel title="Батлах хүлээж буй">
+              {pending.length === 0 ? (
+                <p className="text-sm text-muted">Бүгд шийдэгдсэн. ✓</p>
+              ) : (
+                <>
+                  <ul className="flex flex-col gap-2">
+                    {pending.slice(0, 3).map((b) => {
+                      const d = todayIn(tz, b.startsAt);
+                      return (
+                        <li key={b.id} className="rounded-lg bg-[#fafafa] px-3 py-2 text-sm">
+                          <span className="font-medium">{b.customerName}</span>
+                          <span className="block text-xs text-muted">{formatDayMn(d)}, {formatHm(utcToLocalMinute(b.startsAt, tz))} · {b.serviceName}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <Link href={`${base}/pending`} className="inline-flex min-h-10 items-center justify-center rounded-lg border border-line text-sm font-medium">
+                    Бүгдийг харах ({pending.length})
+                  </Link>
+                </>
+              )}
+            </Panel>
+            <Panel title="Захиалгын холбоос">
+              <a href={`/${slug}`} target="_blank" className="break-all text-sm font-medium text-brand-deep underline">tsag.smartuvs.mn/{slug}</a>
+              {canManage && (
+                <Link href={`${base}/share`} className="inline-flex min-h-10 items-center justify-center rounded-lg border border-line text-sm font-medium">QR код, постер</Link>
+              )}
+            </Panel>
+          </div>
+        </div>
+      </PageBody>
+    </>
   );
 }

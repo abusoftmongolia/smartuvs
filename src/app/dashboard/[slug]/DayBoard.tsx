@@ -56,6 +56,8 @@ type Props = {
   services: Service[];
   /** Кодоор хайж олсон захиалга — анх нээгдсэн байдлаар харуулна */
   initialOpen?: BoardBooking | null;
+  /** "calendar" = өдрийн календарь; "pending" = зөвхөн батлах хүлээж буй жагсаалт */
+  view?: "calendar" | "pending";
 };
 
 const PX_PER_MIN = 1.4;
@@ -80,7 +82,7 @@ export function DayBoard(p: Props) {
   const router = useRouter();
   const [open, setOpen] = useState<BoardBooking | null>(p.initialOpen ?? null);
   const [creating, setCreating] = useState(false);
-  const go = (date: string) => router.push(`/dashboard/${p.slug}?date=${date}`);
+  const go = (date: string) => router.push(`/dashboard/${p.slug}/calendar?date=${date}`);
 
   // Өөр төхөөрөмжөөс орсон захиалгыг харуулахын тулд минут тутам шинэчилнэ
   useEffect(() => {
@@ -98,15 +100,23 @@ export function DayBoard(p: Props) {
 
   return (
     <>
-      {p.pending.length > 0 && (
-        <section aria-labelledby="h-pending" className="flex flex-col gap-3 rounded-[18px] border-2 border-pending/40 bg-white p-4">
-          <h2 id="h-pending" className="text-lg font-semibold">Батлах хүлээж буй ({p.pending.length})</h2>
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
+      {p.view === "pending" ? (
+        p.pending.length === 0 ? (
+          <p className="rounded-xl border border-line bg-white p-6 text-sm text-muted">Батлах хүлээж буй захиалга алга. ✓</p>
+        ) : (
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3" aria-label="Батлах хүлээж буй">
             {p.pending.map((b) => (
               <li key={b.id}><PendingCard b={b} slug={p.slug} onOpen={() => setOpen(b)} /></li>
             ))}
           </ul>
-        </section>
+        )
+      ) : (<>
+      {p.pending.length > 0 && (
+        <Link href={`/dashboard/${p.slug}/pending`}
+          className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-pending/30 bg-blue-50 px-4 text-sm font-medium text-blue-900">
+          <span><b className="font-semibold">{p.pending.length}</b> захиалга батлах хүлээж байна</span>
+          <span aria-hidden>→</span>
+        </Link>
       )}
 
       <section aria-labelledby="h-day" className="flex flex-col gap-3">
@@ -126,7 +136,7 @@ export function DayBoard(p: Props) {
 
         {p.owners.length === 0 ? (
           <p className="rounded-card border border-line bg-white p-6 text-muted">
-            {p.ownerTerm} бүртгэгдээгүй байна. <Link href={`/dashboard/${p.slug}/settings`} className="font-semibold text-brand-deep underline">Тохиргоо</Link>-оос нэмнэ үү.
+            {p.ownerTerm} бүртгэгдээгүй байна. <Link href={`/dashboard/${p.slug}/staff`} className="font-semibold text-brand-deep underline">Тохиргоо</Link>-оос нэмнэ үү.
           </p>
         ) : (
           <div className="overflow-x-auto rounded-[18px] border border-line bg-white">
@@ -178,6 +188,7 @@ export function DayBoard(p: Props) {
           ))}
         </ul>
       </section>
+      </>)}
 
       {open && (
         <BookingDialog key={open.id} b={open} {...p} onClose={() => setOpen(null)} />

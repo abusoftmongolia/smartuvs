@@ -6,6 +6,7 @@ import { QrCode } from "@/components/QrCode";
 import { TenantLogo } from "@/components/TenantLogo";
 import { ErrorBox, Field, btnPrimary, btnSecondary } from "@/components/ui";
 import type { DayHours } from "@/lib/hours";
+import { Panel } from "../../PageHeader";
 import {
   addTimeOff,
   removeLogo,
@@ -18,7 +19,7 @@ import {
   type SettingsResult,
 } from "@/server/settings-actions";
 
-type Info = {
+export type Info = {
   name: string;
   address: string;
   phone: string;
@@ -31,23 +32,9 @@ type Info = {
   listed: boolean;
   notifyNewBookings: boolean;
 };
-type Svc = { id?: string; name: string; durationMin: number; bufferMin: number; price: number | null; active: boolean };
-type Owner = { id?: string; name: string; title: string; active: boolean };
-type Off = { id: string; from: string; to: string; partial: boolean; owner: string | null; reason: string | null };
-
-type Props = {
-  slug: string;
-  name: string;
-  logoUrl: string | null;
-  bookingUrl: string;
-  term: string;
-  kind: "staff" | "resource";
-  info: Info;
-  services: Svc[];
-  owners: Owner[];
-  hours: DayHours[];
-  timeOff: Off[];
-};
+export type Svc = { id?: string; name: string; durationMin: number; bufferMin: number; price: number | null; active: boolean };
+export type Owner = { id?: string; name: string; title: string; active: boolean };
+export type Off = { id: string; from: string; to: string; partial: boolean; owner: string | null; reason: string | null };
 
 const select = "min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-sm font-normal";
 const num = "min-h-11 w-full rounded-lg border-[1.5px] border-[#d4d4d4] px-2.5 text-sm font-normal";
@@ -69,35 +56,15 @@ function useSave() {
   return { pending, save, status };
 }
 
-function Card({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
-  return (
-    <section aria-labelledby={id} className="flex flex-col gap-4 rounded-[18px] border border-line bg-white p-5">
-      <h2 id={id} className="text-lg font-semibold">{title}</h2>
-      {children}
-    </section>
-  );
+function Card({ id, title, subtitle, children }: { id: string; title: string; subtitle?: string; children: React.ReactNode }) {
+  return <Panel id={id} title={title} subtitle={subtitle}>{children}</Panel>;
 }
 
-export function Settings(p: Props) {
-  return (
-    <>
-      <Share slug={p.slug} url={p.bookingUrl} />
-      <Logo slug={p.slug} name={p.name} logoUrl={p.logoUrl} />
-      <InfoForm slug={p.slug} info={p.info} />
-      {/* Хадгалсны дараа серверээс шинэ ID-тай өгөгдөл ирэхэд дахин mount хийнэ */}
-      <Services key={JSON.stringify(p.services)} slug={p.slug} initial={p.services} />
-      <Owners key={JSON.stringify(p.owners)} slug={p.slug} term={p.term} initial={p.owners} />
-      <Hours slug={p.slug} initial={p.hours} />
-      <TimeOff slug={p.slug} owners={p.owners} list={p.timeOff} />
-    </>
-  );
-}
-
-function Share({ slug, url }: { slug: string; url: string }) {
+export function Share({ slug, url }: { slug: string; url: string }) {
   const [copied, setCopied] = useState(false);
   const pretty = url.replace(/^https?:\/\//, "");
   return (
-    <Card id="h-share" title="Захиалгын холбоос">
+    <Card id="h-share" title="Захиалгын холбоос" subtitle="Энэ холбоос, QR кодыг үйлчлүүлэгчиддээ хуваалцана.">
       <div className="flex flex-wrap items-center gap-4">
         <QrCode url={url} size={128} label={`${pretty} хаягийн QR код`} />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -114,12 +81,12 @@ function Share({ slug, url }: { slug: string; url: string }) {
   );
 }
 
-function InfoForm({ slug, info }: { slug: string; info: Info }) {
+export function InfoForm({ slug, info }: { slug: string; info: Info }) {
   const [v, setV] = useState(info);
   const set = <K extends keyof Info>(k: K, x: Info[K]) => setV({ ...v, [k]: x });
   const { pending, save, status } = useSave();
   return (
-    <Card id="h-info" title="Байгууллага ба бодлого">
+    <Card id="h-info" title="Байгууллага ба бодлого" subtitle="Нэр, холбоо барих мэдээлэл, онлайн захиалгын дүрэм.">
       <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); save(() => saveTenantInfo({ slug, ...v })); }}>
         <Field id="i-name" label="Нэр" value={v.name} onChange={(x) => set("name", x)} />
         <Field id="i-addr" label="Хаяг" value={v.address} onChange={(x) => set("address", x)} />
@@ -173,7 +140,7 @@ function InfoForm({ slug, info }: { slug: string; info: Info }) {
   );
 }
 
-function Services({ slug, initial }: { slug: string; initial: Svc[] }) {
+export function Services({ slug, initial }: { slug: string; initial: Svc[] }) {
   const [list, setList] = useState<Svc[]>(initial);
   const [editing, setEditing] = useState<number | null>(null);
   const { pending, save, status } = useSave();
@@ -227,7 +194,7 @@ function Services({ slug, initial }: { slug: string; initial: Svc[] }) {
   );
 }
 
-function Owners({ slug, term, initial }: { slug: string; term: string; initial: Owner[] }) {
+export function Owners({ slug, term, initial }: { slug: string; term: string; initial: Owner[] }) {
   const [list, setList] = useState<Owner[]>(initial);
   const [editing, setEditing] = useState<number | null>(null);
   const { pending, save, status } = useSave();
@@ -271,7 +238,7 @@ function Owners({ slug, term, initial }: { slug: string; term: string; initial: 
   );
 }
 
-function Hours({ slug, initial }: { slug: string; initial: DayHours[] }) {
+export function Hours({ slug, initial }: { slug: string; initial: DayHours[] }) {
   const [hours, setHours] = useState(initial);
   const { pending, save, status } = useSave();
   return (
@@ -286,7 +253,7 @@ function Hours({ slug, initial }: { slug: string; initial: DayHours[] }) {
   );
 }
 
-function TimeOff({ slug, owners, list }: { slug: string; owners: Owner[]; list: Off[] }) {
+export function TimeOff({ slug, owners, list }: { slug: string; owners: Owner[]; list: Off[] }) {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [ownerId, setOwnerId] = useState("");
@@ -353,15 +320,15 @@ async function resizeToSquare(file: File, size = 256): Promise<string> {
   return url.slice(url.indexOf(",") + 1);
 }
 
-function Logo({ slug, name, logoUrl }: { slug: string; name: string; logoUrl: string | null }) {
+export function Logo({ slug, name, logoUrl }: { slug: string; name: string; logoUrl: string | null }) {
   const { pending, save, status } = useSave();
   const [busy, setBusy] = useState(false);
   return (
-    <Card id="h-logo" title="Лого">
+    <Card id="h-logo" title="Байгууллагын лого" subtitle="Нүүр хуудас болон захиалгын хуудсанд харагдана.">
       <div className="flex flex-wrap items-center gap-4">
         <TenantLogo name={name} slug={slug} logoUrl={logoUrl} size={96} />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <p className="text-sm text-muted">tsag.smartuvs.mn нүүр хуудас болон захиалгын хуудсанд харагдана. PNG, JPG эсвэл WebP — дөрвөлжин зураг хамгийн гоё харагдана.</p>
+          <p className="text-sm text-muted">PNG, JPG эсвэл WebP. Дөрвөлжин зураг хамгийн гоё харагдана.</p>
           <div className="flex flex-wrap gap-2">
             <label className={`${btnSecondary} cursor-pointer ${pending || busy ? "pointer-events-none opacity-50" : ""}`}>
               {logoUrl ? "Солих" : "Лого оруулах"}
