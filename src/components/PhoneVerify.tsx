@@ -115,13 +115,13 @@ export function PhoneVerifyPanel({ v, onCancel }: { v: Verification; onCancel: (
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border-2 border-brand bg-brand-tint p-4">
-      <p className="text-[15px] font-bold">Утсаа баталгаажуулна уу</p>
+      <p className="text-sm font-medium">Утсаа баталгаажуулна уу</p>
 
       {/* 1. Хаанаас, хаашаа — хамгийн түгээмэл алдаа (өөр SIM/дугаар) */}
       <div className="grid grid-cols-2 gap-2 text-center">
         <div className="rounded-lg bg-white p-2.5">
           <div className="text-xs text-muted">Таны дугаараас</div>
-          <div className="text-lg font-bold tabular-nums">{spaced(v.phone)}</div>
+          <div className="text-lg font-semibold tabular-nums">{spaced(v.phone)}</div>
         </div>
         <div className="rounded-lg bg-white p-2.5">
           <div className="text-xs text-muted">Энэ дугаар руу</div>
@@ -139,7 +139,7 @@ export function PhoneVerifyPanel({ v, onCancel }: { v: Verification; onCancel: (
       </div>
 
       {/* 3. Дугаар, текст урьдчилан бөглөгдсөн — гараар бичих алдаагүй */}
-      <a href={v.smsUri} className="flex min-h-12 items-center justify-center gap-2 rounded-card bg-ink text-base font-bold text-white">
+      <a href={v.smsUri} className="flex min-h-12 items-center justify-center gap-2 rounded-card bg-ink text-[15px] font-semibold text-white">
         Мессеж илгээх
       </a>
       <p className="text-xs text-muted">Утсан дээр дарахад дугаар, код автоматаар бөглөгдөнө. Операторын SMS-ийн төлбөр (≈150₮) таны утаснаас гарна.</p>
@@ -157,7 +157,7 @@ export function PhoneVerifyPanel({ v, onCancel }: { v: Verification; onCancel: (
         </div>
       </div>
 
-      <button type="button" onClick={onCancel} className="min-h-11 rounded-xl border border-line bg-white text-sm font-bold">
+      <button type="button" onClick={onCancel} className="min-h-11 rounded-xl border border-line bg-white text-sm font-medium">
         Болих
       </button>
     </div>
@@ -173,7 +173,7 @@ export function ExpiredNotice({ onRestart, busy }: { onRestart?: () => void; bus
       </p>
       {onRestart && (
         <button type="button" onClick={onRestart} disabled={busy}
-          className="min-h-11 rounded-xl bg-ink px-4 text-sm font-bold text-white disabled:opacity-60">
+          className="min-h-11 rounded-xl bg-ink px-4 text-sm font-semibold text-white disabled:opacity-60">
           {busy ? "Түр хүлээнэ үү…" : "Шинэ код авах"}
         </button>
       )}

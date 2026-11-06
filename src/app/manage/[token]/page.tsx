@@ -81,8 +81,8 @@ export default async function ManagePage({ params }: { params: Promise<{ token: 
 function Row({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex justify-between gap-3">
-      <dt className="text-[13px] text-muted">{k}</dt>
-      <dd className="text-right font-bold">{v}</dd>
+      <dt className="text-xs text-muted">{k}</dt>
+      <dd className="text-right font-medium">{v}</dd>
     </div>
   );
 }

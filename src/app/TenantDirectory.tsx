@@ -32,7 +32,7 @@ export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; in
   }
 
   const chip = (on: boolean) =>
-    `min-h-11 rounded-full border-[1.5px] px-4 text-sm font-bold ${on ? "border-brand bg-brand text-ink" : "border-line bg-white text-ink"}`;
+    `min-h-11 rounded-full border-[1.5px] px-4 text-sm font-semibold ${on ? "border-brand bg-brand text-ink" : "border-line bg-white text-ink"}`;
 
   return (
     <section aria-label="Байгууллагууд" className="flex flex-col gap-4">
@@ -45,7 +45,7 @@ export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; in
           onChange={(e) => setQ(e.target.value)}
           placeholder="Нэр эсвэл хаягаар хайх…"
           autoComplete="off"
-          className="min-h-12 w-full rounded-card border-[1.5px] border-[#d4d4d4] bg-white px-4 text-[16px] outline-none focus:border-ink"
+          className="min-h-12 w-full rounded-card border-[1.5px] border-[#d4d4d4] bg-white px-4 text-base outline-none focus:border-ink"
         />
         {present.length > 1 && (
           <div className="flex flex-wrap gap-2" role="group" aria-label="Салбар">
@@ -74,8 +74,8 @@ export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; in
                 <div className="flex items-start gap-4">
                   <TenantLogo name={t.name} slug={t.slug} logoUrl={t.logoUrl} size={64} />
                   <div className="flex min-w-0 flex-col items-start gap-1.5">
-                    <span className="text-[18px] font-bold leading-snug">{t.name}</span>
-                    <span className="rounded-full bg-brand-tint px-2.5 py-0.5 text-xs font-bold text-brand-deep">{t.industryLabel}</span>
+                    <span className="text-lg font-semibold leading-snug">{t.name}</span>
+                    <span className="rounded-full bg-brand-tint px-2.5 py-0.5 text-xs font-medium text-brand-deep">{t.industryLabel}</span>
                   </div>
                 </div>
                 {t.address && (
@@ -84,7 +84,7 @@ export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; in
                     {t.address}
                   </span>
                 )}
-                <span className="mt-auto flex min-h-11 items-center justify-between rounded-xl bg-ground px-4 text-sm font-bold transition group-hover:bg-brand">
+                <span className="mt-auto flex min-h-11 items-center justify-between rounded-xl bg-ground px-4 text-sm font-semibold transition group-hover:bg-brand">
                   Цаг захиалах
                   <span aria-hidden className="transition group-hover:translate-x-0.5">→</span>
                 </span>

@@ -100,7 +100,7 @@ export function DayBoard(p: Props) {
     <>
       {p.pending.length > 0 && (
         <section aria-labelledby="h-pending" className="flex flex-col gap-3 rounded-[18px] border-2 border-pending/40 bg-white p-4">
-          <h2 id="h-pending" className="text-lg font-bold">Батлах хүлээж буй ({p.pending.length})</h2>
+          <h2 id="h-pending" className="text-lg font-semibold">Батлах хүлээж буй ({p.pending.length})</h2>
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
             {p.pending.map((b) => (
               <li key={b.id}><PendingCard b={b} slug={p.slug} onOpen={() => setOpen(b)} /></li>
@@ -111,7 +111,7 @@ export function DayBoard(p: Props) {
 
       <section aria-labelledby="h-day" className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 id="h-day" className="mr-auto text-lg font-bold">
+          <h2 id="h-day" className="mr-auto text-lg font-semibold">
             {p.dayLabel}{p.date === p.today ? " · Өнөөдөр" : ""}
             <span className="ml-2 text-sm font-semibold text-muted">{counts.total} захиалга</span>
           </h2>
@@ -144,7 +144,7 @@ export function DayBoard(p: Props) {
               </div>
               {p.owners.map((o) => (
                 <div key={o.id} className="w-44 flex-none border-r border-line last:border-r-0 sm:w-52">
-                  <div className="flex h-11 items-center justify-center border-b border-line px-2 text-sm font-bold">{o.name}</div>
+                  <div className="flex h-11 items-center justify-center border-b border-line px-2 text-sm font-medium">{o.name}</div>
                   <div className="relative bg-ground" style={{ height }}>
                     {/* Ажлын цаг — цагаан */}
                     {p.workHours.filter((w) => w.ownerId === o.id).map((w, i) => (
@@ -161,7 +161,7 @@ export function DayBoard(p: Props) {
                         style={{ top: (b.startMin - p.fromMin) * PX_PER_MIN + 1, height: Math.max(26, (b.endMin - b.startMin) * PX_PER_MIN - 2) }}
                         aria-label={`${b.timeLabel} ${b.customerName}, ${b.serviceName}, ${STATUS[b.status].label}`}
                       >
-                        <span className="block font-bold">{hm(b.startMin)} {b.customerName}</span>
+                        <span className="block font-medium">{hm(b.startMin)} {b.customerName}</span>
                         <span className="block truncate">{b.serviceName}</span>
                       </button>
                     ))}
@@ -199,10 +199,10 @@ function PendingCard({ b, slug, onOpen }: { b: BoardBooking; slug: string; onOpe
     });
   return (
     <div className="flex h-full flex-col gap-2 rounded-card border border-line p-3">
-      <div className="text-sm font-bold">{b.dayLabel}, {b.timeLabel}</div>
+      <div className="text-sm font-medium">{b.dayLabel}, {b.timeLabel}</div>
       <div className="text-sm">{b.customerName} · <a className="underline" href={`tel:${b.customerPhone}`}>{b.customerPhone}</a></div>
       <div className="text-sm text-muted">{b.serviceName}</div>
-      {b.noShowCount > 0 && <div className="text-xs font-bold text-red-800">Өмнө {b.noShowCount} удаа ирээгүй</div>}
+      {b.noShowCount > 0 && <div className="text-xs font-medium text-red-800">Өмнө {b.noShowCount} удаа ирээгүй</div>}
       {error && <ErrorBox>{error}</ErrorBox>}
       <div className="mt-auto flex flex-wrap gap-2">
         <button disabled={pending} onClick={() => run("confirm")} className={`${btnPrimary} min-h-11 flex-1 text-sm`}>Батлах</button>
@@ -232,7 +232,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
     >
       <div className="flex max-h-[85dvh] flex-col gap-4 overflow-y-auto p-5">
         <div className="flex items-start justify-between gap-3">
-          <h2 id="modal-title" className="text-lg font-bold">{title}</h2>
+          <h2 id="modal-title" className="text-lg font-semibold">{title}</h2>
           <button onClick={onClose} className="-m-2 inline-flex size-11 items-center justify-center rounded-xl text-xl" aria-label="Хаах">×</button>
         </div>
         {children}
@@ -270,8 +270,8 @@ function BookingDialog(p: Props & { b: BoardBooking; onClose: () => void }) {
         <Row k="Үйлчилгээ" v={b.serviceName} />
         {ownerName && <Row k={p.ownerTerm} v={ownerName} />}
         <div className="flex justify-between gap-3">
-          <dt className="text-[13px] text-muted">Утас</dt>
-          <dd className="font-bold"><a className="underline" href={`tel:${b.customerPhone}`}>{b.customerPhone}</a></dd>
+          <dt className="text-xs text-muted">Утас</dt>
+          <dd className="font-medium"><a className="underline" href={`tel:${b.customerPhone}`}>{b.customerPhone}</a></dd>
         </div>
         {b.answers.map((a) => <Row key={a.label} k={a.label} v={a.value} />)}
         {b.notes && <Row k="Тэмдэглэл" v={b.notes} />}
@@ -304,7 +304,7 @@ function BookingDialog(p: Props & { b: BoardBooking; onClose: () => void }) {
 
       {active && moving && (
         <div className="flex flex-col gap-3 border-t border-line pt-4">
-          <h3 className="font-bold">Өөр цаг санал болгох</h3>
+          <h3 className="font-semibold">Өөр цаг санал болгох</h3>
           <p className="text-xs text-muted">Шинэ цаг баталгаажиж, үйлчлүүлэгчид SMS очно. Тохирохгүй бол тэр холбоосоор цуцална.</p>
           <SlotPicker
             slug={p.slug}
@@ -326,7 +326,7 @@ function BookingDialog(p: Props & { b: BoardBooking; onClose: () => void }) {
 }
 
 function Row({ k, v }: { k: string; v: string }) {
-  return <div className="flex justify-between gap-3"><dt className="text-[13px] text-muted">{k}</dt><dd className="text-right font-bold">{v}</dd></div>;
+  return <div className="flex justify-between gap-3"><dt className="text-xs text-muted">{k}</dt><dd className="text-right font-medium">{v}</dd></div>;
 }
 
 // ── Сул цаг сонгогч (шилжүүлэх, гараар нэмэх) ─────────────────────────────
@@ -365,15 +365,15 @@ function SlotPicker(p: {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-2">
-        <label className="flex flex-1 flex-col gap-1.5 text-[13px] font-bold">
+        <label className="flex flex-1 flex-col gap-1.5 text-sm font-medium">
           Өдөр
           <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)}
-            className="min-h-11 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-[15px] font-normal" />
+            className="min-h-11 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-base font-normal" />
         </label>
-        <label className="flex flex-1 flex-col gap-1.5 text-[13px] font-bold">
+        <label className="flex flex-1 flex-col gap-1.5 text-sm font-medium">
           {p.ownerTerm}
           <select value={ownerId ?? ""} onChange={(e) => setOwnerId(e.target.value || null)}
-            className="min-h-11 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-[15px] font-normal">
+            className="min-h-11 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-base font-normal">
             <option value="">Хэн ч болно</option>
             {p.owners.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
@@ -387,7 +387,7 @@ function SlotPicker(p: {
         <div className="grid max-h-56 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] gap-2 overflow-y-auto">
           {slots.map((s) => (
             <button key={s.startMin} type="button" onClick={() => setStartMin(s.startMin)} aria-pressed={s.startMin === startMin}
-              className={`min-h-11 rounded-xl border-[1.5px] text-sm font-bold ${s.startMin === startMin ? "border-brand bg-brand" : "border-line bg-white"}`}>
+              className={`min-h-11 rounded-xl border-[1.5px] text-sm font-semibold ${s.startMin === startMin ? "border-brand bg-brand" : "border-line bg-white"}`}>
               {s.label}
             </button>
           ))}
@@ -426,10 +426,10 @@ function NewBookingDialog(p: Props & { onClose: () => void }) {
         <p className="text-muted">Үйлчилгээ бүртгэгдээгүй байна.</p>
       ) : (
         <>
-          <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
             Үйлчилгээ
             <select value={serviceId} onChange={(e) => setServiceId(e.target.value)}
-              className="min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-[15px] font-normal">
+              className="min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-base font-normal">
               {p.services.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.durationMin} мин)</option>)}
             </select>
           </label>

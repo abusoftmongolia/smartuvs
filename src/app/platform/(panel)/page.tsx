@@ -47,10 +47,10 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Платформын тойм</h1>
-          <p className="mt-1 text-[15px] text-muted">{system === "tsag" ? "Цаг захиалга системийн хяналт" : "Бүх дэд системийн нэгдсэн хяналт"}</p>
+          <p className="mt-1 text-sm text-muted">{system === "tsag" ? "Цаг захиалга системийн хяналт" : "Бүх дэд системийн нэгдсэн хяналт"}</p>
         </div>
         <span title="Дараагийн систем холбогдоход идэвхжинэ"
-          className="inline-flex min-h-12 cursor-not-allowed items-center gap-2 rounded-2xl bg-ink px-5 font-bold text-white opacity-60" aria-disabled>
+          className="inline-flex min-h-12 cursor-not-allowed items-center gap-2 rounded-2xl bg-ink px-5 font-semibold text-white opacity-60" aria-disabled>
           + Шинэ систем нэмэх
         </span>
       </div>
@@ -58,9 +58,9 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
       <ul className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${cards.length === 4 ? "xl:grid-cols-4" : "xl:grid-cols-3"}`} aria-label="Гол тоо">
         {cards.map((c) => (
           <li key={c.label} className={`flex flex-col gap-2 rounded-[22px] p-6 ${c.dark ? "bg-ink text-white" : "border border-line bg-white"}`}>
-            <span className={`text-[15px] font-bold ${c.dark ? "text-white/80" : "text-muted"}`}>{c.label}</span>
+            <span className={`text-sm font-medium ${c.dark ? "text-white/80" : "text-muted"}`}>{c.label}</span>
             <span className="text-5xl font-bold tabular-nums tracking-tight">{c.value}</span>
-            <span className={`text-sm font-bold ${c.dark ? "text-brand" : "text-muted"}`}>{c.sub}</span>
+            <span className={`text-sm font-medium ${c.dark ? "text-brand" : "text-muted"}`}>{c.sub}</span>
           </li>
         ))}
       </ul>
@@ -70,16 +70,16 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 id="h-pending" className="flex items-center gap-2 text-xl font-bold">
               Баталгаажуулах байгууллага
-              {pending.length > 0 && <span className="flex min-w-7 items-center justify-center rounded-full bg-brand px-2 text-sm font-bold text-ink">{pending.length}</span>}
+              {pending.length > 0 && <span className="flex min-w-7 items-center justify-center rounded-full bg-brand px-2 text-sm font-medium text-ink">{pending.length}</span>}
             </h2>
-            <Link href="/tenants?status=pending" className="inline-flex min-h-11 items-center font-bold underline">Бүгдийг харах</Link>
+            <Link href="/tenants?status=pending" className="inline-flex min-h-11 items-center font-medium underline">Бүгдийг харах</Link>
           </div>
           {pending.length === 0 ? (
             <p className="rounded-2xl bg-ground p-5 text-muted">Хүлээгдэж буй бүртгэл алга. ✓</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-left text-[15px]">
-                <thead className="border-b border-line text-xs font-bold uppercase tracking-wider text-muted">
+              <table className="w-full min-w-[640px] text-left text-sm">
+                <thead className="border-b border-line text-xs font-medium uppercase tracking-wider text-muted">
                   <tr>
                     <th className="py-3 pr-3">Байгууллага</th>
                     <th className="px-3 py-3">Төрөл</th>
@@ -92,11 +92,11 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
                   {pending.slice(0, 8).map((t) => (
                     <tr key={t.id} className="border-b border-line last:border-b-0">
                       <td className="py-4 pr-3">
-                        <div className="font-bold">{t.name}</div>
+                        <div className="font-medium">{t.name}</div>
                         <div className="text-sm text-muted">{t.ownerName ?? "—"} · {maskPhone(t.ownerPhone)}</div>
                       </td>
                       <td className="px-3 py-4">
-                        <span className="whitespace-nowrap rounded-lg bg-ground px-2.5 py-1 text-sm font-bold">{INDUSTRY_PRESETS[t.industry].label}</span>
+                        <span className="whitespace-nowrap rounded-lg bg-ground px-2.5 py-1 text-sm font-medium">{INDUSTRY_PRESETS[t.industry].label}</span>
                       </td>
                       <td className="px-3 py-4">tsag</td>
                       <td className="px-3 py-4 tabular-nums">{fmtDate(t.createdAt)}</td>

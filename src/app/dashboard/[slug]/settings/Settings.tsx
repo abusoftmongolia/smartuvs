@@ -49,8 +49,8 @@ type Props = {
   timeOff: Off[];
 };
 
-const select = "min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-[15px] font-normal";
-const num = "min-h-11 w-full rounded-lg border-[1.5px] border-[#d4d4d4] px-2.5 text-[15px] font-normal";
+const select = "min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-sm font-normal";
+const num = "min-h-11 w-full rounded-lg border-[1.5px] border-[#d4d4d4] px-2.5 text-sm font-normal";
 
 /** Хадгалах товч + алдаа/амжилтын мэдэгдэл */
 function useSave() {
@@ -72,7 +72,7 @@ function useSave() {
 function Card({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-4 rounded-[18px] border border-line bg-white p-5">
-      <h2 id={id} className="text-lg font-bold">{title}</h2>
+      <h2 id={id} className="text-lg font-semibold">{title}</h2>
       {children}
     </section>
   );
@@ -101,7 +101,7 @@ function Share({ slug, url }: { slug: string; url: string }) {
       <div className="flex flex-wrap items-center gap-4">
         <QrCode url={url} size={128} label={`${pretty} хаягийн QR код`} />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <a href={url} target="_blank" className="break-all text-lg font-bold underline">{pretty}</a>
+          <a href={url} target="_blank" className="break-all text-lg font-semibold underline">{pretty}</a>
           <div className="flex flex-wrap gap-2">
             <button className={btnSecondary} onClick={() => navigator.clipboard?.writeText(url).then(() => setCopied(true))}>
               {copied ? "Хуулагдлаа ✓" : "Хуулах"}
@@ -124,14 +124,14 @@ function InfoForm({ slug, info }: { slug: string; info: Info }) {
         <Field id="i-name" label="Нэр" value={v.name} onChange={(x) => set("name", x)} />
         <Field id="i-addr" label="Хаяг" value={v.address} onChange={(x) => set("address", x)} />
         <Field id="i-phone" label="Холбогдох утас" type="tel" value={v.phone} onChange={(x) => set("phone", x)} />
-        <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+        <label className="flex flex-col gap-1.5 text-sm font-medium">
           Цагийн бүс
           <select className={select} value={v.timezone} onChange={(e) => set("timezone", e.target.value as Info["timezone"])}>
             <option value="Asia/Hovd">Баруун аймгууд — UTC+7</option>
             <option value="Asia/Ulaanbaatar">Улаанбаатар — UTC+8</option>
           </select>
         </label>
-        <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+        <label className="flex flex-col gap-1.5 text-sm font-medium">
           Онлайн захиалга
           <select className={select} value={v.approval} onChange={(e) => set("approval", e.target.value as Info["approval"])}>
             <option value="auto">Сул цаг байвал шууд баталгаажна</option>
@@ -139,21 +139,21 @@ function InfoForm({ slug, info }: { slug: string; info: Info }) {
           </select>
         </label>
         <div className="grid grid-cols-2 gap-3">
-          <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
             Цагийн алхам
             <select className={select} value={v.slotStepMin} onChange={(e) => set("slotStepMin", Number(e.target.value))}>
               {[5, 10, 15, 20, 30, 60].map((n) => <option key={n} value={n}>{n} минут</option>)}
             </select>
           </label>
-          <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
             Хамгийн эрт (минутын өмнө)
             <input type="number" inputMode="numeric" min={0} className={num} value={v.minLeadMin} onChange={(e) => set("minLeadMin", Number(e.target.value))} />
           </label>
-          <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
             Хэдэн хоногийн өмнөөс
             <input type="number" inputMode="numeric" min={1} max={365} className={num} value={v.maxAdvanceDays} onChange={(e) => set("maxAdvanceDays", Number(e.target.value))} />
           </label>
-          <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
             Цуцлах боломж (цагийн өмнө)
             <input type="number" inputMode="numeric" min={0} max={168} className={num} value={v.cancellationHours} onChange={(e) => set("cancellationHours", Number(e.target.value))} />
           </label>
@@ -164,7 +164,7 @@ function InfoForm({ slug, info }: { slug: string; info: Info }) {
         </label>
         <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
           <input type="checkbox" checked={v.notifyNewBookings} onChange={(e) => set("notifyNewBookings", e.target.checked)} className="size-5 accent-[#f5a800]" />
-          <span>Шинэ захиалга орох бүрт SMS авах <span className="block text-[13px] font-normal text-muted">Дээрх утас руу, мөн захиалсан ажилтан системд бүртгэлтэй бол түүн рүү</span></span>
+          <span>Шинэ захиалга орох бүрт SMS авах <span className="block text-xs font-normal text-muted">Дээрх утас руу, мөн захиалсан ажилтан системд бүртгэлтэй бол түүн рүү</span></span>
         </label>
         {status}
         <button disabled={pending} className={`${btnPrimary} self-start`}>{pending ? "Хадгалж байна…" : "Хадгалах"}</button>
@@ -189,16 +189,16 @@ function Services({ slug, initial }: { slug: string; initial: Svc[] }) {
                 e.preventDefault();
                 save(() => saveService({ slug, ...s }), "Хадгалагдлаа", () => setEditing(null));
               }}>
-                <label className="flex min-w-40 flex-[2] flex-col gap-1 text-xs font-bold">Нэр
+                <label className="flex min-w-40 flex-[2] flex-col gap-1 text-xs font-medium">Нэр
                   <input className={num} value={s.name} onChange={(e) => upd(i, { name: e.target.value })} />
                 </label>
-                <label className="flex w-20 flex-col gap-1 text-xs font-bold">Минут
+                <label className="flex w-20 flex-col gap-1 text-xs font-medium">Минут
                   <input type="number" inputMode="numeric" className={num} value={s.durationMin} onChange={(e) => upd(i, { durationMin: Number(e.target.value) })} />
                 </label>
-                <label className="flex w-20 flex-col gap-1 text-xs font-bold">Завсар
+                <label className="flex w-20 flex-col gap-1 text-xs font-medium">Завсар
                   <input type="number" inputMode="numeric" className={num} value={s.bufferMin} onChange={(e) => upd(i, { bufferMin: Number(e.target.value) })} />
                 </label>
-                <label className="flex w-28 flex-col gap-1 text-xs font-bold">Үнэ ₮
+                <label className="flex w-28 flex-col gap-1 text-xs font-medium">Үнэ ₮
                   <input inputMode="numeric" className={num} value={s.price ?? ""} placeholder="—"
                     onChange={(e) => { const d = e.target.value.replace(/\D/g, ""); upd(i, { price: d ? Number(d) : null }); }} />
                 </label>
@@ -206,7 +206,7 @@ function Services({ slug, initial }: { slug: string; initial: Svc[] }) {
               </form>
             ) : (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="flex-1 font-bold">{s.name} <span className="font-normal text-muted">· {s.durationMin} мин{s.price != null ? ` · ₮${s.price.toLocaleString("en-US")}` : ""}</span></span>
+                <span className="flex-1 font-medium">{s.name} <span className="font-normal text-muted">· {s.durationMin} мин{s.price != null ? ` · ₮${s.price.toLocaleString("en-US")}` : ""}</span></span>
                 <button className={btnSecondary} onClick={() => setEditing(i)}>Засах</button>
                 {s.id && (
                   <button className={btnSecondary} disabled={pending}
@@ -243,14 +243,14 @@ function Owners({ slug, term, initial }: { slug: string; term: string; initial: 
                 e.preventDefault();
                 save(() => saveOwner({ slug, ...o }), "Хадгалагдлаа", () => setEditing(null));
               }}>
-                <label className="flex min-w-40 flex-1 flex-col gap-1 text-xs font-bold">Нэр
+                <label className="flex min-w-40 flex-1 flex-col gap-1 text-xs font-medium">Нэр
                   <input className={num} value={o.name} onChange={(e) => upd(i, { name: e.target.value })} />
                 </label>
                 <button disabled={pending} className={btnPrimary}>Хадгалах</button>
               </form>
             ) : (
               <>
-                <span className="flex-1 font-bold">{o.name}{!o.active && <span className="font-normal text-muted"> · идэвхгүй</span>}</span>
+                <span className="flex-1 font-medium">{o.name}{!o.active && <span className="font-normal text-muted"> · идэвхгүй</span>}</span>
                 <button className={btnSecondary} onClick={() => setEditing(i)}>Засах</button>
                 {o.id && (
                   <button className={btnSecondary} disabled={pending}
@@ -311,19 +311,19 @@ function TimeOff({ slug, owners, list }: { slug: string; owners: Owner[]; list: 
         e.preventDefault();
         save(() => addTimeOff({ slug, from, to: to || from, ownerId: ownerId || null, reason }), "Нэмэгдлээ", () => { setFrom(""); setTo(""); setReason(""); });
       }}>
-        <label className="flex flex-col gap-1 text-xs font-bold">Эхлэх
+        <label className="flex flex-col gap-1 text-xs font-medium">Эхлэх
           <input type="date" required className={num} value={from} onChange={(e) => setFrom(e.target.value)} />
         </label>
-        <label className="flex flex-col gap-1 text-xs font-bold">Дуусах
+        <label className="flex flex-col gap-1 text-xs font-medium">Дуусах
           <input type="date" className={num} value={to} min={from} onChange={(e) => setTo(e.target.value)} />
         </label>
-        <label className="flex flex-col gap-1 text-xs font-bold">Хэн
+        <label className="flex flex-col gap-1 text-xs font-medium">Хэн
           <select className={select} value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
             <option value="">Бүх байгууллага</option>
             {owners.filter((o) => o.id).map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
         </label>
-        <label className="flex min-w-32 flex-1 flex-col gap-1 text-xs font-bold">Шалтгаан
+        <label className="flex min-w-32 flex-1 flex-col gap-1 text-xs font-medium">Шалтгаан
           <input className={num} value={reason} placeholder="Цагаан сар" onChange={(e) => setReason(e.target.value)} />
         </label>
         <button disabled={pending || !from} className={btnPrimary}>Нэмэх</button>

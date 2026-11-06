@@ -17,8 +17,8 @@ export default async function Home() {
       <SiteHeader />
       <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
         <div>
-          <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Цаг захиалах</h1>
-          <p className="mt-1 text-[15px] text-muted">Байгууллагаа сонгоод утаснаасаа захиална. Төлбөргүй, бүртгэл шаардахгүй.</p>
+          <h1 className="text-2xl font-bold leading-tight tracking-tight sm:text-3xl">Цаг захиалах</h1>
+          <p className="mt-1 text-sm text-muted">Байгууллагаа сонгоод утаснаасаа захиална. Төлбөргүй, бүртгэл шаардахгүй.</p>
         </div>
 
         {maintenance && (
@@ -35,14 +35,14 @@ export default async function Home() {
         </Suspense>
 
         <section aria-labelledby="h-biz" className="mt-4 flex flex-col items-start gap-3 rounded-[18px] border border-line bg-white p-5">
-          <h2 id="h-biz" className="text-lg font-bold">Байгууллага эрхэлдэг үү?</h2>
-          <p className="text-[15px] text-muted">
+          <h2 id="h-biz" className="text-lg font-semibold">Байгууллага эрхэлдэг үү?</h2>
+          <p className="text-sm text-muted">
             Үсчин, гоо сайхан, шүдний эмнэлэг, фитнесс — 5 минутад үнэгүй бүртгүүлээд <strong className="text-ink">tsag.smartuvs.mn/таны-нэр</strong> хаягтай болно.
           </p>
           <div className="flex flex-wrap gap-2">
-            <Link href="/signup" className="inline-flex min-h-12 items-center rounded-card bg-brand px-5 font-bold text-ink">Байгууллагаа бүртгүүлэх</Link>
-            <Link href="/business" className="inline-flex min-h-12 items-center rounded-card border border-line bg-white px-5 font-bold">Дэлгэрэнгүй</Link>
-            <Link href="/admin/login" className="inline-flex min-h-12 items-center rounded-card border border-line bg-white px-5 font-bold">Байгууллага нэвтрэх</Link>
+            <Link href="/signup" className="inline-flex min-h-12 items-center rounded-card bg-brand px-5 font-semibold text-ink">Байгууллагаа бүртгүүлэх</Link>
+            <Link href="/business" className="inline-flex min-h-12 items-center rounded-card border border-line bg-white px-5 font-medium">Дэлгэрэнгүй</Link>
+            <Link href="/admin/login" className="inline-flex min-h-12 items-center rounded-card border border-line bg-white px-5 font-medium">Байгууллага нэвтрэх</Link>
           </div>
         </section>
       </main>

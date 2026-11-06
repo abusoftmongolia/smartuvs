@@ -49,7 +49,7 @@ export function ManageBooking(p: {
       {p.block === "too_late" ? (
         <p className="rounded-xl bg-ground p-4 text-sm">
           Эхлэхэд {p.cancellationHours} цагаас бага хугацаа үлдсэн тул өөрчлөхийн тулд байгууллага руу залгана уу.
-          {p.tenantPhone && <> <a href={`tel:${p.tenantPhone}`} className="font-bold underline">{p.tenantPhone}</a></>}
+          {p.tenantPhone && <> <a href={`tel:${p.tenantPhone}`} className="font-medium underline">{p.tenantPhone}</a></>}
         </p>
       ) : mode === "move" ? (
         <MovePicker token={p.token} days={p.days} initialDate={p.currentDate} busy={pending}
@@ -57,7 +57,7 @@ export function ManageBooking(p: {
           onPick={(date, startMin) => run(() => rescheduleByCustomer({ token: p.token, date, startMin }), "Цаг шилжлээ")} />
       ) : mode === "confirmCancel" ? (
         <div className="flex flex-col gap-3 rounded-xl border border-red-200 bg-white p-4">
-          <p className="font-bold">Захиалгаа цуцлах уу?</p>
+          <p className="font-medium">Захиалгаа цуцлах уу?</p>
           <div className="flex gap-2">
             <button disabled={pending} onClick={() => run(() => cancelByCustomer(p.token), "Захиалга цуцлагдлаа")} className={`${btnDanger} flex-1`}>
               {pending ? "Түр хүлээнэ үү…" : "Тийм, цуцлах"}
@@ -97,13 +97,13 @@ function MovePicker(p: {
 
   return (
     <div className="flex flex-col gap-3 rounded-[18px] border border-line bg-white p-4">
-      <h2 className="font-bold">Шинэ цаг</h2>
+      <h2 className="font-semibold">Шинэ цаг</h2>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {p.days.map((d) => (
           <button key={d.date} onClick={() => setDate(d.date)} aria-pressed={d.date === date} aria-label={d.date}
             className={`flex min-h-[64px] w-14 flex-none flex-col items-center justify-center rounded-card border-[1.5px] ${d.date === date ? "border-brand bg-brand" : "border-line bg-white"}`}>
-            <span className="text-xs font-bold">{d.wd}</span>
-            <span className="text-lg font-bold">{d.num}</span>
+            <span className="text-xs font-medium">{d.wd}</span>
+            <span className="text-lg font-semibold">{d.num}</span>
             <span className="text-[10px] font-semibold">{d.sub}</span>
           </button>
         ))}
@@ -116,7 +116,7 @@ function MovePicker(p: {
         <div className="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-2">
           {slots.map((s) => (
             <button key={s.startMin} onClick={() => setStartMin(s.startMin)} aria-pressed={s.startMin === startMin}
-              className={`min-h-12 rounded-xl border-[1.5px] text-[15px] font-bold ${s.startMin === startMin ? "border-brand bg-brand" : "border-line bg-white"}`}>
+              className={`min-h-12 rounded-xl border-[1.5px] text-sm font-semibold ${s.startMin === startMin ? "border-brand bg-brand" : "border-line bg-white"}`}>
               {s.label}
             </button>
           ))}

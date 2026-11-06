@@ -91,23 +91,23 @@ export default async function TenantDashboard({ params, searchParams }: Props) {
           <label htmlFor="code-search" className="sr-only">Захиалгын кодоор хайх</label>
           <input id="code-search" name="code" defaultValue={codeQuery} placeholder="Код: X4K9M2" autoComplete="off" maxLength={20}
             className="min-h-11 w-36 rounded-xl border border-line bg-white px-3 font-mono text-sm uppercase outline-none focus:border-ink" />
-          <button className="inline-flex min-h-11 items-center rounded-xl border border-line bg-white px-4 text-sm font-bold">Хайх</button>
+          <button className="inline-flex min-h-11 items-center rounded-xl border border-line bg-white px-4 text-sm font-medium">Хайх</button>
         </form>
         {(role === "owner" || role === "manager") && (
-          <Link href={`/dashboard/${tenant.slug}/settings`} className="inline-flex min-h-11 items-center rounded-xl border border-line bg-white px-4 text-sm font-bold">
+          <Link href={`/dashboard/${tenant.slug}/settings`} className="inline-flex min-h-11 items-center rounded-xl border border-line bg-white px-4 text-sm font-medium">
             Тохиргоо
           </Link>
         )}
       </div>
 
       {codeQuery && !found && (
-        <p role="alert" className="rounded-card border border-line bg-white p-4 text-[15px]">
+        <p role="alert" className="rounded-card border border-line bg-white p-4 text-sm">
           <b>{code ? formatBookingCode(code) : codeQuery}</b> кодтой захиалга олдсонгүй. Код 6 тэмдэгттэй (жишээ нь X4K9M2).
         </p>
       )}
 
       {tenant.status !== "active" && (
-        <p role="status" className="rounded-card border-2 border-brand bg-brand-tint p-4 text-[15px]">
+        <p role="status" className="rounded-card border-2 border-brand bg-brand-tint p-4 text-sm">
           {tenant.status === "pending"
             ? <><b>Таны байгууллага хянагдаж байна.</b> Батлагдмагц захиалгын хуудас нээгдэж, танд SMS ирнэ. Энэ хооронд үйлчилгээ, ажлын цагаа тохируулж болно.</>
             : tenant.status === "rejected"

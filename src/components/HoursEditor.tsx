@@ -19,7 +19,7 @@ export function HoursEditor({ value, onChange }: { value: DayHours[]; onChange: 
       {value.map((d, i) => (
         <fieldset key={d.weekday} className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-line bg-white p-3">
           <legend className="sr-only">{NAMES[d.weekday]}</legend>
-          <label className="flex min-h-11 w-28 items-center gap-2 text-sm font-bold">
+          <label className="flex min-h-11 w-28 items-center gap-2 text-sm font-medium">
             <input type="checkbox" checked={d.open} onChange={(e) => set(i, { open: e.target.checked })} className="size-5 accent-[#f5a800]" />
             {NAMES[d.weekday]}
           </label>

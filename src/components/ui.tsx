@@ -13,7 +13,7 @@ export function Field(p: {
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={p.id} className="text-[13px] font-bold">{p.label}</label>
+      <label htmlFor={p.id} className="text-sm font-medium">{p.label}</label>
       <input
         id={p.id}
         name={p.id}
@@ -24,7 +24,7 @@ export function Field(p: {
         autoComplete={p.autoComplete}
         required={p.required}
         inputMode={p.type === "tel" ? "numeric" : undefined}
-        className="min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3.5 text-[15px] outline-none focus:border-ink"
+        className="min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3.5 text-base outline-none focus:border-ink"
       />
       {p.hint && <span className="text-xs text-muted">{p.hint}</span>}
     </div>
@@ -36,8 +36,8 @@ export function ErrorBox({ children }: { children: React.ReactNode }) {
 }
 
 export const btnPrimary =
-  "inline-flex min-h-12 items-center justify-center rounded-card bg-brand px-5 text-base font-bold text-ink disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-12 items-center justify-center rounded-card bg-brand px-5 text-[15px] font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-50";
 export const btnSecondary =
-  "inline-flex min-h-11 items-center justify-center rounded-xl border border-line bg-white px-4 text-sm font-bold text-ink disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-11 items-center justify-center rounded-xl border border-line bg-white px-4 text-sm font-medium text-ink disabled:cursor-not-allowed disabled:opacity-50";
 export const btnDanger =
-  "inline-flex min-h-11 items-center justify-center rounded-xl border border-red-200 bg-white px-4 text-sm font-bold text-red-800 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-11 items-center justify-center rounded-xl border border-red-200 bg-white px-4 text-sm font-medium text-red-800 disabled:cursor-not-allowed disabled:opacity-50";

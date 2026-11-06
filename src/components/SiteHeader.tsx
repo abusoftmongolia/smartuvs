@@ -16,8 +16,8 @@ export function SiteHeader(p: { tenantName?: string; tenantSlug?: string; tenant
               <span aria-hidden className="h-8 w-px bg-line" />
               {p.tenantSlug && <TenantLogo name={p.tenantName} slug={p.tenantSlug} logoUrl={p.tenantLogo ?? null} size={44} />}
               <div>
-                <div className="text-lg font-bold leading-tight">{p.tenantName}</div>
-                {p.subtitle && <div className="text-[13px] text-muted">{p.subtitle}</div>}
+                <div className="text-lg font-semibold leading-tight">{p.tenantName}</div>
+                {p.subtitle && <div className="text-xs text-muted">{p.subtitle}</div>}
               </div>
             </>
           )}

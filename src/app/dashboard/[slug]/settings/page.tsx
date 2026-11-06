@@ -29,7 +29,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
     <main className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-6 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Тохиргоо · {tenant.name}</h1>
-        <Link href={`/dashboard/${slug}`} className="inline-flex min-h-11 items-center rounded-xl border border-line bg-white px-4 text-sm font-bold">
+        <Link href={`/dashboard/${slug}`} className="inline-flex min-h-11 items-center rounded-xl border border-line bg-white px-4 text-sm font-medium">
           ← Календарь
         </Link>
       </div>

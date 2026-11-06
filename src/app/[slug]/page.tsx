@@ -47,11 +47,11 @@ export default async function TenantBookingPage({ params }: Props) {
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Цаг захиалах</h1>
-          <p className="mt-1 text-[15px] text-muted">Төлбөргүй — утасны дугаараа баталгаажуулаад л болно.</p>
+          <p className="mt-1 text-sm text-muted">Төлбөргүй — утасны дугаараа баталгаажуулаад л болно.</p>
         </div>
         {maintenance ? (
           <p role="status" className="rounded-card border border-line bg-white p-6 text-muted">
-            Систем засвартай байна. Түр хүлээгээд дахин оролдоно уу{tenant.phone ? <> эсвэл <a href={`tel:${tenant.phone}`} className="font-bold text-ink underline">{tenant.phone}</a> руу залгана уу</> : ""}.
+            Систем засвартай байна. Түр хүлээгээд дахин оролдоно уу{tenant.phone ? <> эсвэл <a href={`tel:${tenant.phone}`} className="font-medium text-ink underline">{tenant.phone}</a> руу залгана уу</> : ""}.
           </p>
         ) : svc.length === 0 || !hasResources ? (
           <p className="rounded-card border border-line bg-white p-6 text-muted">Энэ байгууллага одоогоор онлайн захиалга авахгүй байна.</p>

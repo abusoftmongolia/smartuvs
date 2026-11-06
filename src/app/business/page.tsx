@@ -41,16 +41,16 @@ export default function BusinessPage() {
         {/* Hero */}
         <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-14 pt-10 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pb-20 lg:pt-16">
           <div className="flex flex-col items-start gap-5">
-            <span className="rounded-full bg-brand-tint px-3 py-1 text-[13px] font-bold text-brand-deep">Цаг захиалгын систем · Үнэгүй</span>
-            <h1 className="text-[34px] font-bold leading-[1.1] tracking-tight sm:text-5xl">
+            <span className="rounded-full bg-brand-tint px-3 py-1 text-xs font-medium text-brand-deep">Цаг захиалгын систем · Үнэгүй</span>
+            <h1 className="text-3xl font-bold leading-[1.1] tracking-tight sm:text-5xl">
               Захиалгаа утсаар биш, <span className="whitespace-nowrap">онлайнаар</span> аваарай
             </h1>
-            <p className="max-w-lg text-[17px] text-muted">
+            <p className="max-w-lg text-base text-muted">
               Үйлчлүүлэгч таны хуудаснаас сул цагаа сонгоод захиална. Баталгаажуулалт, сануулга SMS-ээр автоматаар явна — та үйлчилгээндээ анхаарна.
             </p>
             <div className="flex flex-wrap gap-2">
-              <Link href="/signup" className="inline-flex min-h-12 items-center rounded-card bg-brand px-6 font-bold text-ink">Үнэгүй бүртгүүлэх</Link>
-              <Link href={DEMO} className="inline-flex min-h-12 items-center rounded-card border border-line bg-white px-6 font-bold">Жишээ хуудас үзэх</Link>
+              <Link href="/signup" className="inline-flex min-h-12 items-center rounded-card bg-brand px-6 font-semibold text-ink">Үнэгүй бүртгүүлэх</Link>
+              <Link href={DEMO} className="inline-flex min-h-12 items-center rounded-card border border-line bg-white px-6 font-medium">Жишээ хуудас үзэх</Link>
             </div>
             <p className="text-sm text-muted">Бүртгэлтэй юу? <Link href="/admin/login" className="font-semibold text-brand-deep underline">Нэвтрэх</Link></p>
           </div>
@@ -62,9 +62,9 @@ export default function BusinessPage() {
           <ol className="grid gap-4 md:grid-cols-3">
             {STEPS.map((s, i) => (
               <li key={s.t} className="flex flex-col gap-3 rounded-[20px] border border-line bg-white p-6">
-                <span className="font-mono text-sm font-bold text-brand-deep">0{i + 1}</span>
-                <h3 className="text-lg font-bold">{s.t}</h3>
-                <p className="text-[15px] text-muted">{s.d}</p>
+                <span className="font-mono text-sm font-medium text-brand-deep">0{i + 1}</span>
+                <h3 className="text-lg font-semibold">{s.t}</h3>
+                <p className="text-sm text-muted">{s.d}</p>
               </li>
             ))}
           </ol>
@@ -76,7 +76,7 @@ export default function BusinessPage() {
             {FEATURES.map((f) => (
               <li key={f.t} className="flex flex-col gap-3 rounded-[20px] border border-line bg-white p-5">
                 <span className="flex size-11 items-center justify-center rounded-xl bg-brand-tint text-brand-deep">{ICONS[f.icon]}</span>
-                <h3 className="font-bold">{f.t}</h3>
+                <h3 className="font-semibold">{f.t}</h3>
                 <p className="text-sm text-muted">{f.d}</p>
               </li>
             ))}
@@ -89,14 +89,14 @@ export default function BusinessPage() {
             <FlowCard n={1} title="Цаг сонгоно">
               <div className="flex gap-1.5">
                 {["Да", "Мя", "Лх", "Пү", "Ба"].map((d, i) => (
-                  <span key={d} className={`flex h-12 flex-1 flex-col items-center justify-center rounded-lg border text-[11px] font-bold ${i === 1 ? "border-brand bg-brand-tint" : "border-line bg-white"}`}>
+                  <span key={d} className={`flex h-12 flex-1 flex-col items-center justify-center rounded-lg border text-[11px] font-medium ${i === 1 ? "border-brand bg-brand-tint" : "border-line bg-white"}`}>
                     {d}<span className="text-sm">{10 + i}</span>
                   </span>
                 ))}
               </div>
               <div className="mt-2 grid grid-cols-3 gap-1.5">
                 {["09:00", "10:00", "11:00", "13:00", "14:00", "15:30"].map((t) => (
-                  <span key={t} className={`rounded-lg border py-1.5 text-center text-xs font-bold ${t === "11:00" ? "border-ink bg-ink text-white" : "border-line bg-white"}`}>{t}</span>
+                  <span key={t} className={`rounded-lg border py-1.5 text-center text-xs font-medium ${t === "11:00" ? "border-ink bg-ink text-white" : "border-line bg-white"}`}>{t}</span>
                 ))}
               </div>
             </FlowCard>
@@ -104,14 +104,14 @@ export default function BusinessPage() {
               <div className="flex flex-col gap-2">
                 <MockField label="Нэр" value="Номин" />
                 <MockField label="Утас" value="9911 2233" />
-                <span className="rounded-lg bg-brand py-2 text-center text-xs font-bold text-ink">Баталгаажуулах</span>
+                <span className="rounded-lg bg-brand py-2 text-center text-xs font-medium text-ink">Баталгаажуулах</span>
               </div>
             </FlowCard>
             <FlowCard n={3} title="Код авна">
               <div className="flex flex-col items-center gap-1 rounded-xl bg-ground p-4 text-center">
                 <span className="text-xs text-muted">Таны цаг баталгаажлаа</span>
-                <span className="font-bold">Мягмар, 11:00</span>
-                <span className="mt-1 font-mono text-xl font-bold tracking-[0.15em]">#X4K9M2</span>
+                <span className="font-medium">Мягмар, 11:00</span>
+                <span className="mt-1 font-mono text-xl font-semibold tracking-[0.15em]">#X4K9M2</span>
                 <span className="text-[11px] text-muted">SMS-ээр сануулга очно</span>
               </div>
             </FlowCard>
@@ -122,9 +122,9 @@ export default function BusinessPage() {
         <Section id="industries" kicker="Хэнд зориулсан бэ" title="Цаг захиалдаг бүх бизнест">
           <ul className="flex flex-wrap gap-2">
             {industries.map((l) => (
-              <li key={l} className="rounded-full border border-line bg-white px-4 py-2 text-[15px] font-medium">{l}</li>
+              <li key={l} className="rounded-full border border-line bg-white px-4 py-2 text-sm font-medium">{l}</li>
             ))}
-            <li className="rounded-full border border-dashed border-line px-4 py-2 text-[15px] text-muted">болон бусад</li>
+            <li className="rounded-full border border-dashed border-line px-4 py-2 text-sm text-muted">болон бусад</li>
           </ul>
         </Section>
 
@@ -133,25 +133,25 @@ export default function BusinessPage() {
           <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
             <div className="flex flex-col gap-5 rounded-[20px] border-2 border-ink bg-white p-6 sm:p-8">
               <div>
-                <div className="text-sm font-bold text-muted">Бүх байгууллагад</div>
+                <div className="text-sm font-medium text-muted">Бүх байгууллагад</div>
                 <div className="mt-1 flex items-baseline gap-2"><span className="text-5xl font-bold tracking-tight">0₮</span><span className="text-muted">/ сар</span></div>
-                <p className="mt-2 text-[15px] text-muted">Ажилтны тоо хязгааргүй. Үйлчлүүлэгчээс ч төлбөр авахгүй.</p>
+                <p className="mt-2 text-sm text-muted">Ажилтны тоо хязгааргүй. Үйлчлүүлэгчээс ч төлбөр авахгүй.</p>
               </div>
-              <ul className="grid gap-2 text-[15px] sm:grid-cols-2">
+              <ul className="grid gap-2 text-sm sm:grid-cols-2">
                 {["Онлайн захиалгын хуудас", "QR постер (A4)", "Ажилтан, боксын хуваарь", "SMS сануулга", "Шинэ захиалгын мэдэгдэл", "Захиалгын түүх"].map((x) => (
                   <li key={x} className="flex items-center gap-2"><span aria-hidden className="text-brand-deep">{ICONS.check}</span>{x}</li>
                 ))}
               </ul>
-              <Link href="/signup" className="inline-flex min-h-12 items-center justify-center self-start rounded-card bg-brand px-6 font-bold text-ink">Үнэгүй эхлэх</Link>
+              <Link href="/signup" className="inline-flex min-h-12 items-center justify-center self-start rounded-card bg-brand px-6 font-semibold text-ink">Үнэгүй эхлэх</Link>
             </div>
             <div className="flex flex-col justify-between gap-5 rounded-[20px] bg-ink p-6 text-white sm:p-8">
               <div>
-                <h3 className="text-xl font-bold">Тусгай хэрэгцээтэй юу?</h3>
-                <p className="mt-2 text-[15px] text-white/75">Олон салбартай сүлжээ, тусгай тайлан, өөр системтэй холболт хэрэгтэй бол бидэнтэй холбогдоорой.</p>
+                <h3 className="text-xl font-semibold">Тусгай хэрэгцээтэй юу?</h3>
+                <p className="mt-2 text-sm text-white/75">Олон салбартай сүлжээ, тусгай тайлан, өөр системтэй холболт хэрэгтэй бол бидэнтэй холбогдоорой.</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <a href={`tel:${CONTACT.phone}`} className="inline-flex min-h-12 items-center rounded-card bg-white px-5 font-bold text-ink">{CONTACT.phoneLabel}</a>
-                <a href={`mailto:${CONTACT.email}`} className="inline-flex min-h-12 items-center rounded-card border border-white/30 px-5 font-bold">{CONTACT.email}</a>
+                <a href={`tel:${CONTACT.phone}`} className="inline-flex min-h-12 items-center rounded-card bg-white px-5 font-medium text-ink">{CONTACT.phoneLabel}</a>
+                <a href={`mailto:${CONTACT.email}`} className="inline-flex min-h-12 items-center rounded-card border border-white/30 px-5 font-medium">{CONTACT.email}</a>
               </div>
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function BusinessPage() {
               <h2 className="text-2xl font-bold text-ink sm:text-3xl">Өнөөдөр эхлээрэй</h2>
               <p className="mt-1 text-ink/80">5 минутад бүртгүүлнэ. SmartUvs хянаж баталмагц таны хуудас нээгдэнэ.</p>
             </div>
-            <Link href="/signup" className="inline-flex min-h-12 flex-none items-center rounded-card bg-ink px-6 font-bold text-white">Байгууллагаа бүртгүүлэх</Link>
+            <Link href="/signup" className="inline-flex min-h-12 flex-none items-center rounded-card bg-ink px-6 font-semibold text-white">Байгууллагаа бүртгүүлэх</Link>
           </div>
         </section>
       </main>
@@ -176,8 +176,8 @@ function Section({ id, kicker, title, children }: { id: string; kicker: string; 
   return (
     <section id={id} aria-labelledby={`h-${id}`} className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 lg:pb-20">
       <div className="mb-6">
-        <div className="text-[13px] font-bold uppercase tracking-wider text-brand-deep">{kicker}</div>
-        <h2 id={`h-${id}`} className="mt-1.5 text-[28px] font-bold leading-tight tracking-tight sm:text-4xl">{title}</h2>
+        <div className="text-xs font-medium uppercase tracking-wider text-brand-deep">{kicker}</div>
+        <h2 id={`h-${id}`} className="mt-1.5 text-2xl font-bold leading-tight tracking-tight sm:text-3xl lg:text-4xl">{title}</h2>
       </div>
       {children}
     </section>
@@ -188,8 +188,8 @@ function FlowCard({ n, title, children }: { n: number; title: string; children: 
   return (
     <li className="flex flex-col gap-4 rounded-[20px] border border-line bg-white p-5">
       <div className="flex items-center gap-3">
-        <span className="flex size-8 items-center justify-center rounded-full bg-ink text-sm font-bold text-white">{n}</span>
-        <h3 className="font-bold">{title}</h3>
+        <span className="flex size-8 items-center justify-center rounded-full bg-ink text-sm font-medium text-white">{n}</span>
+        <h3 className="font-semibold">{title}</h3>
       </div>
       <div aria-hidden>{children}</div>
     </li>
@@ -199,7 +199,7 @@ function FlowCard({ n, title, children }: { n: number; title: string; children: 
 function MockField({ label, value }: { label: string; value: string }) {
   return (
     <span className="flex flex-col gap-0.5">
-      <span className="text-[11px] font-bold text-muted">{label}</span>
+      <span className="text-[11px] font-medium text-muted">{label}</span>
       <span className="rounded-lg border border-line bg-white px-2.5 py-1.5 text-sm">{value}</span>
     </span>
   );
@@ -223,8 +223,8 @@ function ScheduleMock() {
   return (
     <div aria-hidden className="overflow-hidden rounded-[24px] border border-line bg-white shadow-[0_24px_60px_-30px_rgba(11,11,11,0.35)]">
       <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
-        <span className="font-bold">Мягмар · Өнөөдөр</span>
-        <span className="rounded-full bg-brand px-3 py-1 text-xs font-bold text-ink">7 захиалга</span>
+        <span className="font-medium">Мягмар · Өнөөдөр</span>
+        <span className="rounded-full bg-brand px-3 py-1 text-xs font-medium text-ink">7 захиалга</span>
       </div>
       <div className="flex">
         <div className="w-14 flex-none border-r border-line pt-9">
@@ -232,13 +232,13 @@ function ScheduleMock() {
         </div>
         {staff.map((s, col) => (
           <div key={s} className="min-w-0 flex-1 border-r border-line last:border-r-0">
-            <div className="flex h-9 items-center justify-center border-b border-line text-[13px] font-bold">{s}</div>
+            <div className="flex h-9 items-center justify-center border-b border-line text-xs font-medium">{s}</div>
             <div className="relative" style={{ height: ROW * hours.length }}>
               {hours.map((h, i) => <div key={h} className="absolute inset-x-0 border-t border-line/70" style={{ top: i * ROW }} />)}
               {blocks.filter((b) => b[0] === col).map(([, at, len, name, svc, st]) => (
                 <div key={name} className={`absolute inset-x-1 overflow-hidden rounded-lg border-l-[3px] px-2 py-1 ${st === "ok" ? "border-brand bg-brand-tint" : "border-pending bg-blue-50"}`}
                   style={{ top: at * ROW + 2, height: len * ROW - 4 }}>
-                  <div className="truncate text-xs font-bold">{name}</div>
+                  <div className="truncate text-xs font-medium">{name}</div>
                   <div className="truncate text-[11px] text-muted">{svc}</div>
                 </div>
               ))}

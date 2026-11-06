@@ -110,21 +110,21 @@ export function BookingFlow(p: BookingFlowProps) {
         <p className="text-sm text-muted">{service?.name} · {p.bookingMode === "staff" ? staffName : ""}</p>
         <p className="text-2xl font-bold">{result.day}, {result.time}</p>
         <div className="w-full rounded-xl bg-ground px-4 py-3">
-          <div className="text-[13px] text-muted">Захиалгын код — хадгалаарай</div>
+          <div className="text-xs text-muted">Захиалгын код — хадгалаарай</div>
           <div className="font-mono text-2xl font-bold tracking-[0.15em]">{formatBookingCode(result.code)}</div>
         </div>
-        <p className="text-[13px] text-muted">
+        <p className="text-xs text-muted">
           {result.status === "confirmed" ? "Дэлгэрэнгүйг SMS-ээр илгээлээ. 24 цагийн өмнө сануулна." : "Ажилтан батлахад SMS ирнэ."}
         </p>
         <div className="mt-2 flex w-full flex-col gap-2">
-          <a href={`${result.managePath}/ics`} className="flex min-h-12 items-center justify-center rounded-card bg-brand font-bold text-ink">
+          <a href={`${result.managePath}/ics`} className="flex min-h-12 items-center justify-center rounded-card bg-brand font-semibold text-ink">
             📅 Календарьт нэмэх
           </a>
-          <a href={result.managePath} className="flex min-h-12 items-center justify-center rounded-xl border border-line text-sm font-bold">
+          <a href={result.managePath} className="flex min-h-12 items-center justify-center rounded-xl border border-line text-sm font-medium">
             Захиалгаа харах · шилжүүлэх · цуцлах
           </a>
         </div>
-        <button onClick={() => { setResult(null); setStartMin(null); }} className="min-h-12 rounded-xl px-5 text-sm font-bold text-brand-deep underline">
+        <button onClick={() => { setResult(null); setStartMin(null); }} className="min-h-12 rounded-xl px-5 text-sm font-medium text-brand-deep underline">
           Өөр цаг захиалах
         </button>
       </section>
@@ -135,7 +135,7 @@ export function BookingFlow(p: BookingFlowProps) {
     <div className="flex flex-wrap items-start gap-6">
       {/* 1. Үйлчилгээ */}
       <section aria-labelledby="h-svc" className="flex min-w-0 flex-[1_1_300px] flex-col gap-3">
-        <h2 id="h-svc" className="text-lg font-bold">1. Үйлчилгээ</h2>
+        <h2 id="h-svc" className="text-lg font-semibold">1. Үйлчилгээ</h2>
         {p.services.map((s) => (
           <button
             key={s.id}
@@ -143,24 +143,24 @@ export function BookingFlow(p: BookingFlowProps) {
             aria-pressed={s.id === serviceId}
             className={`flex w-full items-center gap-3.5 rounded-card border-[1.5px] p-4 text-left ${card(s.id === serviceId)}`}
           >
-            <span className="flex flex-1 flex-col"><span className="text-[15px] font-bold">{s.name}</span><span className="text-[13px] text-muted">{s.duration}</span></span>
-            {s.price && <span className="text-[15px] font-bold whitespace-nowrap">{s.price}</span>}
+            <span className="flex flex-1 flex-col"><span className="text-sm font-medium">{s.name}</span><span className="text-xs text-muted">{s.duration}</span></span>
+            {s.price && <span className="text-sm font-medium whitespace-nowrap">{s.price}</span>}
           </button>
         ))}
-        <p className="text-[13px] text-muted">Үнэ мэдээллийн зорилготой — тооцоог газар дээр нь хийнэ.</p>
+        <p className="text-xs text-muted">Үнэ мэдээллийн зорилготой — тооцоог газар дээр нь хийнэ.</p>
       </section>
 
       {/* 2. Ажилтан ба цаг */}
       <section aria-labelledby="h-time" className="flex min-w-0 flex-[2_1_440px] flex-col gap-5 rounded-[18px] border border-line bg-white p-5">
-        <h2 id="h-time" className="text-lg font-bold">2. {p.bookingMode === "staff" ? `${p.staffTerm} ба цаг` : "Цаг"}</h2>
+        <h2 id="h-time" className="text-lg font-semibold">2. {p.bookingMode === "staff" ? `${p.staffTerm} ба цаг` : "Цаг"}</h2>
 
         {p.bookingMode === "staff" && staffList.length > 1 && (
           <div className="flex flex-col gap-2.5">
-            <div className="text-[13px] font-bold text-muted">{p.staffTerm}</div>
+            <div className="text-xs font-medium text-muted">{p.staffTerm}</div>
             <div className="flex flex-wrap gap-2">
               {[{ id: null as string | null, name: "Хэн ч болно", title: "Хамгийн эрт сул" }, ...staffList].map((s) => (
                 <button key={s.id ?? "any"} onClick={() => setStaffId(s.id)} aria-pressed={s.id === staffId}
-                  className={`min-h-12 rounded-full border-[1.5px] px-4 text-left text-sm font-bold ${card(s.id === staffId)}`}>
+                  className={`min-h-12 rounded-full border-[1.5px] px-4 text-left text-sm font-medium ${card(s.id === staffId)}`}>
                   {s.name}{s.title && <span className="block text-xs font-medium text-muted">{s.title}</span>}
                 </button>
               ))}
@@ -169,13 +169,13 @@ export function BookingFlow(p: BookingFlowProps) {
         )}
 
         <div className="flex flex-col gap-2.5">
-          <div className="text-[13px] font-bold text-muted">Өдөр</div>
+          <div className="text-xs font-medium text-muted">Өдөр</div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {p.days.map((d) => (
               <button key={d.date} onClick={() => setDate(d.date)} aria-pressed={d.date === date} aria-label={d.date}
                 className={`flex min-h-[72px] w-16 flex-none flex-col items-center justify-center rounded-card border-[1.5px] ${chip(d.date === date)}`}>
-                <span className="text-xs font-bold">{d.wd}</span>
-                <span className="text-xl font-bold">{d.num}</span>
+                <span className="text-xs font-medium">{d.wd}</span>
+                <span className="text-xl font-semibold">{d.num}</span>
                 <span className="text-[11px] font-semibold">{d.sub}</span>
               </button>
             ))}
@@ -189,11 +189,11 @@ export function BookingFlow(p: BookingFlowProps) {
         ) : (
           groups.map((g) => (
             <div key={g.label} className="flex flex-col gap-2.5">
-              <div className="text-[13px] font-bold text-muted">{g.label}</div>
+              <div className="text-xs font-medium text-muted">{g.label}</div>
               <div className="grid grid-cols-[repeat(auto-fill,minmax(88px,1fr))] gap-2">
                 {g.items.map((t) => (
                   <button key={t.startMin} onClick={() => setStartMin(t.startMin)} aria-pressed={t.startMin === startMin}
-                    className={`min-h-12 rounded-xl border-[1.5px] text-[15px] font-bold ${chip(t.startMin === startMin)}`}>
+                    className={`min-h-12 rounded-xl border-[1.5px] text-sm font-medium ${chip(t.startMin === startMin)}`}>
                     {t.label}
                   </button>
                 ))}
@@ -205,7 +205,7 @@ export function BookingFlow(p: BookingFlowProps) {
 
       {/* 3. Баталгаажуулах */}
       <aside aria-labelledby="h-sum" className="flex min-w-0 flex-[1_1_280px] flex-col gap-4 rounded-[18px] border border-line bg-white p-5">
-        <h2 id="h-sum" className="text-lg font-bold">3. Баталгаажуулах</h2>
+        <h2 id="h-sum" className="text-lg font-semibold">3. Баталгаажуулах</h2>
         <dl className="flex flex-col gap-2.5 rounded-xl bg-ground p-3.5 text-sm">
           <Row k="Үйлчилгээ" v={service ? `${service.name} (${service.duration})` : "—"} />
           {p.bookingMode === "staff" && <Row k={p.staffTerm} v={staffName ?? "—"} />}
@@ -226,7 +226,7 @@ export function BookingFlow(p: BookingFlowProps) {
           <>
             {verification?.state === "expired" && <ExpiredNotice onRestart={pv.restart} busy={pv.starting} />}
             <button onClick={submit} disabled={startMin == null || pending || pv.starting || !name || !phone}
-              className="min-h-13 rounded-card bg-brand py-3.5 text-base font-bold text-ink disabled:cursor-not-allowed disabled:opacity-50">
+              className="min-h-13 rounded-card bg-brand py-3.5 text-[15px] font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-50">
               {pending || pv.starting ? "Түр хүлээнэ үү…" : "Цаг захиалах"}
             </button>
           </>
@@ -239,17 +239,17 @@ export function BookingFlow(p: BookingFlowProps) {
 
 function Row({ k, v }: { k: string; v: string }) {
   return (
-    <div className="flex justify-between gap-3"><dt className="text-[13px] text-muted">{k}</dt><dd className="text-right font-bold">{v}</dd></div>
+    <div className="flex justify-between gap-3"><dt className="text-xs text-muted">{k}</dt><dd className="text-right font-medium">{v}</dd></div>
   );
 }
 
 function Field(p: { id: string; label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; hint?: string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={p.id} className="text-[13px] font-bold">{p.label}</label>
+      <label htmlFor={p.id} className="text-sm font-medium">{p.label}</label>
       <input id={p.id} type={p.type ?? "text"} value={p.value} onChange={(e) => p.onChange(e.target.value)} placeholder={p.placeholder}
         inputMode={p.type === "tel" ? "numeric" : undefined}
-        className="min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3.5 text-[15px] outline-none focus:border-ink" />
+        className="min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3.5 text-base outline-none focus:border-ink" />
       {p.hint && <span className="text-xs text-muted">{p.hint}</span>}
     </div>
   );

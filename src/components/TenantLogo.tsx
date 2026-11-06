@@ -14,7 +14,7 @@ export function TenantLogo(p: { name: string; slug: string; logoUrl: string | nu
   }
   const c = avatarColors(p.slug);
   return (
-    <span aria-hidden className={`${box} font-bold tracking-tight`}
+    <span aria-hidden className={`${box} font-medium tracking-tight`}
       style={{ width: size, height: size, background: c.bg, color: c.fg, fontSize: Math.round(size * 0.38) }}>
       {initials(p.name)}
     </span>

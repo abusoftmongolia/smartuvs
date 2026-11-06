@@ -22,7 +22,7 @@ export default async function AdminTenants({ searchParams }: { searchParams: Pro
     <>
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Байгууллагууд</h1>
-        <p className="mt-1 text-[15px] text-muted">tsag.smartuvs.mn · шинэ бүртгэлийг батлах, хаах</p>
+        <p className="mt-1 text-sm text-muted">tsag.smartuvs.mn · шинэ бүртгэлийг батлах, хаах</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {FILTERS.map((f) => {
@@ -30,7 +30,7 @@ export default async function AdminTenants({ searchParams }: { searchParams: Pro
           const href = `/tenants?${new URLSearchParams({ ...(f.id !== "all" ? { status: f.id } : {}), ...(q ? { q } : {}) })}`;
           return (
             <Link key={f.id} href={href} aria-current={on ? "page" : undefined}
-              className={`inline-flex min-h-11 items-center gap-2 rounded-full border-[1.5px] px-4 text-sm font-bold ${on ? "border-brand bg-brand text-ink" : "border-line bg-white"}`}>
+              className={`inline-flex min-h-11 items-center gap-2 rounded-full border-[1.5px] px-4 text-sm font-semibold ${on ? "border-brand bg-brand text-ink" : "border-line bg-white"}`}>
               {f.label}<span className="tabular-nums text-muted">{count(f.id)}</span>
             </Link>
           );
@@ -39,7 +39,7 @@ export default async function AdminTenants({ searchParams }: { searchParams: Pro
           {status !== "all" && <input type="hidden" name="status" value={status} />}
           <label htmlFor="tq" className="sr-only">Байгууллага хайх</label>
           <input id="tq" name="q" type="search" defaultValue={q} placeholder="Нэр, хаяг…"
-            className="min-h-11 w-full rounded-xl border-[1.5px] border-line bg-white px-3 text-[15px]" />
+            className="min-h-11 w-full rounded-xl border-[1.5px] border-line bg-white px-3 text-base" />
         </form>
       </div>
       <TenantList rows={rows} />

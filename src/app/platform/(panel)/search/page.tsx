@@ -20,13 +20,13 @@ export default async function AdminSearch({ searchParams }: { searchParams: Prom
             <ul className="flex flex-col gap-2">
               {users.map((u) => (
                 <li key={u.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-white p-4">
-                  <span className="font-bold">{u.name}</span>
+                  <span className="font-medium">{u.name}</span>
                   <span className="text-muted">{maskPhone(u.phone)} · {u.tenants ?? "—"} · {fmtDate(u.createdAt)}</span>
                 </li>
               ))}
             </ul>
           )}
-          <Link href="/" className="font-bold underline">← Тойм</Link>
+          <Link href="/" className="font-medium underline">← Тойм</Link>
         </>
       )}
     </>

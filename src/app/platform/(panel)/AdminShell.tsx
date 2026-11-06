@@ -43,23 +43,23 @@ export function AdminShell(p: { userName: string; pending: number; children: Rea
       <Link href="/" className="flex items-center gap-2 px-2">
         {/* Лого хар-шар тул хар sidebar дээр цагаан хавтан дотор */}
         <span className="rounded-lg bg-white px-2.5 py-2"><Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={1200} height={175} className="h-5 w-auto" priority /></span>
-        <span className="rounded-md bg-brand px-1.5 py-0.5 text-[11px] font-bold text-ink">АДМИН</span>
+        <span className="rounded-md bg-brand px-1.5 py-0.5 text-[11px] font-medium text-ink">АДМИН</span>
       </Link>
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto">
         {groups.map((g, i) => (
           <div key={i} className="flex flex-col gap-1">
-            {g.title && <div className="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-white/50">{g.title}</div>}
+            {g.title && <div className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-white/50">{g.title}</div>}
             {g.items.map((it) =>
               it.soon ? (
-                <span key={it.label} className="flex min-h-11 items-center justify-between rounded-xl px-3 text-[15px] font-bold text-white/40" aria-disabled>
-                  {it.label}<span className="text-[10px] font-bold uppercase">удахгүй</span>
+                <span key={it.label} className="flex min-h-11 items-center justify-between rounded-xl px-3 text-sm font-medium text-white/40" aria-disabled>
+                  {it.label}<span className="text-[10px] font-medium uppercase">удахгүй</span>
                 </span>
               ) : (
                 <Link key={it.href} href={it.href} aria-current={isActive(it.href) ? "page" : undefined}
-                  className={`flex min-h-11 items-center justify-between rounded-xl px-3 text-[15px] font-bold ${isActive(it.href) ? "bg-brand text-ink" : "text-white hover:bg-white/10"}`}>
+                  className={`flex min-h-11 items-center justify-between rounded-xl px-3 text-sm font-semibold ${isActive(it.href) ? "bg-brand text-ink" : "text-white hover:bg-white/10"}`}>
                   {it.label}
                   {!!it.badge && (
-                    <span className={`flex min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold ${isActive(it.href) ? "bg-ink text-brand" : "bg-brand text-ink"}`}>{it.badge}</span>
+                    <span className={`flex min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-medium ${isActive(it.href) ? "bg-ink text-brand" : "bg-brand text-ink"}`}>{it.badge}</span>
                   )}
                 </Link>
               ),
@@ -68,12 +68,12 @@ export function AdminShell(p: { userName: string; pending: number; children: Rea
         ))}
       </div>
       <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3">
-        <span aria-hidden className="flex size-10 flex-none items-center justify-center rounded-full bg-brand text-lg font-bold text-ink">
+        <span aria-hidden className="flex size-10 flex-none items-center justify-center rounded-full bg-brand text-lg font-semibold text-ink">
           {/* "Г.Батжаргал" → "Б" (овгийн үсгийг алгасна) */}
           {(p.userName.split(".").pop()?.trim() || p.userName).slice(0, 1).toUpperCase()}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-bold">{p.userName}</div>
+          <div className="truncate text-sm font-medium">{p.userName}</div>
           <div className="text-xs text-white/60">Супер админ</div>
         </div>
         <form action={async () => { const r = await logoutAdmin(); window.location.assign(r.to); }}>
@@ -103,12 +103,12 @@ export function AdminShell(p: { userName: string; pending: number; children: Rea
             <label htmlFor="admin-search" className="sr-only">Хайх</label>
             <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
             <input id="admin-search" name="q" type="search" defaultValue={path === "/search" ? (sp.get("q") ?? "") : ""} placeholder="Байгууллага, хэрэглэгч хайх…"
-              className="min-h-11 w-full rounded-xl border border-line bg-ground pl-10 pr-3 text-[15px] outline-none focus:border-ink" />
+              className="min-h-11 w-full rounded-xl border border-line bg-ground pl-10 pr-3 text-base outline-none focus:border-ink" />
           </form>
-          <label className="ml-auto hidden items-center gap-2 text-sm font-bold text-muted md:flex">
+          <label className="ml-auto hidden items-center gap-2 text-sm font-medium text-muted md:flex">
             Систем
             <select value={sp.get("system") ?? "all"} onChange={(e) => router.push(e.target.value === "all" ? "/" : `/?system=${e.target.value}`)}
-              className="min-h-11 rounded-xl border border-line bg-white px-3 text-[15px] font-bold text-ink">
+              className="min-h-11 rounded-xl border border-line bg-white px-3 text-base font-medium text-ink">
               <option value="all">Бүх систем</option>
               <option value="tsag">Цаг захиалга</option>
               <option value="chat" disabled>Ухаалаг туслах (холбогдоогүй)</option>

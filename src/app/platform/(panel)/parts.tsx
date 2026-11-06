@@ -31,7 +31,7 @@ export function TenantActions({ id, name, status }: { id: string; name: string; 
           const primary = a === "approve" || a === "activate";
           return (
             <button key={a} disabled={pending} onClick={() => run(a)}
-              className={`inline-flex min-h-11 items-center rounded-xl px-4 text-sm font-bold disabled:opacity-50 ${primary ? "bg-ink text-white" : "border-[1.5px] border-line bg-white text-ink"}`}>
+              className={`inline-flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold disabled:opacity-50 ${primary ? "bg-ink text-white" : "border-[1.5px] border-line bg-white text-ink"}`}>
               {LABEL[a]}
             </button>
           );

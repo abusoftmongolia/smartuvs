@@ -19,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <div className="flex items-center gap-2">
             <span className="hidden text-sm font-semibold text-muted sm:inline">{user.name}</span>
             <form action={logout}>
-              <button className="inline-flex min-h-11 items-center rounded-xl border border-line px-4 text-sm font-bold">Гарах</button>
+              <button className="inline-flex min-h-11 items-center rounded-xl border border-line px-4 text-sm font-medium">Гарах</button>
             </form>
           </div>
         </div>
