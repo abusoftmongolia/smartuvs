@@ -4,9 +4,11 @@ import "server-only";
  * Эцсийн давхардлын хамгаалалт = Postgres exclusion constraint (23P01).
  */
 import { randomBytes } from "node:crypto";
-import { db, pgErrorCode, PG_EXCLUSION_VIOLATION, schema } from "@/db";
+import { db, pgErrorCode, PG_EXCLUSION_VIOLATION, PG_UNIQUE_VIOLATION, schema } from "@/db";
+import { generateBookingCode } from "@/lib/booking-code";
 import type { Slot } from "@/lib/slots";
 import { sms, smsText } from "@/lib/sms";
+import { listBookingAlertPhones } from "@/db/tenant";
 import { formatDayMn, formatHm, todayIn, utcToLocalMinute } from "@/lib/time";
 
 type Tenant = typeof schema.tenants.$inferSelect;
@@ -30,7 +32,9 @@ export async function placeBooking(p: {
   notes?: string | null;
 }): Promise<Booking | null> {
   const isResource = p.tenant.bookingMode === "resource";
-  for (const ownerId of p.slot.ownerIds) {
+  let codeRetries = 3; // код давхцах магадлал ~1/890 сая — давхцвал шинэ кодоор дахин
+  for (let i = 0; i < p.slot.ownerIds.length; i++) {
+    const ownerId = p.slot.ownerIds[i];
     try {
       const [b] = await db()
         .insert(schema.bookings)
@@ -47,12 +51,15 @@ export async function placeBooking(p: {
           answers: p.answers ?? {},
           notes: p.notes ?? null,
           manageToken: randomBytes(18).toString("base64url"),
+          code: generateBookingCode(),
         })
         .returning();
       await scheduleReminders({ bookingId: b.id, startsAt: b.startsAt });
       return b;
     } catch (err) {
-      if (pgErrorCode(err) === PG_EXCLUSION_VIOLATION) continue;
+      const code = pgErrorCode(err);
+      if (code === PG_EXCLUSION_VIOLATION) continue;
+      if (code === PG_UNIQUE_VIOLATION && codeRetries-- > 0) { i--; continue; } // ижил ажилтанд шинэ кодоор
       throw err;
     }
   }
@@ -88,7 +95,7 @@ export type CustomerMessage = "pending" | "confirmed" | "rescheduled" | "cancell
 export async function notifyCustomer(tenant: Tenant, booking: Booking, phone: string, kind: CustomerMessage) {
   const { day, time } = bookingWhen(tenant, booking.startsAt);
   const link = manageLink(booking.manageToken);
-  const base = { tenant: tenant.name, day, time };
+  const base = { tenant: tenant.name, day, time, code: booking.code };
   const text =
     kind === "confirmed" ? smsText.confirmed({ ...base, link })
     : kind === "rescheduled" ? smsText.rescheduled({ ...base, link })
@@ -99,5 +106,26 @@ export async function notifyCustomer(tenant: Tenant, booking: Booking, phone: st
     if (!r.ok) console.error(`[sms] ${kind} илгээж чадсангүй: ${r.error}`);
   } catch (e) {
     console.error(`[sms] ${kind}`, e);
+  }
+}
+
+/**
+ * Байгууллагад шинэ онлайн захиалгын SMS (тохиргоонд унтраагаагүй бол). SMS-ийн зардлыг байгууллага хариуцна.
+ * Үйлчлүүлэгчийн утсыг SMS-д бичихгүй — самбараас харна. Алдаа гарвал захиалгыг унагаахгүй.
+ */
+export async function notifyBusiness(tenant: Tenant, booking: Booking, p: { customerName: string; serviceName: string }) {
+  if (tenant.settings.notifyNewBookings === false) return;
+  try {
+    const phones = await listBookingAlertPhones(tenant, booking.staffId);
+    const { day, time } = bookingWhen(tenant, booking.startsAt);
+    const text = smsText.newBooking({
+      customer: p.customerName, service: p.serviceName, day, time, code: booking.code, pending: booking.status === "pending",
+    });
+    for (const to of phones) {
+      const r = await sms().send(to, text);
+      if (!r.ok) console.error(`[sms] newBooking илгээж чадсангүй: ${r.error}`);
+    }
+  } catch (e) {
+    console.error("[sms] newBooking", e);
   }
 }

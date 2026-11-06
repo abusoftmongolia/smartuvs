@@ -4,8 +4,9 @@
  * Үнийг санаатайгаар оруулаагүй — байгууллага өөрөө бөглөнө (заавал биш).
  */
 import type { TenantSettings } from "@/db/schema";
+import type { Industry } from "./industries";
 
-export type Industry = "barber" | "beauty" | "carwash" | "clinic" | "other";
+export { INDUSTRY_IDS, type Industry } from "./industries";
 
 export type IndustryPreset = {
   id: Industry;
@@ -46,6 +47,20 @@ export const INDUSTRY_PRESETS: Record<Industry, IndustryPreset> = {
     customFields: [],
     approval: "auto",
   },
+  nails: {
+    id: "nails",
+    label: "Хумс арчилгаа",
+    bookingMode: "staff",
+    terminology: { staff: "Мастер", staffGenitive: "Мастерын" },
+    services: [
+      { name: "Маникюр", durationMin: 60, bufferMin: 10 },
+      { name: "Гель будаг", durationMin: 75, bufferMin: 10 },
+      { name: "Педикюр", durationMin: 60, bufferMin: 10 },
+      { name: "Хумс суулгах", durationMin: 120, bufferMin: 10 },
+    ],
+    customFields: [],
+    approval: "auto",
+  },
   carwash: {
     id: "carwash",
     label: "Авто угаалга",
@@ -76,6 +91,85 @@ export const INDUSTRY_PRESETS: Record<Industry, IndustryPreset> = {
     // Хамгийн бага мэдээлэл: шинж тэмдгийг заавал асуухгүй
     customFields: [{ key: "reason", label: "Үзүүлэх шалтгаан (заавал биш)", required: false }],
     approval: "manual", // эмч гараар батална
+  },
+  dental: {
+    id: "dental",
+    label: "Шүдний эмнэлэг",
+    bookingMode: "staff",
+    terminology: { staff: "Эмч", staffGenitive: "Эмчийн" },
+    services: [
+      { name: "Үзлэг, зөвлөгөө", durationMin: 20, bufferMin: 10 },
+      { name: "Шүд цэвэрлэгээ", durationMin: 45, bufferMin: 10 },
+      { name: "Ломбо", durationMin: 60, bufferMin: 10 },
+      { name: "Шүд авах", durationMin: 30, bufferMin: 10 },
+    ],
+    // Хамгийн бага мэдээлэл: шинж тэмдгийг заавал асуухгүй
+    customFields: [{ key: "reason", label: "Үзүүлэх шалтгаан (заавал биш)", required: false }],
+    approval: "manual",
+  },
+  fitness: {
+    id: "fitness",
+    label: "Фитнесс",
+    bookingMode: "staff",
+    terminology: { staff: "Дасгалжуулагч", staffGenitive: "Дасгалжуулагчийн" },
+    services: [
+      { name: "Хувийн дасгал", durationMin: 60, bufferMin: 0 },
+      { name: "Анхны уулзалт, хэмжилт", durationMin: 30, bufferMin: 0 },
+      { name: "Иога", durationMin: 60, bufferMin: 0 },
+    ],
+    customFields: [],
+    approval: "auto",
+  },
+  photo: {
+    id: "photo",
+    label: "Гэрэл зурагчин",
+    bookingMode: "staff",
+    terminology: { staff: "Зурагчин", staffGenitive: "Зурагчны" },
+    services: [
+      { name: "Хөрөг зураг", durationMin: 30, bufferMin: 10 },
+      { name: "Гэр бүлийн зураг", durationMin: 60, bufferMin: 15 },
+      { name: "Бичиг баримтын зураг", durationMin: 10, bufferMin: 5 },
+    ],
+    customFields: [],
+    approval: "auto",
+  },
+  education: {
+    id: "education",
+    label: "Сургалтын төв",
+    bookingMode: "staff",
+    terminology: { staff: "Багш", staffGenitive: "Багшийн" },
+    services: [
+      { name: "Ганцаарчилсан хичээл", durationMin: 60, bufferMin: 0 },
+      { name: "Түвшин тогтоох шалгалт", durationMin: 30, bufferMin: 0 },
+      { name: "Зөвлөгөө", durationMin: 20, bufferMin: 0 },
+    ],
+    customFields: [],
+    approval: "auto",
+  },
+  consulting: {
+    id: "consulting",
+    label: "Зөвлөх үйлчилгээ",
+    bookingMode: "staff",
+    terminology: { staff: "Зөвлөх", staffGenitive: "Зөвлөхийн" },
+    services: [
+      { name: "Анхны уулзалт", durationMin: 30, bufferMin: 10 },
+      { name: "Зөвлөгөө (1 цаг)", durationMin: 60, bufferMin: 10 },
+    ],
+    customFields: [],
+    approval: "manual",
+  },
+  pet: {
+    id: "pet",
+    label: "Тэжээвэр амьтан",
+    bookingMode: "staff",
+    terminology: { staff: "Мастер", staffGenitive: "Мастерын" },
+    services: [
+      { name: "Угаалга", durationMin: 60, bufferMin: 10 },
+      { name: "Үс засалт", durationMin: 90, bufferMin: 10 },
+      { name: "Хумс тайрах", durationMin: 20, bufferMin: 5 },
+    ],
+    customFields: [{ key: "pet", label: "Амьтны төрөл, үүлдэр", required: true }],
+    approval: "auto",
   },
   other: {
     id: "other",

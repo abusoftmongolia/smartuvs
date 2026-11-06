@@ -10,7 +10,7 @@ import { isTsagMaintenance } from "@/db/platform";
 import { getTenantBySlug, upsertCustomer } from "@/db/tenant";
 import { normalizePhone } from "@/lib/sms";
 import { getAvailability } from "./availability";
-import { bookingWhen, notifyCustomer, placeBooking, SLOT_TAKEN_MESSAGE } from "./booking-core";
+import { bookingWhen, notifyBusiness, notifyCustomer, placeBooking, SLOT_TAKEN_MESSAGE } from "./booking-core";
 import { isPhoneVerified } from "./phone-verification";
 
 const { services } = schema;
@@ -29,7 +29,7 @@ const BookingInput = z.object({
 });
 
 export type BookingResult =
-  | { ok: true; bookingId: string; status: "pending" | "confirmed"; day: string; time: string; managePath: string }
+  | { ok: true; bookingId: string; code: string; status: "pending" | "confirmed"; day: string; time: string; managePath: string }
   | { ok: false; reason: "invalid" | "unverified" | "not_found" | "slot_taken" | "error"; message: string };
 
 export async function createBooking(raw: unknown): Promise<BookingResult> {
@@ -75,9 +75,10 @@ export async function createBooking(raw: unknown): Promise<BookingResult> {
     });
     if (!b) return { ok: false, reason: "slot_taken", message: SLOT_TAKEN_MESSAGE };
     await notifyCustomer(tenant, b, phone, status);
+    await notifyBusiness(tenant, b, { customerName: customer.name, serviceName: service.name });
     const { day, time } = bookingWhen(tenant, b.startsAt);
     // Захиалагч өөрийнх нь захиалгын холбоос — цуцлах, шилжүүлэх, календарьт нэмэх
-    return { ok: true, bookingId: b.id, status, day, time, managePath: `/manage/${b.manageToken}` };
+    return { ok: true, bookingId: b.id, code: b.code, status, day, time, managePath: `/manage/${b.manageToken}` };
   } catch (err) {
     console.error("createBooking", err);
     return { ok: false, reason: "error", message: "Алдаа гарлаа. Дахин оролдоно уу." };

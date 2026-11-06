@@ -4,6 +4,7 @@
  */
 import Link from "next/link";
 import {
+  getBookingByCode,
   listBookingsInRange,
   listOwners,
   listPendingBookings,
@@ -11,18 +12,24 @@ import {
   listServices,
   type BookingView,
 } from "@/db/tenant";
+import { formatBookingCode, normalizeBookingCode } from "@/lib/booking-code";
 import { addDays, formatDayMn, formatHm, localToUtc, todayIn, utcToLocalMinute, weekdayOf } from "@/lib/time";
 import { requireMember } from "@/server/auth";
 import { DayBoard, type BoardBooking } from "./DayBoard";
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ date?: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ date?: string; code?: string }> };
 
 export default async function TenantDashboard({ params, searchParams }: Props) {
   const { slug } = await params;
   const { tenant, role } = await requireMember(slug);
   const tz = tenant.timezone;
   const today = todayIn(tz);
-  const q = (await searchParams).date;
+  const sp = await searchParams;
+  // Кодоор хайлт (?code=X4K9M2): олдвол тэр өдрийг нээж, захиалгыг шууд харуулна
+  const codeQuery = sp.code?.slice(0, 20).trim() ?? "";
+  const code = codeQuery ? normalizeBookingCode(codeQuery) : null;
+  const found = code ? await getBookingByCode(tenant.id, code) : null;
+  const q = found ? todayIn(tz, found.startsAt) : sp.date;
   const date = q && /^\d{4}-\d{2}-\d{2}$/.test(q) ? q : today;
 
   const kind = tenant.bookingMode === "resource" ? "resource" : "staff";
@@ -39,6 +46,7 @@ export default async function TenantDashboard({ params, searchParams }: Props) {
     const startMin = utcToLocalMinute(b.startsAt, tz);
     return {
       id: b.id,
+      code: b.code,
       ownerId: (kind === "resource" ? b.resourceId : b.staffId) ?? "",
       date: bDate,
       dayLabel: formatDayMn(bDate),
@@ -79,12 +87,24 @@ export default async function TenantDashboard({ params, searchParams }: Props) {
             </Link>
           </p>
         </div>
+        <form action={`/dashboard/${tenant.slug}`} method="get" role="search" className="flex gap-2">
+          <label htmlFor="code-search" className="sr-only">Захиалгын кодоор хайх</label>
+          <input id="code-search" name="code" defaultValue={codeQuery} placeholder="Код: X4K9M2" autoComplete="off" maxLength={20}
+            className="min-h-11 w-36 rounded-xl border border-line bg-white px-3 font-mono text-sm uppercase outline-none focus:border-ink" />
+          <button className="inline-flex min-h-11 items-center rounded-xl border border-line bg-white px-4 text-sm font-bold">Хайх</button>
+        </form>
         {(role === "owner" || role === "manager") && (
           <Link href={`/dashboard/${tenant.slug}/settings`} className="inline-flex min-h-11 items-center rounded-xl border border-line bg-white px-4 text-sm font-bold">
             Тохиргоо
           </Link>
         )}
       </div>
+
+      {codeQuery && !found && (
+        <p role="alert" className="rounded-card border border-line bg-white p-4 text-[15px]">
+          <b>{code ? formatBookingCode(code) : codeQuery}</b> кодтой захиалга олдсонгүй. Код 6 тэмдэгттэй (жишээ нь X4K9M2).
+        </p>
+      )}
 
       {tenant.status !== "active" && (
         <p role="status" className="rounded-card border-2 border-brand bg-brand-tint p-4 text-[15px]">
@@ -97,6 +117,7 @@ export default async function TenantDashboard({ params, searchParams }: Props) {
       )}
 
       <DayBoard
+        key={found?.id ?? "board"} // өөр код хайхад диалог дахин нээгдэнэ
         slug={tenant.slug}
         date={date}
         today={today}
@@ -109,6 +130,7 @@ export default async function TenantDashboard({ params, searchParams }: Props) {
         toMin={Math.max(toMin, fromMin + 60)}
         bookings={items}
         pending={pending.map(toDto)}
+        initialOpen={found ? toDto(found) : null}
         services={services.map((s) => ({ id: s.id, name: s.name, durationMin: s.durationMin }))}
       />
     </main>

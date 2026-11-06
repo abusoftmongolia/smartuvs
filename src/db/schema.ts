@@ -25,8 +25,9 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { INDUSTRY_IDS } from "../lib/industries";
 
-export const industryEnum = pgEnum("industry", ["barber", "beauty", "carwash", "clinic", "other"]);
+export const industryEnum = pgEnum("industry", INDUSTRY_IDS);
 export const roleEnum = pgEnum("member_role", ["owner", "manager", "staff"]);
 export const bookingModeEnum = pgEnum("booking_mode", ["staff", "resource"]);
 export const bookingStatusEnum = pgEnum("booking_status", [
@@ -61,6 +62,8 @@ export type TenantSettings = {
   customFields: { key: string; label: string; required: boolean }[];
   /** tsag.smartuvs.mn нүүрний жагсаалтад харагдах эсэх. Байхгүй (хуучин мөр) = харагдана. */
   listed?: boolean;
+  /** Шинэ онлайн захиалга орох бүрт байгууллагын утас (+ тухайн ажилтан) руу SMS. Байхгүй = илгээнэ. */
+  notifyNewBookings?: boolean;
 };
 
 export const tenants = pgTable("tenants", {
@@ -187,10 +190,13 @@ export const bookings = pgTable("bookings", {
   cancelledBy: text("cancelled_by"), // "customer" | "staff"
   /** Цуцлах/шилжүүлэх холбоосны нууц токен (SMS-ээр явна) */
   manageToken: text("manage_token").notNull(),
+  /** Богино код (X4K9M2) — үйлчлүүлэгчид харуулж, самбарт кодоор хайна. src/lib/booking-code.ts */
+  code: text("code").notNull(),
   createdAt: createdAt(),
 }, (t) => [
   index("bookings_tenant_start_idx").on(t.tenantId, t.startsAt),
   uniqueIndex("bookings_manage_token_uq").on(t.manageToken),
+  uniqueIndex("bookings_tenant_code_uq").on(t.tenantId, t.code),
 ]);
 
 export const notifications = pgTable("notifications", {

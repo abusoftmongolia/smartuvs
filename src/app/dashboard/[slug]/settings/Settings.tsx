@@ -29,6 +29,7 @@ type Info = {
   minLeadMin: number;
   maxAdvanceDays: number;
   listed: boolean;
+  notifyNewBookings: boolean;
 };
 type Svc = { id?: string; name: string; durationMin: number; bufferMin: number; price: number | null; active: boolean };
 type Owner = { id?: string; name: string; title: string; active: boolean };
@@ -160,6 +161,10 @@ function InfoForm({ slug, info }: { slug: string; info: Info }) {
         <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
           <input type="checkbox" checked={v.listed} onChange={(e) => set("listed", e.target.checked)} className="size-5 accent-[#f5a800]" />
           tsag.smartuvs.mn нүүр хуудасны жагсаалтад харагдах
+        </label>
+        <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
+          <input type="checkbox" checked={v.notifyNewBookings} onChange={(e) => set("notifyNewBookings", e.target.checked)} className="size-5 accent-[#f5a800]" />
+          <span>Шинэ захиалга орох бүрт SMS авах <span className="block text-[13px] font-normal text-muted">Дээрх утас руу, мөн захиалсан ажилтан системд бүртгэлтэй бол түүн рүү</span></span>
         </label>
         {status}
         <button disabled={pending} className={`${btnPrimary} self-start`}>{pending ? "Хадгалж байна…" : "Хадгалах"}</button>

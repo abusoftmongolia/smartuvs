@@ -59,6 +59,7 @@ const InfoInput = z.object({
   minLeadMin: z.number().int().min(0).max(7 * 24 * 60),
   maxAdvanceDays: z.number().int().min(1).max(365),
   listed: z.boolean(),
+  notifyNewBookings: z.boolean(),
 });
 
 export async function saveTenantInfo(raw: unknown): Promise<SettingsResult> {
@@ -83,6 +84,7 @@ export async function saveTenantInfo(raw: unknown): Promise<SettingsResult> {
       minLeadMin: i.minLeadMin,
       maxAdvanceDays: i.maxAdvanceDays,
       listed: i.listed,
+      notifyNewBookings: i.notifyNewBookings,
     },
   });
   await audit(m.tenant.id, m.user.id, "tenant.update", "tenant", m.tenant.id);

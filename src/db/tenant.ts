@@ -125,6 +125,7 @@ export async function listSchedulesForWeekday(tenantId: string, weekday: number)
 
 const bookingView = {
   id: bookings.id,
+  code: bookings.code,
   startsAt: bookings.startsAt,
   endsAt: bookings.endsAt,
   status: bookings.status,
@@ -143,6 +144,17 @@ const bookingView = {
 };
 
 export type BookingView = Awaited<ReturnType<typeof listBookingsInRange>>[number];
+
+/** Самбарын хайлт: байгууллагын захиалгыг кодоор (цуцлагдсаныг ч олно) */
+export async function getBookingByCode(tenantId: string, code: string) {
+  const [row] = await db()
+    .select(bookingView)
+    .from(bookings)
+    .innerJoin(services, eq(services.id, bookings.serviceId))
+    .innerJoin(customers, eq(customers.id, bookings.customerId))
+    .where(and(eq(bookings.tenantId, tenantId), eq(bookings.code, code)));
+  return row ?? null;
+}
 
 /** Хугацааны хүрээн дэх захиалгууд (цуцлагдсаныг оруулахгүй) */
 export async function listBookingsInRange(tenantId: string, fromUtc: Date, toUtc: Date) {
@@ -549,4 +561,30 @@ export async function getLogoBySlug(slug: string) {
     .where(eq(tenants.slug, slug))
     .limit(1);
   return r ?? null;
+}
+
+/**
+ * Шинэ захиалгын мэдэгдэл хүлээн авах утаснууд: байгууллагын утас (байхгүй бол эзэд) + тухайн ажилтны хэрэглэгчийн утас.
+ * Давхардалгүй.
+ */
+export async function listBookingAlertPhones(tenant: { id: string; phone: string | null }, staffId: string | null) {
+  const phones = new Set<string>();
+  if (tenant.phone) phones.add(tenant.phone);
+  else {
+    const owners = await db()
+      .select({ phone: schema.users.phone })
+      .from(schema.memberships)
+      .innerJoin(schema.users, eq(schema.users.id, schema.memberships.userId))
+      .where(and(eq(schema.memberships.tenantId, tenant.id), eq(schema.memberships.role, "owner")));
+    owners.forEach((o) => phones.add(o.phone));
+  }
+  if (staffId) {
+    const [s] = await db()
+      .select({ phone: schema.users.phone })
+      .from(staff)
+      .innerJoin(schema.users, eq(schema.users.id, staff.userId))
+      .where(and(eq(staff.id, staffId), eq(staff.tenantId, tenant.id)));
+    if (s) phones.add(s.phone);
+  }
+  return [...phones];
 }

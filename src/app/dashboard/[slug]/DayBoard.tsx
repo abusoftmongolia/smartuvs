@@ -18,6 +18,7 @@ import {
 
 export type BoardBooking = {
   id: string;
+  code: string;
   ownerId: string;
   date: string;
   dayLabel: string;
@@ -53,6 +54,8 @@ type Props = {
   bookings: BoardBooking[];
   pending: BoardBooking[];
   services: Service[];
+  /** Кодоор хайж олсон захиалга — анх нээгдсэн байдлаар харуулна */
+  initialOpen?: BoardBooking | null;
 };
 
 const PX_PER_MIN = 1.4;
@@ -75,7 +78,7 @@ function shiftDate(date: string, days: number) {
 
 export function DayBoard(p: Props) {
   const router = useRouter();
-  const [open, setOpen] = useState<BoardBooking | null>(null);
+  const [open, setOpen] = useState<BoardBooking | null>(p.initialOpen ?? null);
   const [creating, setCreating] = useState(false);
   const go = (date: string) => router.push(`/dashboard/${p.slug}?date=${date}`);
 
@@ -261,6 +264,7 @@ function BookingDialog(p: Props & { b: BoardBooking; onClose: () => void }) {
   return (
     <Modal title={`${b.customerName}`} onClose={p.onClose}>
       <dl className="flex flex-col gap-2 rounded-xl bg-ground p-3.5 text-sm">
+        <Row k="Код" v={`#${b.code}`} />
         <Row k="Төлөв" v={STATUS[b.status].label} />
         <Row k="Цаг" v={`${b.dayLabel}, ${b.timeLabel}`} />
         <Row k="Үйлчилгээ" v={b.serviceName} />

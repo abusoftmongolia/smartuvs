@@ -53,10 +53,13 @@ export function normalizePhone(input: string): string | null {
 /** SMS текстүүд — кирилл, богино (1 SMS ≈ 70 тэмдэгт кирилл) */
 export const smsText = {
   otp: (code: string) => `Таны баталгаажуулах код: ${code}. 5 минут хүчинтэй. tsag.smartuvs.mn`,
-  confirmed: (p: { tenant: string; day: string; time: string; link: string }) =>
-    `${p.tenant}: ${p.day} ${p.time} цаг баталгаажлаа. Өөрчлөх: ${p.link}`,
-  pending: (p: { tenant: string; day: string; time: string }) =>
-    `${p.tenant}: ${p.day} ${p.time} захиалга хүлээн авлаа. Батлахад SMS ирнэ.`,
+  confirmed: (p: { tenant: string; day: string; time: string; link: string; code?: string }) =>
+    `${p.tenant}: ${p.day} ${p.time} цаг баталгаажлаа.${p.code ? ` Код: ${p.code}.` : ""} Өөрчлөх: ${p.link}`,
+  pending: (p: { tenant: string; day: string; time: string; code?: string }) =>
+    `${p.tenant}: ${p.day} ${p.time} захиалга хүлээн авлаа.${p.code ? ` Код: ${p.code}.` : ""} Батлахад SMS ирнэ.`,
+  /** Байгууллагад: шинэ онлайн захиалга. Үйлчлүүлэгчийн утсыг бичихгүй (самбараас харна). */
+  newBooking: (p: { customer: string; service: string; day: string; time: string; code: string; pending: boolean }) =>
+    `Шинэ захиалга${p.pending ? " (батлах хүлээж буй)" : ""}: ${p.customer}, ${p.service}, ${p.day} ${p.time}. Код: ${p.code}. tsag.smartuvs.mn/dashboard`,
   rescheduled: (p: { tenant: string; day: string; time: string; link: string }) =>
     `${p.tenant}: таны цагийг ${p.day} ${p.time} болгож өөрчиллөө. Тохирохгүй бол: ${p.link}`,
   reminder: (p: { tenant: string; day: string; time: string; link: string }) =>

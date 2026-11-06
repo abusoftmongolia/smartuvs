@@ -11,7 +11,7 @@ import { insertTenantSetup, isSlugTaken } from "@/db/tenant";
 import { countRecentEvents, deleteUserSessions, getUserByPhone, recordEvent, setUserPassword } from "@/db/users";
 import { weekHoursProblem, weekHoursToWindows } from "@/lib/hours";
 import { hashPassword, passwordProblem } from "@/lib/password";
-import { defaultSettings, INDUSTRY_PRESETS } from "@/lib/presets";
+import { defaultSettings, INDUSTRY_IDS, INDUSTRY_PRESETS } from "@/lib/presets";
 import { normalizePhone } from "@/lib/sms";
 import { uniqueSlug } from "@/lib/slug";
 import { currentUser, rateKey, startSession } from "./auth";
@@ -61,7 +61,7 @@ export async function registerAccount(raw: unknown): Promise<SignupResult> {
 
 const TenantInput = z.object({
   name: z.string().trim().min(2, "Байгууллагын нэрээ оруулна уу").max(80),
-  industry: z.enum(["barber", "beauty", "carwash", "clinic", "other"]),
+  industry: z.enum(INDUSTRY_IDS),
   timezone: z.enum(["Asia/Hovd", "Asia/Ulaanbaatar"]),
   address: z.string().trim().max(160).optional(),
   phone: z.string().max(32).optional(),

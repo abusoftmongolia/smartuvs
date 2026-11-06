@@ -3,6 +3,7 @@
  * Захиалгын урсгал: 1. Үйлчилгээ → 2. Ажилтан ба цаг → 3. Баталгаажуулах
  * Утсанд нэг багана, компьютерт гурван багана (flex-wrap). Загвар: canvas-ын Main.dc.html
  */
+import { formatBookingCode } from "@/lib/booking-code";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { createBooking, type BookingResult } from "@/server/bookings";
 import { ExpiredNotice, PhoneVerifyPanel, usePhoneVerification } from "./PhoneVerify";
@@ -108,6 +109,10 @@ export function BookingFlow(p: BookingFlowProps) {
         <h2 className="text-xl font-bold">{result.status === "confirmed" ? "Таны цаг баталгаажлаа" : "Захиалга хүлээн авлаа"}</h2>
         <p className="text-sm text-muted">{service?.name} · {p.bookingMode === "staff" ? staffName : ""}</p>
         <p className="text-2xl font-bold">{result.day}, {result.time}</p>
+        <div className="w-full rounded-xl bg-ground px-4 py-3">
+          <div className="text-[13px] text-muted">Захиалгын код — хадгалаарай</div>
+          <div className="font-mono text-2xl font-bold tracking-[0.15em]">{formatBookingCode(result.code)}</div>
+        </div>
         <p className="text-[13px] text-muted">
           {result.status === "confirmed" ? "Дэлгэрэнгүйг SMS-ээр илгээлээ. 24 цагийн өмнө сануулна." : "Ажилтан батлахад SMS ирнэ."}
         </p>

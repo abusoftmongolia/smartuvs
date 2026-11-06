@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getBookingByManageToken } from "@/db/tenant";
+import { formatBookingCode } from "@/lib/booking-code";
 import { customerChangeBlock } from "@/lib/policy";
 import { addDays, formatDayMn, formatHm, todayIn, utcToLocalMinute, weekdayName } from "@/lib/time";
 import { ManageBooking } from "./ManageBooking";
@@ -54,6 +55,7 @@ export default async function ManagePage({ params }: { params: Promise<{ token: 
       <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-6">
         <h1 className="text-2xl font-bold">Таны захиалга</h1>
         <dl className="flex flex-col gap-2.5 rounded-[18px] border border-line bg-white p-5 text-sm">
+          <Row k="Код" v={formatBookingCode(booking.code)} />
           <Row k="Төлөв" v={STATUS_MN[booking.status] ?? booking.status} />
           <Row k="Өдөр" v={formatDayMn(date)} />
           <Row k="Цаг" v={`${formatHm(startMin)}–${formatHm(startMin + row.durationMin)}`} />

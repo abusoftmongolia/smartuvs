@@ -37,10 +37,11 @@ export default async function Home() {
         <section aria-labelledby="h-biz" className="mt-4 flex flex-col items-start gap-3 rounded-[18px] border border-line bg-white p-5">
           <h2 id="h-biz" className="text-lg font-bold">Байгууллага эрхэлдэг үү?</h2>
           <p className="text-[15px] text-muted">
-            Үсчин, гоо сайхан, авто угаалга, эмнэлэг — 5 минутад үнэгүй бүртгүүлээд <strong className="text-ink">tsag.smartuvs.mn/таны-нэр</strong> хаягтай болно.
+            Үсчин, гоо сайхан, шүдний эмнэлэг, фитнесс — 5 минутад үнэгүй бүртгүүлээд <strong className="text-ink">tsag.smartuvs.mn/таны-нэр</strong> хаягтай болно.
           </p>
           <div className="flex flex-wrap gap-2">
             <Link href="/signup" className="inline-flex min-h-12 items-center rounded-card bg-brand px-5 font-bold text-ink">Байгууллагаа бүртгүүлэх</Link>
+            <Link href="/business" className="inline-flex min-h-12 items-center rounded-card border border-line bg-white px-5 font-bold">Дэлгэрэнгүй</Link>
             <Link href="/admin/login" className="inline-flex min-h-12 items-center rounded-card border border-line bg-white px-5 font-bold">Байгууллага нэвтрэх</Link>
           </div>
         </section>

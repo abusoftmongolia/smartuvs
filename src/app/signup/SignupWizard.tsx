@@ -12,13 +12,12 @@ import { QrCode } from "@/components/QrCode";
 import { ErrorBox, Field, btnPrimary, btnSecondary } from "@/components/ui";
 import { defaultWeekHours, weekHoursProblem, type DayHours } from "@/lib/hours";
 import { PASSWORD_MIN } from "@/lib/password-rules";
-import { INDUSTRY_PRESETS, type Industry } from "@/lib/presets";
+import { INDUSTRY_IDS, INDUSTRY_PRESETS, type Industry } from "@/lib/presets";
 import { createTenant, registerAccount } from "@/server/signup-actions";
 
 type Svc = { name: string; durationMin: number; bufferMin: number; price: string };
 
 const STEPS = ["Бүртгэл", "Байгууллага", "Үйлчилгээ ба цаг", "Ажилтан"] as const;
-const INDUSTRIES: Industry[] = ["barber", "beauty", "carwash", "clinic", "other"];
 
 function presetServices(i: Industry): Svc[] {
   return INDUSTRY_PRESETS[i].services.map((s) => ({ ...s, price: "" }));
@@ -160,7 +159,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
             <fieldset className="flex flex-col gap-2">
               <legend className="mb-1.5 text-[13px] font-bold">Салбар</legend>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {INDUSTRIES.map((i) => (
+                {INDUSTRY_IDS.map((i) => (
                   <button key={i} type="button" onClick={() => chooseIndustry(i)} aria-pressed={industry === i}
                     className={`min-h-12 rounded-card border-[1.5px] px-3 text-sm font-bold ${industry === i ? "border-brand bg-brand-tint" : "border-line bg-white"}`}>
                     {INDUSTRY_PRESETS[i].label}

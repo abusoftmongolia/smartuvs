@@ -51,6 +51,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
           minLeadMin: tenant.settings.minLeadMin,
           maxAdvanceDays: tenant.settings.maxAdvanceDays,
           listed: tenant.settings.listed !== false,
+          notifyNewBookings: tenant.settings.notifyNewBookings !== false,
         }}
         services={services.map((s) => ({ id: s.id, name: s.name, durationMin: s.durationMin, bufferMin: s.bufferMin, price: s.price, active: s.active }))}
         owners={owners.map((o) => ({ id: o.id, name: o.name, title: o.title ?? "", active: o.active }))}

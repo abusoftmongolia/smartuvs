@@ -15,7 +15,7 @@ export const RESERVED_SLUGS = new Set([
   "admin", "api", "app", "dashboard", "login", "logout", "signup", "register", "settings",
   "help", "support", "about", "terms", "privacy", "booking", "manage", "b", "s", "www",
   "static", "assets", "public", "_next", "favicon.ico", "robots.txt", "sitemap.xml",
-  "smartuvs", "tsag", "ajil",
+  "smartuvs", "tsag", "ajil", "business", "biznes", "platform",
 ]);
 
 export function slugify(name: string): string {
