@@ -5,7 +5,7 @@ import { normalizePhone } from "@/lib/sms";
 import { startVerification, verificationState, type VerificationState } from "./phone-verification";
 
 export type StartVerificationResult =
-  | { ok: true; token: string; shortcode: string; code: string; smsUri: string; expiresAt: string }
+  | { ok: true; token: string; shortcode: string; code: string; smsUri: string; expiresAt: string; displayInstruction: string | null }
   | { ok: false; message: string };
 
 export async function startPhoneVerification(raw: unknown): Promise<StartVerificationResult> {

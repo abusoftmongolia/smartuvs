@@ -23,6 +23,7 @@ export type StartedVerification = {
   code: string;
   smsUri: string;
   expiresAt: string;
+  displayInstruction: string | null;
 };
 
 export async function startVerification(phone: string): Promise<StartedVerification | null> {
@@ -43,6 +44,7 @@ export async function startVerification(phone: string): Promise<StartedVerificat
     code: r.session.text,
     smsUri: r.session.smsUri,
     expiresAt: r.session.expiresAt,
+    displayInstruction: r.session.displayInstruction ?? null,
   };
 }
 

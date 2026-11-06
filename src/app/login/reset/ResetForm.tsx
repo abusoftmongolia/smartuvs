@@ -38,7 +38,7 @@ export function ResetForm({ next }: { next?: string }) {
         <PhoneVerifyPanel v={v} onCancel={pv.reset} />
       ) : (
         <>
-          {v?.state === "expired" && <ExpiredNotice />}
+          {v?.state === "expired" && <ExpiredNotice onRestart={pv.restart} busy={pv.starting} />}
           <button type="submit" disabled={pending || pv.starting} className={btnPrimary}>
             {pending || pv.starting ? "Түр хүлээнэ үү…" : "Үргэлжлүүлэх"}
           </button>

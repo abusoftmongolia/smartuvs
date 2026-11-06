@@ -145,7 +145,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
               hint="Самбарт энэ дугаараар нэвтэрнэ" />
             <Field id="su-pw" label="Нууц үг" type="password" value={password} onChange={setPassword} autoComplete="new-password" hint={`${PASSWORD_MIN}+ тэмдэгт`} />
             {v?.state === "pending" && <PhoneVerifyPanel v={v} onCancel={pv.reset} />}
-            {v?.state === "expired" && <ExpiredNotice />}
+            {v?.state === "expired" && <ExpiredNotice onRestart={pv.restart} busy={pv.starting} />}
             {pv.error && <ErrorBox>{pv.error}</ErrorBox>}
             <p className="text-sm text-muted">Бүртгэлтэй юу? <Link href="/admin/login" className="font-semibold text-brand-deep underline">Нэвтрэх</Link></p>
           </>

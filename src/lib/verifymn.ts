@@ -15,6 +15,8 @@ export type VerifySession = {
   /** "sms:144773?body=482916" — утсан дээр SMS бичих цонх нээнэ */
   smsUri: string;
   expiresAt: string;
+  /** verify.mn-ийн бэлэн заавар — өөрчлөлтгүй харуулна (verify.mn-ийн UX зөвлөмж) */
+  displayInstruction?: string;
 };
 
 export type VerifyStatus = "PENDING" | "VERIFIED" | "EXPIRED";
@@ -52,6 +54,7 @@ class VerifyMnVerifier implements PhoneVerifier {
           text: d.text ?? code,
           smsUri: d.smsUri ?? `sms:${d.shortcode}?body=${encodeURIComponent(code)}`,
           expiresAt: d.expiresAt,
+          displayInstruction: typeof d.displayInstruction === "string" ? d.displayInstruction.slice(0, 400) : undefined,
         },
       };
     } catch (e) {
@@ -79,7 +82,7 @@ class VerifyMnVerifier implements PhoneVerifier {
 /** Хөгжүүлэлтэд: төлөвгүй, sessionId дотор үүссэн цагаа хадгална */
 class MockVerifier implements PhoneVerifier {
   readonly name = "mock";
-  async create(_phone: string, code: string) {
+  async create(phone: string, code: string) {
     const now = Date.now();
     console.log(`\n[verify mock] 144773 ← "${code}" (5 секундын дараа автоматаар баталгаажна)\n`);
     return {
@@ -90,6 +93,7 @@ class MockVerifier implements PhoneVerifier {
         text: code,
         smsUri: `sms:144773?body=${code}`,
         expiresAt: new Date(now + 5 * 60_000).toISOString(),
+        displayInstruction: `Та өөрийн ${phone} дугаараас 144773 дугаарт “${code}” гэж SMS илгээнэ үү. Хоёр SIM-тэй бол зөв SIM-ээ сонгоно уу.`,
       },
     };
   }

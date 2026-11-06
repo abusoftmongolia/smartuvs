@@ -224,7 +224,7 @@ export function BookingFlow(p: BookingFlowProps) {
           <PhoneVerifyPanel v={verification} onCancel={pv.reset} />
         ) : (
           <>
-            {verification?.state === "expired" && <ExpiredNotice />}
+            {verification?.state === "expired" && <ExpiredNotice onRestart={pv.restart} busy={pv.starting} />}
             <button onClick={submit} disabled={startMin == null || pending || pv.starting || !name || !phone}
               className="min-h-13 rounded-card bg-brand py-3.5 text-base font-bold text-ink disabled:cursor-not-allowed disabled:opacity-50">
               {pending || pv.starting ? "Түр хүлээнэ үү…" : "Цаг захиалах"}
