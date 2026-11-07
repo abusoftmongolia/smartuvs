@@ -6,10 +6,10 @@
  * verify.mn-ийн UX зөвлөмж (амжилтгүй 9.8%-ийн шалтгаан):
  *  1. Өөр дугаар/SIM-ээс илгээх (8.7%) → displayInstruction-ыг өөрчлөлтгүй, илгээх дугаарыг том тод харуулна.
  *  2. Хугацаа дууссаны дараа илгээх (0.96%) → expiresAt-аар countdown; дуусмагц кодыг нууж «Шинэ код авах».
- *  3. Текст зөрүүтэй бичих (0.10%) → «Мессеж илгээх» товч smsUri-гаар дугаар, текстийг урьдчилан бөглөнө.
+ *  3. Текст зөрүүтэй бичих (0.10%) → заавар доторх холбоос smsUri-гаар дугаар, текстийг урьдчилан бөглөнө.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { countdownAnnouncement, formatCountdown, showVerifyHelp } from "@/lib/booking-ui";
+import { countdownAnnouncement, showVerifyHelp } from "@/lib/booking-ui";
 import { startPhoneVerification } from "@/server/verify-actions";
 import { getJson } from "@/lib/fetch-json";
 import type { VerificationState } from "@/server/phone-verification";
@@ -160,6 +160,9 @@ export function usePhoneVerification(onVerified: (token: string, phone: string) 
   return { verification, error, starting, netError, start, reset, restart, checkNow };
 }
 
+/** "95866262" → "95****62" — дэлгэцэнд бүтэн дугаар харуулахгүй, гэхдээ аль SIM болохыг танихад хангалттай */
+const masked = (n: string) => (/^\d{8}$/.test(n) ? `${n.slice(0, 2)}****${n.slice(6)}` : n);
+
 /** "99112233" → "9911 2233" — уншихад амар */
 const spaced = (n: string) => (/^\d{8}$/.test(n) ? `${n.slice(0, 4)} ${n.slice(4)}` : n);
 
@@ -179,61 +182,58 @@ export function PhoneVerifyPanel({ v, onCancel, netError, onCheck }: {
     return () => clearInterval(t);
   }, []);
   const left = Math.max(0, Math.ceil((v.expiresAt - now) / 1000));
-  const total = 5 * 60;
   const low = left <= 60;
   const help = showVerifyHelp(v.startedAt, now);
+  const [copied, setCopied] = useState(false);
+  const card = "rounded-xl bg-white px-4 py-3.5";
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border-2 border-brand bg-brand-tint p-4">
-      {/* Гарчиг + үлдсэн хугацаа нэг мөрөнд. Цаг секунд бүр шинэчлэгдэх тул live биш; 1 минут үлдсэн/дууссан үед л зарлана */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-baseline justify-between gap-2">
-          <p className="font-semibold">SMS-ээр баталгаажуулах</p>
-          <span className={`text-sm font-semibold tabular-nums ${low ? "text-red-700" : "text-muted"}`} role="timer"
-            aria-label={`${Math.floor(left / 60)} минут ${left % 60} секунд үлдлээ`}>
-            {formatCountdown(left)}
-          </span>
-        </div>
-        <div className="h-1 overflow-hidden rounded-full bg-white" aria-hidden>
-          <div className={`h-full rounded-full transition-[width] duration-1000 ${low ? "bg-red-600" : "bg-brand"}`} style={{ width: `${Math.min(100, (left / total) * 100)}%` }} />
-        </div>
-        <p className="sr-only" aria-live="polite">{countdownAnnouncement(left)}</p>
+    <div className="flex flex-col gap-3 rounded-[18px] bg-ground p-4">
+      <p className="text-center text-lg font-bold">Баталгаажуулалт</p>
+
+      {/* 1. Хаанаас — өөр SIM-ээс илгээх нь хамгийн түгээмэл алдаа */}
+      <div className={`${card} flex items-center justify-between gap-3`}>
+        <span className="text-sm text-muted">Таны дугаар:</span>
+        <span className="text-lg font-bold tabular-nums" aria-label={`${v.phone.split("").join(" ")}`}>{masked(v.phone)}</span>
       </div>
 
-      {/* Хаашаа, юу — хамгийн чухал хоёр утга; хаанаас нь доор жижгээр (өөр SIM-ээс илгээх алдаанаас сэргийлнэ) */}
-      <div className="rounded-lg bg-white px-3 py-2.5">
-        <dl className="grid grid-cols-2 gap-2 text-center">
-          <div>
-            <dt className="text-xs text-muted">Хүлээн авагч</dt>
-            <dd className="text-2xl font-bold tabular-nums">{v.shortcode}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted">Текст</dt>
-            <dd className="font-mono text-2xl font-bold tracking-[0.12em]" aria-label={`Код ${v.code.split("").join(" ")}`}>{v.code}</dd>
-          </div>
-        </dl>
-        <p className="mt-1.5 border-t border-line pt-1.5 text-center text-xs text-muted">
-          <b className="font-semibold text-ink tabular-nums">{spaced(v.phone)}</b> дугаараас илгээнэ
-        </p>
+      {/* 2. Хаашаа, юу — дарахад дугаар, код бөглөгдсөн Мессеж апп нээгдэнэ */}
+      <p className={`${card} text-sm leading-relaxed`}>
+        Та дээрх дугаараасаа{" "}
+        <a href={v.smsUri} className={`font-semibold text-brand-deep underline underline-offset-2 ${focusRing}`}>
+          {v.shortcode} дугаар луу дараах кодыг мессежээр илгээж
+        </a>{" "}
+        түр хүлээнэ үү. <span className="text-muted">(энгийн мессежний тарифаар тооцогдоно)</span>
+      </p>
+
+      {/* 3. Код + хуулах, үлдсэн хугацаа. Цаг секунд бүр шинэчлэгдэх тул live биш; 1 минут үлдсэн/дууссан үед л зарлана */}
+      <div className={`${card} flex items-center justify-between gap-3`}>
+        <div className="flex items-center gap-1">
+          <span className="font-mono text-3xl font-bold tracking-[0.08em]" aria-label={`Код ${v.code.split("").join(" ")}`}>{v.code}</span>
+          <button type="button" aria-label={copied ? "Код хуулагдлаа" : "Кодыг хуулах"}
+            onClick={() => navigator.clipboard?.writeText(v.code).then(() => setCopied(true))}
+            className={`inline-flex size-11 items-center justify-center rounded-lg text-muted hover:text-ink ${focusRing}`}>
+            {copied ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="9" y="9" width="11" height="11" rx="2.5" /><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15" /></svg>
+            )}
+          </button>
+        </div>
+        <span className={`text-sm font-medium tabular-nums ${low ? "text-red-700" : "text-brand-deep"}`} role="timer"
+          aria-label={`${Math.floor(left / 60)} минут ${left % 60} секунд үлдлээ`}>
+          {left} секунд
+        </span>
+        <span className="sr-only" aria-live="polite">{countdownAnnouncement(left)}</span>
       </div>
 
-      {/* Дугаар, текст урьдчилан бөглөгдсөн — гараар бичих алдаагүй */}
-      <a href={v.smsUri} className={`flex min-h-12 items-center justify-center gap-2 rounded-card bg-ink text-[15px] font-semibold text-white ${focusRing}`}>
-        Мессеж илгээх
-      </a>
-      <p className="text-center text-xs text-muted">Илгээгээд энд буцаж ирнэ үү · SMS-ийн үнэ таны данснаас гарна</p>
-
-      {/* Дэлгэрэнгүй заавар (verify.mn-ийн displayInstruction) — хэрэгтэй хүн нээнэ */}
-      <details className="group text-sm">
-        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-center gap-1 rounded-lg font-medium text-brand-deep [&::-webkit-details-marker]:hidden">
-          Гараар илгээх заавар
-          <span aria-hidden className="transition group-open:rotate-180">▾</span>
-        </summary>
-        <p className="rounded-lg bg-white p-3">
-          {v.displayInstruction ?? `Та өөрийн ${v.phone} дугаараас ${v.shortcode} дугаарт “${v.code}” гэж SMS илгээнэ үү.`}
-          {" "}Хоёр SIM-тэй бол зөв SIM-ээ сонгоно уу.
-        </p>
-      </details>
+      {/* 4. Буруу дугаар бол буцаж засна */}
+      <div className={`${card} text-sm`}>
+        <p className="text-muted">Дээрх дугаар буруу юу?</p>
+        <button type="button" onClick={onCancel} className={`min-h-11 font-medium text-brand-deep underline-offset-2 hover:underline ${focusRing}`}>
+          Утасны дугаараа солих
+        </button>
+      </div>
 
       {netError && (
         <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm font-semibold text-red-800">
@@ -248,21 +248,18 @@ export function PhoneVerifyPanel({ v, onCancel, netError, onCheck }: {
             <p className="font-semibold">SMS илгээсэн ч баталгаажихгүй байна уу?</p>
             <ul className="flex list-disc flex-col gap-1 pl-5">
               <li>Хоёр SIM-тэй бол <b className="font-semibold tabular-nums">{spaced(v.phone)}</b> дугаартай SIM-ээс илгээсэн эсэхээ шалгана уу.</li>
-              <li>Мессеж апп-д SMS илгээгдсэн эсэхийг харна уу. Илгээгдээгүй бол “Мессеж илгээх”-ийг дахин дарна уу.</li>
+              <li>Мессеж апп-д SMS илгээгдсэн эсэхийг харна уу. Илгээгдээгүй бол дээрх холбоосыг дахин дарна уу.</li>
               <li>Текст нь яг “{v.code}”, хүлээн авагч нь {v.shortcode} байх ёстой.</li>
             </ul>
-            {onCheck && (
-              <button type="button" onClick={onCheck} className={`min-h-11 rounded-xl border-[1.5px] border-ink bg-white text-sm font-medium ${focusRing}`}>
-                Дахин шалгах
-              </button>
-            )}
           </div>
         )}
       </div>
 
-      <button type="button" onClick={onCancel} className={`min-h-11 rounded-xl text-sm font-medium text-muted underline-offset-2 hover:underline ${focusRing}`}>
-        Болих
-      </button>
+      {onCheck && (
+        <button type="button" onClick={onCheck} className={`min-h-12 rounded-card bg-brand text-[15px] font-semibold text-ink ${focusRing}`}>
+          Шалгах
+        </button>
+      )}
     </div>
   );
 }
