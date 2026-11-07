@@ -1,5 +1,5 @@
 import { PageBody, PageHeader } from "../../PageHeader";
-import { Hours, TimeOff } from "../settings/Settings";
+import { Hours, TimeOff } from "./HoursForm";
 import { loadHoursAndTimeOff, manageContext } from "../settings/data";
 
 export default async function HoursPage({ params }: { params: Promise<{ slug: string }> }) {

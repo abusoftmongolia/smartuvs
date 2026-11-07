@@ -1,13 +1,9 @@
+import { statusLabel } from "@/lib/booking-status";
 import Link from "next/link";
 import { listRecentBookingsForAdmin } from "@/db/admin";
 import { formatDayMn, formatHm, todayIn, utcToLocalMinute } from "@/lib/time";
 import { fmtDateTime } from "../fmt";
 import { TSAG } from "../fmt";
-
-const STATUS: Record<string, string> = {
-  pending: "Хүлээгдэж буй", confirmed: "Баталгаажсан", checked_in: "Ирсэн",
-  completed: "Дууссан", cancelled: "Цуцлагдсан", no_show: "Ирээгүй",
-};
 
 /** Сүүлийн захиалгууд — үйлчлүүлэгчийн утсыг харуулахгүй (хамгийн бага хувийн мэдээлэл) */
 export default async function AdminBookings() {
@@ -31,7 +27,7 @@ export default async function AdminBookings() {
                   <td className="px-5 py-4"><Link href={`${TSAG}/dashboard/${b.tenantSlug}/calendar?date=${d}`} className="font-medium underline">{b.tenantName}</Link></td>
                   <td className="px-3 py-4">{b.serviceName}<div className="text-sm text-muted">{b.customerName} · {b.source === "online" ? "онлайн" : "гараар"}</div></td>
                   <td className="px-3 py-4 tabular-nums">{formatDayMn(d)} {formatHm(utcToLocalMinute(b.startsAt, b.timezone))}</td>
-                  <td className="px-3 py-4">{STATUS[b.status] ?? b.status}</td>
+                  <td className="px-3 py-4">{statusLabel(b.status)}</td>
                   <td className="px-5 py-4 tabular-nums text-muted">{fmtDateTime(b.createdAt)}</td>
                 </tr>
               );

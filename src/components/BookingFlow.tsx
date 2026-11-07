@@ -3,6 +3,7 @@
  * Захиалгын урсгал: 1. Үйлчилгээ → 2. Ажилтан ба цаг → 3. Таны мэдээлэл (+ утас баталгаажуулах)
  * Утсанд нэг багана, компьютерт гурван багана (flex-wrap). Загвар: canvas-ын Main.dc.html
  */
+import { Field, Row, SuccessMark } from "./ui";
 import { formatBookingCode } from "@/lib/booking-code";
 import { approvalWaitText, joinParts, type DayChip } from "@/lib/booking-ui";
 import { formatDayMn } from "@/lib/time";
@@ -153,9 +154,7 @@ export function BookingFlow(p: BookingFlowProps) {
   if (result?.ok) {
     return (
       <section className="mx-auto flex w-full max-w-md flex-col items-center gap-3 rounded-[18px] border border-line bg-white p-8 text-center">
-        <div aria-hidden className="flex size-16 items-center justify-center rounded-full bg-ink">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f5a800" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-        </div>
+        <SuccessMark />
         <h2 ref={doneRef} tabIndex={-1} className="text-xl font-bold outline-none">
           {result.status === "confirmed" ? "Таны цаг баталгаажлаа" : "Захиалга хүлээн авлаа"}
         </h2>
@@ -301,29 +300,6 @@ export function BookingFlow(p: BookingFlowProps) {
         </form>
         <p className="text-center text-xs text-muted">Захиалгын төлбөр байхгүй. {p.cancelPolicy}</p>
       </aside>
-    </div>
-  );
-}
-
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="flex justify-between gap-3"><dt className="text-xs text-muted">{k}</dt><dd className="text-right font-medium">{v}</dd></div>
-  );
-}
-
-function Field(p: {
-  id: string; name: string; label: string; value: string; onChange: (v: string) => void;
-  placeholder?: string; type?: string; hint?: string; autoComplete?: string;
-}) {
-  const hintId = p.hint ? `${p.id}-hint` : undefined;
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={p.id} className="text-sm font-medium">{p.label}</label>
-      <input id={p.id} name={p.name} type={p.type ?? "text"} value={p.value} onChange={(e) => p.onChange(e.target.value)} placeholder={p.placeholder}
-        autoComplete={p.autoComplete} aria-describedby={hintId}
-        inputMode={p.type === "tel" ? "numeric" : undefined}
-        className="min-h-12 rounded-xl border-[1.5px] border-field bg-white px-3.5 text-base outline-none focus:border-ink focus-visible:ring-2 focus-visible:ring-ink/20" />
-      {p.hint && <span id={hintId} className="text-xs text-muted">{p.hint}</span>}
     </div>
   );
 }

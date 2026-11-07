@@ -1,5 +1,5 @@
 import { PageBody, PageHeader } from "../../PageHeader";
-import { Services } from "../settings/Settings";
+import { Services } from "./Services";
 import { loadServices, manageContext } from "../settings/data";
 
 export default async function ServicesPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -11,8 +11,8 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
       <PageHeader title="Үйлчилгээ" subtitle="Үйлчлүүлэгч захиалахдаа сонгох үйлчилгээ, үргэлжлэх хугацаа, үнэ" />
       <PageBody>
         <div className="max-w-3xl">
-          {/* Хадгалсны дараа серверээс шинэ ID-тай өгөгдөл ирэхэд дахин mount хийнэ */}
-          <Services key={JSON.stringify(services)} slug={slug} initial={services} />
+          {/* Хадгалахад шинэ id-г action-оос авна — remount хийж хадгалаагүй мөрийг алдахгүй */}
+          <Services slug={slug} initial={services} />
         </div>
       </PageBody>
     </>

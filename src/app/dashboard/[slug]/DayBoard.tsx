@@ -6,7 +6,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { ErrorBox, Field, btnDanger, btnPrimary, btnSecondary } from "@/components/ui";
+import { ErrorBox, Field, Row, btnDanger, btnPrimary, btnSecondary } from "@/components/ui";
+import { addDays, formatHm } from "@/lib/time";
 import {
   createManualBooking,
   rescheduleBooking,
@@ -15,6 +16,7 @@ import {
 } from "@/server/dashboard-actions";
 import type { DashSlot } from "@/server/slot-queries";
 import { getJson, query } from "@/lib/fetch-json";
+import { BOOKING_STATUS } from "@/lib/booking-status";
 
 export type BoardBooking = {
   id: string;
@@ -62,21 +64,8 @@ type Props = {
 
 const PX_PER_MIN = 1.4;
 
-const STATUS: Record<BoardBooking["status"], { label: string; card: string }> = {
-  pending: { label: "Батлах хүлээж буй", card: "border-pending border-dashed bg-blue-50" },
-  confirmed: { label: "Баталгаажсан", card: "border-brand bg-brand-tint" },
-  checked_in: { label: "Ирсэн", card: "border-green-600 bg-green-50" },
-  completed: { label: "Дууссан", card: "border-line bg-ground text-muted" },
-  no_show: { label: "Ирээгүй", card: "border-red-400 bg-red-50" },
-  cancelled: { label: "Цуцлагдсан", card: "border-line bg-white text-muted line-through" },
-};
+const STATUS = BOOKING_STATUS;
 
-const hm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-
-function shiftDate(date: string, days: number) {
-  const [y, m, d] = date.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
-}
 
 export function DayBoard(p: Props) {
   const router = useRouter();
@@ -128,9 +117,9 @@ export function DayBoard(p: Props) {
             {p.dayLabel}{p.date === p.today ? " · Өнөөдөр" : ""}
             <span className="ml-2 text-sm font-semibold text-muted">{counts.total} захиалга</span>
           </h2>
-          <button className={btnSecondary} onClick={() => go(shiftDate(p.date, -1))} aria-label="Өмнөх өдөр">‹</button>
+          <button className={btnSecondary} onClick={() => go(addDays(p.date, -1))} aria-label="Өмнөх өдөр">‹</button>
           {p.date !== p.today && <button className={btnSecondary} onClick={() => go(p.today)}>Өнөөдөр</button>}
-          <button className={btnSecondary} onClick={() => go(shiftDate(p.date, 1))} aria-label="Дараагийн өдөр">›</button>
+          <button className={btnSecondary} onClick={() => go(addDays(p.date, 1))} aria-label="Дараагийн өдөр">›</button>
           <DatePickButton date={p.date} onPick={go} />
           <button className={btnPrimary} onClick={() => setCreating(true)}>+ Захиалга</button>
         </div>
@@ -148,7 +137,7 @@ export function DayBoard(p: Props) {
                 <div className="relative" style={{ height }}>
                   {hours.map((m) => (
                     <div key={m} className="absolute right-2 -translate-y-1/2 text-xs font-semibold text-muted" style={{ top: (m - p.fromMin) * PX_PER_MIN }}>
-                      {m > p.fromMin ? hm(m) : ""}
+                      {m > p.fromMin ? formatHm(m) : ""}
                     </div>
                   ))}
                 </div>
@@ -172,7 +161,7 @@ export function DayBoard(p: Props) {
                         style={{ top: (b.startMin - p.fromMin) * PX_PER_MIN + 1, height: Math.max(26, (b.endMin - b.startMin) * PX_PER_MIN - 2) }}
                         aria-label={`${b.timeLabel} ${b.customerName}, ${b.serviceName}, ${STATUS[b.status].label}`}
                       >
-                        <span className="block font-medium">{hm(b.startMin)} {b.customerName}</span>
+                        <span className="block font-medium">{formatHm(b.startMin)} {b.customerName}</span>
                         <span className="block truncate">{b.serviceName}</span>
                       </button>
                     ))}
@@ -355,10 +344,6 @@ function BookingDialog(p: Props & { b: BoardBooking; onClose: () => void }) {
       )}
     </Modal>
   );
-}
-
-function Row({ k, v }: { k: string; v: string }) {
-  return <div className="flex justify-between gap-3"><dt className="text-xs text-muted">{k}</dt><dd className="text-right font-medium">{v}</dd></div>;
 }
 
 // ── Сул цаг сонгогч (шилжүүлэх, гараар нэмэх) ─────────────────────────────

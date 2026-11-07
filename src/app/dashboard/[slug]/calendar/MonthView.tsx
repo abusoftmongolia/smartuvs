@@ -2,19 +2,13 @@
  * Сарын календарь — 7 багана (Даваа → Ням), өдөр бүрт захиалгын тоо ба эхний хэдэн захиалга.
  * Өдөр дээр дарахад тэр өдрийн дэлгэрэнгүй (ажилтнаар баганалсан) календарь нээгдэнэ.
  */
+import { BOOKING_STATUS, isBookingStatus } from "@/lib/booking-status";
 import Link from "next/link";
 import { addMonths, daysOfMonth, formatHm, formatMonthMn, weekdayOf } from "@/lib/time";
 
 export type MonthItem = { id: string; date: string; startMin: number; name: string; status: string };
 
 const WEEK = ["Да", "Мя", "Лх", "Пү", "Ба", "Бя", "Ня"];
-const DOT: Record<string, string> = {
-  pending: "bg-pending",
-  confirmed: "bg-brand",
-  checked_in: "bg-green-600",
-  completed: "bg-muted/50",
-  no_show: "bg-red-500",
-};
 const SHOW = 3;
 
 export function MonthView({ base, month, today, items }: { base: string; month: string; today: string; items: MonthItem[] }) {
@@ -65,7 +59,7 @@ export function MonthView({ base, month, today, items }: { base: string; month: 
                   <span className="hidden flex-col gap-0.5 sm:flex">
                     {list.slice(0, SHOW).map((b) => (
                       <span key={b.id} className="flex items-center gap-1.5 truncate rounded px-1 text-xs leading-5">
-                        <span aria-hidden className={`size-1.5 flex-none rounded-full ${DOT[b.status] ?? "bg-muted"}`} />
+                        <span aria-hidden className={`size-1.5 flex-none rounded-full ${isBookingStatus(b.status) ? BOOKING_STATUS[b.status].dot : "bg-muted"}`} />
                         <span className="tabular-nums text-muted">{formatHm(b.startMin)}</span>
                         <span className="truncate">{b.name}</span>
                       </span>

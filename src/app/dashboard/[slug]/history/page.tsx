@@ -2,6 +2,7 @@
  * Захиалгын түүх — бүх захиалга (цуцлагдсаныг оруулаад). Код, нэр, утсаар хайх; хугацаа, төлөвөөр шүүх.
  * Мөр дээр дарахад календарь дээр тэр захиалгыг нээнэ (?code=).
  */
+import { BOOKING_STATUS, BOOKING_STATUSES, isBookingStatus } from "@/lib/booking-status";
 import Link from "next/link";
 import { listBookingHistory } from "@/db/tenant";
 import { formatBookingCode, normalizeBookingCode } from "@/lib/booking-code";
@@ -9,15 +10,6 @@ import { formatDayMn, formatHm, todayIn, utcToLocalMinute } from "@/lib/time";
 import { requireMember } from "@/server/auth";
 import { PageBody, PageHeader } from "../../PageHeader";
 
-const STATUS = {
-  pending: { label: "Хүлээгдэж буй", cls: "bg-blue-50 text-blue-800" },
-  confirmed: { label: "Баталгаажсан", cls: "bg-brand-tint text-brand-deep" },
-  checked_in: { label: "Ирсэн", cls: "bg-green-50 text-green-800" },
-  completed: { label: "Дууссан", cls: "bg-ground text-muted" },
-  cancelled: { label: "Цуцлагдсан", cls: "bg-ground text-muted line-through" },
-  no_show: { label: "Ирээгүй", cls: "bg-red-50 text-red-800" },
-} as const;
-type Status = keyof typeof STATUS;
 const PERIODS = { all: "Бүгд", upcoming: "Удахгүй", past: "Өнгөрсөн" } as const;
 type Period = keyof typeof PERIODS;
 
@@ -29,7 +21,7 @@ export default async function HistoryPage({ params, searchParams }: Props) {
   const sp = await searchParams;
   const q = (sp.q ?? "").trim().slice(0, 60);
   const period: Period = sp.period === "upcoming" || sp.period === "past" ? sp.period : "all";
-  const status = sp.status && Object.hasOwn(STATUS, sp.status) ? (sp.status as Status) : undefined;
+  const status = isBookingStatus(sp.status) ? sp.status : undefined;
 
   const digits = q.replace(/\D/g, "");
   const now = new Date();
@@ -73,8 +65,8 @@ export default async function HistoryPage({ params, searchParams }: Props) {
             ))}
             <span aria-hidden className="mx-1 w-px self-stretch bg-line" />
             <Link href={href({ status: undefined })} aria-current={!status ? "true" : undefined} className={chip(!status)}>Бүх төлөв</Link>
-            {(Object.keys(STATUS) as Status[]).map((k) => (
-              <Link key={k} href={href({ status: k })} aria-current={status === k ? "true" : undefined} className={chip(status === k)}>{STATUS[k].label}</Link>
+            {BOOKING_STATUSES.map((k) => (
+              <Link key={k} href={href({ status: k })} aria-current={status === k ? "true" : undefined} className={chip(status === k)}>{BOOKING_STATUS[k].label}</Link>
             ))}
           </div>
         </div>
@@ -109,7 +101,7 @@ export default async function HistoryPage({ params, searchParams }: Props) {
                       <td className="md:px-4 md:py-3">{b.customerName}</td>
                       <td className="text-muted md:px-4 md:py-3">{b.serviceName}</td>
                       <td className="md:px-4 md:py-3">
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS[b.status].cls}`}>{STATUS[b.status].label}</span>
+                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${BOOKING_STATUS[b.status].badge}`}>{BOOKING_STATUS[b.status].label}</span>
                       </td>
                     </tr>
                   );

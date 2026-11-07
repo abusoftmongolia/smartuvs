@@ -2,7 +2,7 @@
  * A4 QR постер — үүдэнд, тоолуур дээр наана. Хөтчийн "Хэвлэх → PDF болгох"-оор PDF болгоно.
  */
 import Image from "next/image";
-import QRCode from "qrcode";
+import { qrSvg } from "@/lib/qr";
 import { requireMember } from "@/server/auth";
 import { PrintButton } from "./PrintButton";
 
@@ -11,7 +11,7 @@ export default async function PosterPage({ params }: { params: Promise<{ slug: s
   const { tenant } = await requireMember(slug);
   const url = `${(process.env.NEXT_PUBLIC_SITE_URL ?? "https://tsag.smartuvs.mn").replace(/\/$/, "")}/${tenant.slug}`;
   const pretty = url.replace(/^https?:\/\//, "");
-  const svg = await QRCode.toString(url, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#111111", light: "#ffffff" } });
+  const svg = await qrSvg(url);
 
   return (
     <main className="flex flex-col items-center gap-4 px-4 py-6 print:p-0">

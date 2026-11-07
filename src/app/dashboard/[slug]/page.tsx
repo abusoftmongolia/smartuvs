@@ -2,6 +2,7 @@
  * Хянах самбар — өнөөдрийн тойм: тоон үзүүлэлт, өнөөдрийн хуваарь, батлах хүлээж буй.
  * /dashboard/<slug>
  */
+import { BOOKING_STATUS } from "@/lib/booking-status";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { listBookingsInRange, listPendingBookings } from "@/db/tenant";
@@ -9,15 +10,6 @@ import { countRows, formatPercent, noShowRate } from "@/lib/report";
 import { addDays, formatDayMn, formatHm, localToUtc, todayIn, utcToLocalMinute } from "@/lib/time";
 import { requireMember } from "@/server/auth";
 import { PageBody, PageHeader, Panel } from "../PageHeader";
-
-const STATUS = {
-  pending: { label: "Хүлээгдэж буй", cls: "bg-blue-50 text-blue-800" },
-  confirmed: { label: "Баталгаажсан", cls: "bg-brand-tint text-brand-deep" },
-  checked_in: { label: "Ирсэн", cls: "bg-green-50 text-green-800" },
-  completed: { label: "Дууссан", cls: "bg-ground text-muted" },
-  cancelled: { label: "Цуцлагдсан", cls: "bg-ground text-muted" },
-  no_show: { label: "Ирээгүй", cls: "bg-red-50 text-red-800" },
-} as const;
 
 export default async function Overview({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ date?: string; code?: string }> }) {
   const { slug } = await params;
@@ -95,7 +87,7 @@ export default async function Overview({ params, searchParams }: { params: Promi
                           <span className="block truncate text-sm font-medium">{b.customerName}</span>
                           <span className="block truncate text-xs text-muted">{b.serviceName}</span>
                         </span>
-                        <span className={`flex-none rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS[b.status].cls}`}>{STATUS[b.status].label}</span>
+                        <span className={`flex-none rounded-full px-2.5 py-0.5 text-xs font-medium ${BOOKING_STATUS[b.status].badge}`}>{BOOKING_STATUS[b.status].label}</span>
                       </Link>
                     </li>
                   );

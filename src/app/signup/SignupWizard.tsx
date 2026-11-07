@@ -3,28 +3,72 @@
  * Бүртгэлийн 4 алхам + "Бэлэн". Салбар сонгоход preset-ээс үйлчилгээ, нэр томьёо автоматаар бөглөгдөнө.
  * Нэвтэрсэн хэрэглэгч 1-р алхмыг алгасна.
  */
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { HoursEditor } from "@/components/HoursEditor";
 import { ExpiredNotice, PhoneVerifyPanel, usePhoneVerification } from "@/components/PhoneVerify";
-import { QrCode } from "@/components/QrCode";
-import { ErrorBox, Field, btnPrimary, btnSecondary } from "@/components/ui";
+import { ErrorBox, Field, SuccessMark, btnPrimary, btnSecondary, inputCls, selectCls } from "@/components/ui";
 import { defaultWeekHours, weekHoursProblem, type DayHours } from "@/lib/hours";
 import { PASSWORD_MIN } from "@/lib/password-rules";
 import { INDUSTRY_IDS, INDUSTRY_PRESETS, type Industry } from "@/lib/presets";
 import { createTenant, registerAccount } from "@/server/signup-actions";
 
-type Svc = { name: string; durationMin: number; bufferMin: number; price: string };
+// QR зөвхөн "Бэлэн" алхамд — qrcode санг эхнээс нь ачаалахгүй
+const QrCode = dynamic(() => import("@/components/QrCode").then((m) => m.QrCode), {
+  ssr: false,
+  loading: () => <div aria-hidden className="size-[220px] animate-pulse rounded bg-ground" />,
+});
+
+type Svc = { key: string; name: string; durationMin: number; bufferMin: number; price: string };
+type OwnerRow = { key: string; name: string };
+
+/** Жагсаалтын мөрд тогтвортой key (index-ээр бол устгахад input-ийн утга солигдоно) */
+let seq = 0;
+const k = () => `r${++seq}`;
+
+/** Ноорог: refresh хийвэл алга болохгүй. Нууц үг, утас (1-р алхам) хадгалахгүй. */
+const DRAFT_KEY = "tsag-signup-draft-v1";
+type Draft = {
+  step: number;
+  orgName: string;
+  industry: Industry;
+  timezone: "Asia/Hovd" | "Asia/Ulaanbaatar";
+  address: string;
+  orgPhone: string;
+  services: Omit<Svc, "key">[];
+  hours: DayHours[];
+  owners: string[];
+};
+function readDraft(): Draft | null {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw) as Draft;
+    return d && typeof d === "object" && INDUSTRY_IDS.includes(d.industry) ? d : null;
+  } catch {
+    return null;
+  }
+}
+function writeDraft(d: Draft | null) {
+  try {
+    if (d) sessionStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+    else sessionStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // хувийн цонх, хаалттай storage — ноорог хадгалахгүй, бүртгэл хэвийн
+  }
+}
 
 const STEPS = ["Бүртгэл", "Байгууллага", "Үйлчилгээ ба цаг", "Ажилтан"] as const;
 
 function presetServices(i: Industry): Svc[] {
-  return INDUSTRY_PRESETS[i].services.map((s) => ({ ...s, price: "" }));
+  return INDUSTRY_PRESETS[i].services.map((s) => ({ ...s, key: k(), price: "" }));
 }
-function presetOwners(i: Industry): string[] {
+function presetOwners(i: Industry): OwnerRow[] {
   const p = INDUSTRY_PRESETS[i];
-  return p.bookingMode === "resource" ? [`${p.terminology.staff} 1`, `${p.terminology.staff} 2`] : [""];
+  const names = p.bookingMode === "resource" ? [`${p.terminology.staff} 1`, `${p.terminology.staff} 2`] : [""];
+  return names.map((name) => ({ key: k(), name }));
 }
 
 export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | null; siteUrl: string }) {
@@ -47,9 +91,43 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
   const [services, setServices] = useState<Svc[]>(presetServices("barber"));
   const [hours, setHours] = useState<DayHours[]>(defaultWeekHours());
   // 4. Ажилтан / бокс
-  const [owners, setOwners] = useState<string[]>(presetOwners("barber"));
+  const [owners, setOwners] = useState<OwnerRow[]>(presetOwners("barber"));
   // Бэлэн
   const [slug, setSlug] = useState<string | null>(null);
+
+  // Ноорог сэргээх (зөвхөн нэвтэрсэн — бүртгэл үүссэн бол 1+ алхам)
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    const d = loggedInAs ? readDraft() : null;
+    if (!d) return;
+    setOrgName(d.orgName);
+    setIndustry(d.industry);
+    setTimezone(d.timezone);
+    setAddress(d.address);
+    setOrgPhone(d.orgPhone);
+    setServices(d.services.map((s) => ({ ...s, key: k() })));
+    setHours(d.hours);
+    setOwners(d.owners.map((name) => ({ key: k(), name })));
+    setStep(Math.min(Math.max(d.step, 1), 3));
+  }, [loggedInAs]);
+  useEffect(() => {
+    if (!restored.current || step < 1 || step > 3) return;
+    writeDraft({
+      step, orgName, industry, timezone, address, orgPhone, hours,
+      services: services.map(({ key: _key, ...s }) => s),
+      owners: owners.map((o) => o.name),
+    });
+  }, [step, orgName, industry, timezone, address, orgPhone, services, hours, owners]);
+
+  // Алхам солигдоход шинэ гарчиг руу фокус — дэлгэц уншигч өөрчлөлтийг мэднэ
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const firstStep = useRef(true);
+  useEffect(() => {
+    if (firstStep.current) { firstStep.current = false; return; }
+    headingRef.current?.focus();
+  }, [step]);
 
   const preset = INDUSTRY_PRESETS[industry];
   const term = preset.terminology.staff;
@@ -93,7 +171,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
       return setStep(3);
     }
     if (step === 3) {
-      const names = owners.map((o) => o.trim()).filter(Boolean);
+      const names = owners.map((o) => o.name.trim()).filter(Boolean);
       if (names.length === 0) return setError(`Ядаж нэг ${term.toLowerCase()} нэмнэ үү`);
       start(async () => {
         const r = await createTenant({
@@ -109,6 +187,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
           owners: names,
         });
         if (!r.ok) return setError(r.message);
+        writeDraft(null);
         setSlug(r.slug);
         setStep(4);
       });
@@ -128,7 +207,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
         {STEPS.map((s, i) => (
           <li key={s} className="flex flex-1 flex-col gap-1" aria-current={i === step ? "step" : undefined}>
             <span className={`h-1.5 rounded-full ${i <= step ? "bg-brand" : "bg-line"}`} />
-            <span className={`text-[11px] font-medium ${i === step ? "text-ink" : "text-muted"}`}>{i + 1}. {s}</span>
+            <span className={`text-xs font-medium ${i === step ? "text-ink" : "text-muted"}`}>{i + 1}. {s}</span>
           </li>
         ))}
       </ol>
@@ -139,7 +218,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
       >
         {step === 0 && (
           <>
-            <h2 className="text-lg font-semibold">Таны бүртгэл</h2>
+            <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold">Таны бүртгэл</h2>
             <Field id="su-name" label="Таны нэр" value={name} onChange={setName} autoComplete="name" />
             <Field id="su-phone" label="Утасны дугаар" type="tel" value={phone} onChange={(x) => { setPhone(x); pv.reset(); }} placeholder="9911 2233" autoComplete="username"
               hint="Самбарт энэ дугаараар нэвтэрнэ" />
@@ -153,7 +232,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
 
         {step === 1 && (
           <>
-            <h2 className="text-lg font-semibold">Байгууллага</h2>
+            <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold">Байгууллага</h2>
             {loggedInAs && <p className="text-sm text-muted">{loggedInAs} нэрээр бүртгүүлж байна.</p>}
             <Field id="org-name" label="Байгууллагын нэр" value={orgName} onChange={setOrgName} placeholder="Хатан Салон" />
             <fieldset className="flex flex-col gap-2">
@@ -170,7 +249,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
             <label className="flex flex-col gap-1.5 text-sm font-medium">
               Байршил (цагийн бүс)
               <select value={timezone} onChange={(e) => setTimezone(e.target.value as typeof timezone)}
-                className="min-h-12 rounded-xl border-[1.5px] border-field bg-white px-3 text-base font-normal">
+                className={`${selectCls} text-base`}>
                 <option value="Asia/Hovd">Баруун аймгууд (Увс, Ховд, Баян-Өлгий, Завхан, Говь-Алтай) — UTC+7</option>
                 <option value="Asia/Ulaanbaatar">Улаанбаатар ба бусад аймаг — UTC+8</option>
               </select>
@@ -182,35 +261,35 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
 
         {step === 2 && (
           <>
-            <h2 className="text-lg font-semibold">Үйлчилгээ</h2>
+            <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold">Үйлчилгээ</h2>
             <p className="text-sm text-muted">Үнэ зөвхөн мэдээлэл — үйлчлүүлэгч урьдчилж төлөхгүй.</p>
             <ul className="flex flex-col gap-2">
-              {services.map((s, i) => (
-                <li key={i} className="flex flex-wrap items-end gap-2 rounded-xl border border-line p-3">
+              {services.map((s) => (
+                <li key={s.key} className="flex flex-wrap items-end gap-2 rounded-xl border border-line p-3">
                   <label className="flex min-w-40 flex-[2] flex-col gap-1 text-xs font-medium">
                     Нэр
-                    <input value={s.name} onChange={(e) => setServices(services.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))}
-                      className="min-h-11 rounded-lg border-[1.5px] border-field px-2.5 text-base font-normal" />
+                    <input value={s.name} onChange={(e) => setServices(services.map((x) => (x.key === s.key ? { ...x, name: e.target.value } : x)))}
+                      className={`min-h-11 px-2.5 text-base font-normal ${inputCls}`} />
                   </label>
                   <label className="flex w-24 flex-col gap-1 text-xs font-medium">
                     Минут
                     <input type="number" inputMode="numeric" min={5} step={5} value={s.durationMin}
-                      onChange={(e) => setServices(services.map((x, j) => (j === i ? { ...x, durationMin: Number(e.target.value) } : x)))}
-                      className="min-h-11 rounded-lg border-[1.5px] border-field px-2.5 text-base font-normal" />
+                      onChange={(e) => setServices(services.map((x) => (x.key === s.key ? { ...x, durationMin: Number(e.target.value) } : x)))}
+                      className={`min-h-11 px-2.5 text-base font-normal ${inputCls}`} />
                   </label>
                   <label className="flex w-28 flex-col gap-1 text-xs font-medium">
                     Үнэ ₮
                     <input inputMode="numeric" value={s.price} placeholder="—"
-                      onChange={(e) => setServices(services.map((x, j) => (j === i ? { ...x, price: e.target.value.replace(/\D/g, "") } : x)))}
-                      className="min-h-11 rounded-lg border-[1.5px] border-field px-2.5 text-base font-normal" />
+                      onChange={(e) => setServices(services.map((x) => (x.key === s.key ? { ...x, price: e.target.value.replace(/\D/g, "") } : x)))}
+                      className={`min-h-11 px-2.5 text-base font-normal ${inputCls}`} />
                   </label>
-                  <button type="button" onClick={() => setServices(services.filter((_, j) => j !== i))} aria-label={`${s.name || "Үйлчилгээ"} хасах`}
+                  <button type="button" onClick={() => setServices(services.filter((x) => x.key !== s.key))} aria-label={`${s.name || "Үйлчилгээ"} хасах`}
                     className="inline-flex size-11 items-center justify-center rounded-lg border border-line text-lg">×</button>
                 </li>
               ))}
             </ul>
             <button type="button" className={`${btnSecondary} self-start`}
-              onClick={() => setServices([...services, { name: "", durationMin: 30, bufferMin: 5, price: "" }])}>
+              onClick={() => setServices([...services, { key: k(), name: "", durationMin: 30, bufferMin: 5, price: "" }])}>
               + Үйлчилгээ нэмэх
             </button>
             <h2 className="mt-2 text-lg font-semibold">Ажлын цаг</h2>
@@ -220,7 +299,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
 
         {step === 3 && (
           <>
-            <h2 className="text-lg font-semibold">{term}</h2>
+            <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold">{term}</h2>
             <p className="text-sm text-muted">
               {preset.bookingMode === "resource"
                 ? `Үйлчлүүлэгч сул ${term.toLowerCase()}оор захиална. Хэдэн ${term.toLowerCase()} зэрэг ажиллахыг оруулна уу.`
@@ -228,17 +307,17 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
             </p>
             <ul className="flex flex-col gap-2">
               {owners.map((o, i) => (
-                <li key={i} className="flex gap-2">
-                  <label className="sr-only" htmlFor={`own-${i}`}>{term} {i + 1}</label>
-                  <input id={`own-${i}`} value={o} placeholder={`${term} ${i + 1}-н нэр`}
-                    onChange={(e) => setOwners(owners.map((x, j) => (j === i ? e.target.value : x)))}
-                    className="min-h-12 flex-1 rounded-xl border-[1.5px] border-field px-3.5 text-base" />
-                  <button type="button" onClick={() => setOwners(owners.filter((_, j) => j !== i))} aria-label={`${o || term} хасах`}
+                <li key={o.key} className="flex gap-2">
+                  <label className="sr-only" htmlFor={`own-${o.key}`}>{term} {i + 1}</label>
+                  <input id={`own-${o.key}`} value={o.name} placeholder={`${term} ${i + 1}-н нэр`}
+                    onChange={(e) => setOwners(owners.map((x) => (x.key === o.key ? { ...x, name: e.target.value } : x)))}
+                    className={`min-h-12 flex-1 px-3.5 text-base ${inputCls}`} />
+                  <button type="button" onClick={() => setOwners(owners.filter((x) => x.key !== o.key))} aria-label={`${o.name || term} хасах`}
                     className="inline-flex size-12 items-center justify-center rounded-xl border border-line text-lg">×</button>
                 </li>
               ))}
             </ul>
-            <button type="button" className={`${btnSecondary} self-start`} onClick={() => setOwners([...owners, ""])}>+ {term} нэмэх</button>
+            <button type="button" className={`${btnSecondary} self-start`} onClick={() => setOwners([...owners, { key: k(), name: "" }])}>+ {term} нэмэх</button>
           </>
         )}
 
@@ -268,9 +347,7 @@ function Ready({ slug, name, siteUrl }: { slug: string; name: string; siteUrl: s
   const [copied, setCopied] = useState(false);
   return (
     <section className="flex flex-col items-center gap-4 rounded-[18px] border border-line bg-white p-6 text-center">
-      <div aria-hidden className="flex size-16 items-center justify-center rounded-full bg-ink">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f5a800" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-      </div>
+      <SuccessMark />
       <h1 className="text-2xl font-bold">Бүртгэл илгээгдлээ!</h1>
       <p className="rounded-xl bg-brand-tint p-3 text-sm">
         SmartUvs таны байгууллагыг шалгаад <b>батлах</b> бөгөөд батлагдмагц SMS ирнэ. Тэр хүртэл доорх хаяг нийтэд нээгдэхгүй — энэ хооронд самбартаа үйлчилгээ, ажилтнаа тохируулаарай.

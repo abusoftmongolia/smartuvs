@@ -4,7 +4,7 @@ import { listAllOwners, listAllServices, listTenantSchedules, listUpcomingTimeOf
 import { defaultWeekHours, windowsToWeekHours } from "@/lib/hours";
 import { todayIn, utcToLocalMinute } from "@/lib/time";
 import { requireMember } from "@/server/auth";
-import type { Info, Off, Owner, Svc } from "./Settings";
+import type { Info, Off, Owner, Svc } from "./types";
 
 export const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL ?? "https://tsag.smartuvs.mn").replace(/\/$/, "");
 

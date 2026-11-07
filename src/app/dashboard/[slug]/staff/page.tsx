@@ -1,5 +1,5 @@
 import { PageBody, PageHeader } from "../../PageHeader";
-import { Owners } from "../settings/Settings";
+import { Owners } from "./Owners";
 import { loadOwners, manageContext } from "../settings/data";
 
 export default async function StaffPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -11,7 +11,7 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
       <PageHeader title={term} subtitle={kind === "resource" ? "Захиалга авах бокс, өрөө" : "Захиалга авах ажилтнууд. Идэвхгүй болговол захиалгын хуудсанд харагдахгүй."} />
       <PageBody>
         <div className="max-w-3xl">
-          <Owners key={JSON.stringify(owners)} slug={slug} term={term} initial={owners} />
+          <Owners slug={slug} term={term} initial={owners} />
         </div>
       </PageBody>
     </>

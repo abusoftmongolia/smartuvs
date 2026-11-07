@@ -2,6 +2,8 @@
  * Үйлчлүүлэгчийн захиалга: tsag.smartuvs.mn/manage/<token> (SMS-ийн холбоос)
  * Харах, календарьт нэмэх, цуцлах, өөр цаг руу шилжүүлэх.
  */
+import { statusLabel } from "@/lib/booking-status";
+import { Row } from "@/components/ui";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -15,15 +17,6 @@ import { ManageBooking } from "./ManageBooking";
 export const dynamic = "force-dynamic";
 // Токен URL-д байгаа тул хайлтад орохгүй, гадагш referrer-ээр задрахгүй
 export const metadata: Metadata = { title: "Миний захиалга", robots: { index: false, follow: false }, referrer: "no-referrer" };
-
-const STATUS_MN: Record<string, string> = {
-  pending: "Батлах хүлээж буй",
-  confirmed: "Баталгаажсан",
-  checked_in: "Ирсэн",
-  completed: "Дууссан",
-  cancelled: "Цуцлагдсан",
-  no_show: "Ирээгүй",
-};
 
 export default async function ManagePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -52,7 +45,7 @@ export default async function ManagePage({ params }: { params: Promise<{ token: 
         <h1 className="text-2xl font-bold">Таны захиалга</h1>
         <dl className="flex flex-col gap-2.5 rounded-[18px] border border-line bg-white p-5 text-sm">
           <Row k="Код" v={formatBookingCode(booking.code)} />
-          <Row k="Төлөв" v={STATUS_MN[booking.status] ?? booking.status} />
+          <Row k="Төлөв" v={statusLabel(booking.status)} />
           <Row k="Өдөр" v={formatDayMn(date)} />
           <Row k="Цаг" v={`${formatHm(startMin)}–${formatHm(startMin + row.durationMin)}`} />
           <Row k="Үйлчилгээ" v={row.serviceName} />
@@ -75,11 +68,3 @@ export default async function ManagePage({ params }: { params: Promise<{ token: 
   );
 }
 
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="flex justify-between gap-3">
-      <dt className="text-xs text-muted">{k}</dt>
-      <dd className="text-right font-medium">{v}</dd>
-    </div>
-  );
-}

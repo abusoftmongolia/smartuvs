@@ -1,5 +1,6 @@
 import { PageBody, PageHeader } from "../../PageHeader";
-import { InfoForm, Logo } from "./Settings";
+import { InfoForm } from "./InfoForm";
+import { Logo } from "./Logo";
 import { manageContext, tenantInfo } from "./data";
 
 export default async function SettingsPage({ params }: { params: Promise<{ slug: string }> }) {

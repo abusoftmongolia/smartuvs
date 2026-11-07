@@ -23,7 +23,8 @@ import { normalizePhone } from "@/lib/sms";
 import { addDays, localToUtc } from "@/lib/time";
 import { memberOrNull } from "./auth";
 
-export type SettingsResult = { ok: true } | { ok: false; message: string };
+/** Шинэ мөр үүсгэсэн бол id буцаана — client remount хийлгүйгээр шинэ id-г авна */
+export type SettingsResult = { ok: true; id?: string } | { ok: false; message: string };
 
 const NO_ACCESS: SettingsResult = { ok: false, message: "Эрх хүрэхгүй байна" };
 const Slug = z.string().min(1).max(64);
@@ -38,11 +39,11 @@ async function audit(tenantId: string, actorId: string, action: string, entity: 
   await db().insert(schema.auditLogs).values({ tenantId, actorId, action, entity, entityId, diff: diff ?? null });
 }
 
-function done(slug: string): SettingsResult {
+function done(slug: string, id?: string): SettingsResult {
   revalidatePath(`/dashboard/${slug}`, "layout");
   revalidatePath(`/${slug}`);
   revalidatePath("/");
-  return { ok: true };
+  return id ? { ok: true, id } : { ok: true };
 }
 
 // ── Байгууллагын мэдээлэл ба бодлого ──────────────────────────────────────
@@ -112,7 +113,7 @@ export async function saveService(raw: unknown): Promise<SettingsResult> {
   const s = await upsertService(m.tenant.id, svc);
   if (!s) return { ok: false, message: "Үйлчилгээ олдсонгүй" };
   await audit(m.tenant.id, m.user.id, svc.id ? "service.update" : "service.create", "service", s.id);
-  return done(slug);
+  return done(slug, s.id);
 }
 
 // ── Ажилтан / бокс ────────────────────────────────────────────────────────
@@ -146,7 +147,7 @@ export async function saveOwner(raw: unknown): Promise<SettingsResult> {
   const r = await upsertOwner(m.tenant.id, kind, { ...o, title: o.title || null }, defaultSchedule);
   if (!r) return { ok: false, message: "Олдсонгүй" };
   await audit(m.tenant.id, m.user.id, o.id ? "owner.update" : "owner.create", kind, r.id);
-  return done(slug);
+  return done(slug, r.id);
 }
 
 // ── Ажлын цаг ─────────────────────────────────────────────────────────────
