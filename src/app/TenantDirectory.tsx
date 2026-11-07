@@ -32,7 +32,7 @@ export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; in
   }
 
   const chip = (on: boolean) =>
-    `min-h-11 rounded-full border-[1.5px] px-4 text-sm font-semibold ${on ? "border-brand bg-brand text-ink" : "border-line bg-white text-ink"}`;
+    `min-h-11 rounded-full border-[1.5px] px-4 text-sm font-semibold ${on ? "border-ink bg-brand text-ink" : "border-line bg-white text-ink"}`;
 
   return (
     <section aria-label="Байгууллагууд" className="flex flex-col gap-4">
@@ -45,7 +45,7 @@ export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; in
           onChange={(e) => setQ(e.target.value)}
           placeholder="Нэр эсвэл хаягаар хайх…"
           autoComplete="off"
-          className="min-h-12 w-full rounded-card border-[1.5px] border-[#d4d4d4] bg-white px-4 text-base outline-none focus:border-ink"
+          className="min-h-12 w-full rounded-card border-[1.5px] border-field bg-white px-4 text-base outline-none focus:border-ink"
         />
         {present.length > 1 && (
           <div className="flex flex-wrap gap-2" role="group" aria-label="Салбар">

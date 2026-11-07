@@ -7,7 +7,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { isTsagMaintenance } from "@/db/platform";
-import { getTenantBySlug, upsertCustomer } from "@/db/tenant";
+import { getOwnerName, getTenantBySlug, upsertCustomer } from "@/db/tenant";
 import { normalizePhone } from "@/lib/sms";
 import { getAvailability } from "./availability";
 import { bookingWhen, notifyBusiness, notifyCustomer, placeBooking, SLOT_TAKEN_MESSAGE } from "./booking-core";
@@ -29,8 +29,67 @@ const BookingInput = z.object({
 });
 
 export type BookingResult =
-  | { ok: true; bookingId: string; code: string; status: "pending" | "confirmed"; day: string; time: string; managePath: string }
+  | {
+      ok: true;
+      bookingId: string;
+      code: string;
+      status: "pending" | "confirmed";
+      day: string;
+      time: string;
+      managePath: string;
+      serviceName: string;
+      /** Хуваарилагдсан ажилтан/боксын нэр ("Хэн ч болно" сонгосон ч жинхэнэ нэр) */
+      ownerName: string | null;
+    }
   | { ok: false; reason: "invalid" | "unverified" | "not_found" | "slot_taken" | "error"; message: string };
+
+/** SMS баталгаажуулалтаас өмнөх шалгалтын оролт — verifyToken-гүй */
+const PrecheckInput = BookingInput.omit({ verifyToken: true });
+type CheckInput = z.infer<typeof PrecheckInput>;
+type Fail = Extract<BookingResult, { ok: false }>;
+
+/** Талбар, засвар, байгууллага, үйлчилгээ, заавал бөглөх талбар, сул цагийг шалгана (утас баталгаажуулалтаас бусад) */
+async function checkBooking(input: CheckInput) {
+  const phone = normalizePhone(input.phone);
+  if (!phone) return { ok: false, reason: "invalid", message: "Утасны дугаар 8 оронтой байх ёстой" } satisfies Fail;
+  if (await isTsagMaintenance()) return { ok: false, reason: "error", message: "Систем засвартай байна. Түр хүлээгээд дахин оролдоно уу." } satisfies Fail;
+
+  const tenant = await getTenantBySlug(input.slug);
+  if (!tenant) return { ok: false, reason: "not_found", message: "Байгууллага олдсонгүй" } satisfies Fail;
+
+  const [service] = await db()
+    .select()
+    .from(services)
+    .where(and(eq(services.id, input.serviceId), eq(services.tenantId, tenant.id), eq(services.active, true)));
+  if (!service) return { ok: false, reason: "not_found", message: "Үйлчилгээ олдсонгүй" } satisfies Fail;
+
+  // Заавал бөглөх нэмэлт талбар (машины дугаар гэх мэт)
+  for (const f of tenant.settings.customFields) {
+    if (f.required && !input.answers[f.key]?.trim()) {
+      return { ok: false, reason: "invalid", message: `${f.label} оруулна уу` } satisfies Fail;
+    }
+  }
+
+  // Сул цагийг серверт дахин тооцоолж, тэр цагт сул байгаа ажилтан/нөөцүүдийг олно
+  const slots = await getAvailability({ tenant, service, staffId: input.staffId, date: input.date });
+  const slot = slots.find((s) => s.startMin === input.startMin);
+  if (!slot) return { ok: false, reason: "slot_taken", message: SLOT_TAKEN_MESSAGE } satisfies Fail;
+
+  return { ok: true as const, phone, tenant, service, slot };
+}
+
+/**
+ * SMS илгээхээс ӨМНӨ дуудна: үйлчлүүлэгч төлбөртэй SMS илгээчихээд
+ * "Машины дугаар оруулна уу" / "цаг эзлэгдсэн" алдаа авахаас сэргийлнэ.
+ */
+export async function precheckBooking(raw: unknown): Promise<{ ok: true } | Fail> {
+  const parsed = PrecheckInput.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, reason: "invalid", message: parsed.error.issues[0]?.message ?? "Мэдээлэл буруу байна" };
+  }
+  const c = await checkBooking(parsed.data);
+  return c.ok ? { ok: true } : c;
+}
 
 export async function createBooking(raw: unknown): Promise<BookingResult> {
   const parsed = BookingInput.safeParse(raw);
@@ -38,34 +97,15 @@ export async function createBooking(raw: unknown): Promise<BookingResult> {
     return { ok: false, reason: "invalid", message: parsed.error.issues[0]?.message ?? "Мэдээлэл буруу байна" };
   }
   const input = parsed.data;
-  const phone = normalizePhone(input.phone);
-  if (!phone) return { ok: false, reason: "invalid", message: "Утасны дугаар 8 оронтой байх ёстой" };
-  if (!(await isPhoneVerified(input.verifyToken, phone))) {
+  const normalized = normalizePhone(input.phone);
+  if (!normalized) return { ok: false, reason: "invalid", message: "Утасны дугаар 8 оронтой байх ёстой" };
+  if (!(await isPhoneVerified(input.verifyToken, normalized))) {
     return { ok: false, reason: "unverified", message: "Утасны дугаараа баталгаажуулна уу" };
   }
 
-  if (await isTsagMaintenance()) return { ok: false, reason: "error", message: "Систем засвартай байна. Түр хүлээгээд дахин оролдоно уу." };
-
-  const tenant = await getTenantBySlug(input.slug);
-  if (!tenant) return { ok: false, reason: "not_found", message: "Байгууллага олдсонгүй" };
-
-  const [service] = await db()
-    .select()
-    .from(services)
-    .where(and(eq(services.id, input.serviceId), eq(services.tenantId, tenant.id), eq(services.active, true)));
-  if (!service) return { ok: false, reason: "not_found", message: "Үйлчилгээ олдсонгүй" };
-
-  // Заавал бөглөх нэмэлт талбар (машины дугаар гэх мэт)
-  for (const f of tenant.settings.customFields) {
-    if (f.required && !input.answers[f.key]?.trim()) {
-      return { ok: false, reason: "invalid", message: `${f.label} оруулна уу` };
-    }
-  }
-
-  // Сул цагийг серверт дахин тооцоолж, тэр цагт сул байгаа ажилтан/нөөцүүдийг олно
-  const slots = await getAvailability({ tenant, service, staffId: input.staffId, date: input.date });
-  const slot = slots.find((s) => s.startMin === input.startMin);
-  if (!slot) return { ok: false, reason: "slot_taken", message: SLOT_TAKEN_MESSAGE };
+  const c = await checkBooking(input);
+  if (!c.ok) return c;
+  const { phone, tenant, service, slot } = c;
 
   const customer = await upsertCustomer(tenant.id, input.name, phone);
   const status = tenant.settings.approval === "auto" ? "confirmed" : "pending";
@@ -77,8 +117,16 @@ export async function createBooking(raw: unknown): Promise<BookingResult> {
     await notifyCustomer(tenant, b, phone, status);
     await notifyBusiness(tenant, b, { customerName: customer.name, serviceName: service.name });
     const { day, time } = bookingWhen(tenant, b.startsAt);
+    const ownerName = await getOwnerName(
+      tenant.id,
+      tenant.bookingMode === "resource" ? "resource" : "staff",
+      tenant.bookingMode === "resource" ? b.resourceId : b.staffId,
+    ).catch(() => null);
     // Захиалагч өөрийнх нь захиалгын холбоос — цуцлах, шилжүүлэх, календарьт нэмэх
-    return { ok: true, bookingId: b.id, code: b.code, status, day, time, managePath: `/manage/${b.manageToken}` };
+    return {
+      ok: true, bookingId: b.id, code: b.code, status, day, time, managePath: `/manage/${b.manageToken}`,
+      serviceName: service.name, ownerName,
+    };
   } catch (err) {
     console.error("createBooking", err);
     return { ok: false, reason: "error", message: "Алдаа гарлаа. Дахин оролдоно уу." };

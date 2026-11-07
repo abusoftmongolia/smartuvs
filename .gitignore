@@ -9,3 +9,6 @@ next-env.d.ts
 .vercel
 coverage
 .env*
+
+# Agency Agents (локал, git-д оруулахгүй)
+.claude/agents/

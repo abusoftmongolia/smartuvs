@@ -36,8 +36,8 @@ export type Svc = { id?: string; name: string; durationMin: number; bufferMin: n
 export type Owner = { id?: string; name: string; title: string; active: boolean };
 export type Off = { id: string; from: string; to: string; partial: boolean; owner: string | null; reason: string | null };
 
-const select = "min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-sm font-normal";
-const num = "min-h-11 w-full rounded-lg border-[1.5px] border-[#d4d4d4] px-2.5 text-sm font-normal";
+const select = "min-h-12 rounded-xl border-[1.5px] border-field bg-white px-3 text-sm font-normal";
+const num = "min-h-11 w-full rounded-lg border-[1.5px] border-field px-2.5 text-sm font-normal";
 
 /** Хадгалах товч + алдаа/амжилтын мэдэгдэл */
 function useSave() {

@@ -35,7 +35,7 @@ export function ResetForm({ next }: { next?: string }) {
       <Field id="password" label="Шинэ нууц үг" type="password" value={password} onChange={setPassword} autoComplete="new-password" hint={`${PASSWORD_MIN}+ тэмдэгт`} required />
       {(error || pv.error) && <ErrorBox>{error ?? pv.error}</ErrorBox>}
       {v?.state === "pending" ? (
-        <PhoneVerifyPanel v={v} onCancel={pv.reset} />
+        <PhoneVerifyPanel v={v} onCancel={pv.reset} netError={pv.netError} onCheck={() => void pv.checkNow()} />
       ) : (
         <>
           {v?.state === "expired" && <ExpiredNotice onRestart={pv.restart} busy={pv.starting} />}

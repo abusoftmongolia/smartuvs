@@ -42,7 +42,7 @@ export function AdminShell(p: { userName: string; pending: number; children: Rea
     <nav aria-label="Админ цэс" className="flex h-full flex-col gap-6 bg-ink px-4 py-6 text-white">
       <Link href="/" className="flex items-center gap-2 px-2">
         {/* Лого хар-шар тул хар sidebar дээр цагаан хавтан дотор */}
-        <span className="rounded-lg bg-white px-2.5 py-2"><Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={1200} height={175} className="h-5 w-auto" priority /></span>
+        <span className="rounded-lg bg-white px-2.5 py-2"><Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={137} height={20} className="h-5 w-auto" priority /></span>
         <span className="rounded-md bg-brand px-1.5 py-0.5 text-[11px] font-medium text-ink">АДМИН</span>
       </Link>
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto">

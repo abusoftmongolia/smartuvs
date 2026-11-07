@@ -2,21 +2,23 @@
  * Tenant-аар шүүсэн query-ууд. Байгууллагын өгөгдлийг ЗӨВХӨН эндээс уншина —
  * ингэснээр нэг байгууллага нөгөөгийнхөө өгөгдлийг санамсаргүй харах эрсдэлгүй.
  */
-import { and, asc, desc, eq, gte, ilike, inArray, isNull, lt, ne, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, ilike, inArray, isNull, lt, ne, or, sql, type SQL } from "drizzle-orm";
+import { cache } from "react";
 import { db, schema } from "./index";
 
 const { tenants, services, staff, staffServices, schedules, timeOff, bookings, resources, customers, notifications } = schema;
 
 type BookingStatus = (typeof schema.bookingStatusEnum.enumValues)[number];
 
-export async function getTenantBySlug(slug: string) {
+/** Нэг request дотор (generateMetadata + page) давхар query хийхгүйн тулд cache() */
+export const getTenantBySlug = cache(async (slug: string) => {
   const [t] = await db()
     .select()
     .from(tenants)
     .where(and(eq(tenants.slug, slug), eq(tenants.status, "active")))
     .limit(1);
   return t ?? null;
-}
+});
 
 export async function listServices(tenantId: string) {
   return db()
@@ -33,6 +35,21 @@ export async function listStaffForService(tenantId: string, serviceId: string) {
     .innerJoin(staffServices, eq(staffServices.staffId, staff.id))
     .where(and(eq(staff.tenantId, tenantId), eq(staff.active, true), eq(staffServices.serviceId, serviceId)))
     .orderBy(asc(staff.sortOrder), asc(staff.name));
+}
+
+/** Олон үйлчилгээний ажилтныг НЭГ query-ээр: { serviceId: ажилтнууд[] } (N+1-ээс сэргийлнэ) */
+export async function listStaffByServices(tenantId: string, serviceIds: string[]) {
+  const out: Record<string, { id: string; name: string; title: string | null }[]> = {};
+  for (const id of serviceIds) out[id] = [];
+  if (serviceIds.length === 0) return out;
+  const rows = await db()
+    .select({ serviceId: staffServices.serviceId, id: staff.id, name: staff.name, title: staff.title })
+    .from(staff)
+    .innerJoin(staffServices, eq(staffServices.staffId, staff.id))
+    .where(and(eq(staff.tenantId, tenantId), eq(staff.active, true), inArray(staffServices.serviceId, serviceIds)))
+    .orderBy(asc(staff.sortOrder), asc(staff.name));
+  for (const r of rows) out[r.serviceId]?.push({ id: r.id, name: r.name, title: r.title });
+  return out;
 }
 
 export async function listResources(tenantId: string) {
@@ -168,14 +185,16 @@ export async function listBookingsInRange(tenantId: string, fromUtc: Date, toUtc
         eq(bookings.tenantId, tenantId),
         ne(bookings.status, "cancelled"),
         lt(bookings.startsAt, toUtc),
-        gte(bookings.endsAt, fromUtc),
+        // Яг fromUtc-д дуусах захиалга энэ мужид хамаарахгүй
+        gt(bookings.endsAt, fromUtc),
       ),
     )
     .orderBy(asc(bookings.startsAt));
 }
 
 /** Батлах хүлээж буй ирээдүйн захиалгууд */
-export async function listPendingBookings(tenantId: string, now = new Date()) {
+export const listPendingBookings = cache(async (tenantId: string) => {
+  const now = new Date();
   return db()
     .select(bookingView)
     .from(bookings)
@@ -184,7 +203,7 @@ export async function listPendingBookings(tenantId: string, now = new Date()) {
     .where(and(eq(bookings.tenantId, tenantId), eq(bookings.status, "pending"), gte(bookings.startsAt, now)))
     .orderBy(asc(bookings.startsAt))
     .limit(100);
-}
+});
 
 export async function getBooking(tenantId: string, bookingId: string) {
   const [b] = await db()
@@ -496,6 +515,7 @@ export async function getBookingByManageToken(token: string) {
       serviceName: services.name,
       durationMin: services.durationMin,
       customerName: customers.name,
+      customerPhone: customers.phone,
       staffName: staff.name,
       resourceName: resources.name,
     })
@@ -614,4 +634,31 @@ export async function listBookingHistory(
     .where(and(...conds))
     .orderBy(desc(bookings.startsAt))
     .limit(f.limit ?? 100);
+}
+
+/**
+ * Тайлангийн мөрүүд: [fromUtc, toUtc) хооронд ЭХЛЭХ захиалгууд, цуцлагдсаныг оруулаад.
+ * Үйлчлүүлэгчийн мэдээлэл буцаахгүй (тайланд хэрэггүй).
+ */
+export async function listBookingsForReport(tenantId: string, fromUtc: Date, toUtc: Date) {
+  return db()
+    .select({
+      startsAt: bookings.startsAt,
+      status: bookings.status,
+      staffId: bookings.staffId,
+      resourceId: bookings.resourceId,
+      serviceName: services.name,
+    })
+    .from(bookings)
+    .innerJoin(services, eq(services.id, bookings.serviceId))
+    .where(and(eq(bookings.tenantId, tenantId), gte(bookings.startsAt, fromUtc), lt(bookings.startsAt, toUtc)))
+    .limit(20000);
+}
+
+/** Захиалгад хуваарилагдсан ажилтан/боксын нэр (амжилтын дэлгэцэд) */
+export async function getOwnerName(tenantId: string, kind: "staff" | "resource", id: string | null) {
+  if (!id) return null;
+  const t = kind === "resource" ? resources : staff;
+  const [r] = await db().select({ name: t.name }).from(t).where(and(eq(t.id, id), eq(t.tenantId, tenantId))).limit(1);
+  return r?.name ?? null;
 }

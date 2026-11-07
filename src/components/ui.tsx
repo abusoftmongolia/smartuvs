@@ -24,7 +24,7 @@ export function Field(p: {
         autoComplete={p.autoComplete}
         required={p.required}
         inputMode={p.type === "tel" ? "numeric" : undefined}
-        className="min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3.5 text-base outline-none focus:border-ink"
+        className="min-h-12 rounded-xl border-[1.5px] border-field bg-white px-3.5 text-base outline-none focus:border-ink"
       />
       {p.hint && <span className="text-xs text-muted">{p.hint}</span>}
     </div>

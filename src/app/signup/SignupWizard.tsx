@@ -144,7 +144,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
             <Field id="su-phone" label="Утасны дугаар" type="tel" value={phone} onChange={(x) => { setPhone(x); pv.reset(); }} placeholder="9911 2233" autoComplete="username"
               hint="Самбарт энэ дугаараар нэвтэрнэ" />
             <Field id="su-pw" label="Нууц үг" type="password" value={password} onChange={setPassword} autoComplete="new-password" hint={`${PASSWORD_MIN}+ тэмдэгт`} />
-            {v?.state === "pending" && <PhoneVerifyPanel v={v} onCancel={pv.reset} />}
+            {v?.state === "pending" && <PhoneVerifyPanel v={v} onCancel={pv.reset} netError={pv.netError} onCheck={() => void pv.checkNow()} />}
             {v?.state === "expired" && <ExpiredNotice onRestart={pv.restart} busy={pv.starting} />}
             {pv.error && <ErrorBox>{pv.error}</ErrorBox>}
             <p className="text-sm text-muted">Бүртгэлтэй юу? <Link href="/admin/login" className="font-semibold text-brand-deep underline">Нэвтрэх</Link></p>
@@ -161,7 +161,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {INDUSTRY_IDS.map((i) => (
                   <button key={i} type="button" onClick={() => chooseIndustry(i)} aria-pressed={industry === i}
-                    className={`min-h-12 rounded-card border-[1.5px] px-3 text-sm font-medium ${industry === i ? "border-brand bg-brand-tint" : "border-line bg-white"}`}>
+                    className={`min-h-12 rounded-card border-[1.5px] px-3 text-sm font-medium ${industry === i ? "border-ink bg-brand-tint" : "border-line bg-white"}`}>
                     {INDUSTRY_PRESETS[i].label}
                   </button>
                 ))}
@@ -170,7 +170,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
             <label className="flex flex-col gap-1.5 text-sm font-medium">
               Байршил (цагийн бүс)
               <select value={timezone} onChange={(e) => setTimezone(e.target.value as typeof timezone)}
-                className="min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-base font-normal">
+                className="min-h-12 rounded-xl border-[1.5px] border-field bg-white px-3 text-base font-normal">
                 <option value="Asia/Hovd">Баруун аймгууд (Увс, Ховд, Баян-Өлгий, Завхан, Говь-Алтай) — UTC+7</option>
                 <option value="Asia/Ulaanbaatar">Улаанбаатар ба бусад аймаг — UTC+8</option>
               </select>
@@ -190,19 +190,19 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
                   <label className="flex min-w-40 flex-[2] flex-col gap-1 text-xs font-medium">
                     Нэр
                     <input value={s.name} onChange={(e) => setServices(services.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))}
-                      className="min-h-11 rounded-lg border-[1.5px] border-[#d4d4d4] px-2.5 text-base font-normal" />
+                      className="min-h-11 rounded-lg border-[1.5px] border-field px-2.5 text-base font-normal" />
                   </label>
                   <label className="flex w-24 flex-col gap-1 text-xs font-medium">
                     Минут
                     <input type="number" inputMode="numeric" min={5} step={5} value={s.durationMin}
                       onChange={(e) => setServices(services.map((x, j) => (j === i ? { ...x, durationMin: Number(e.target.value) } : x)))}
-                      className="min-h-11 rounded-lg border-[1.5px] border-[#d4d4d4] px-2.5 text-base font-normal" />
+                      className="min-h-11 rounded-lg border-[1.5px] border-field px-2.5 text-base font-normal" />
                   </label>
                   <label className="flex w-28 flex-col gap-1 text-xs font-medium">
                     Үнэ ₮
                     <input inputMode="numeric" value={s.price} placeholder="—"
                       onChange={(e) => setServices(services.map((x, j) => (j === i ? { ...x, price: e.target.value.replace(/\D/g, "") } : x)))}
-                      className="min-h-11 rounded-lg border-[1.5px] border-[#d4d4d4] px-2.5 text-base font-normal" />
+                      className="min-h-11 rounded-lg border-[1.5px] border-field px-2.5 text-base font-normal" />
                   </label>
                   <button type="button" onClick={() => setServices(services.filter((_, j) => j !== i))} aria-label={`${s.name || "Үйлчилгээ"} хасах`}
                     className="inline-flex size-11 items-center justify-center rounded-lg border border-line text-lg">×</button>
@@ -232,7 +232,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
                   <label className="sr-only" htmlFor={`own-${i}`}>{term} {i + 1}</label>
                   <input id={`own-${i}`} value={o} placeholder={`${term} ${i + 1}-н нэр`}
                     onChange={(e) => setOwners(owners.map((x, j) => (j === i ? e.target.value : x)))}
-                    className="min-h-12 flex-1 rounded-xl border-[1.5px] border-[#d4d4d4] px-3.5 text-base" />
+                    className="min-h-12 flex-1 rounded-xl border-[1.5px] border-field px-3.5 text-base" />
                   <button type="button" onClick={() => setOwners(owners.filter((_, j) => j !== i))} aria-label={`${o || term} хасах`}
                     className="inline-flex size-12 items-center justify-center rounded-xl border border-line text-lg">×</button>
                 </li>

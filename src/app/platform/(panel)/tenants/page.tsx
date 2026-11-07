@@ -30,7 +30,7 @@ export default async function AdminTenants({ searchParams }: { searchParams: Pro
           const href = `/tenants?${new URLSearchParams({ ...(f.id !== "all" ? { status: f.id } : {}), ...(q ? { q } : {}) })}`;
           return (
             <Link key={f.id} href={href} aria-current={on ? "page" : undefined}
-              className={`inline-flex min-h-11 items-center gap-2 rounded-full border-[1.5px] px-4 text-sm font-semibold ${on ? "border-brand bg-brand text-ink" : "border-line bg-white"}`}>
+              className={`inline-flex min-h-11 items-center gap-2 rounded-full border-[1.5px] px-4 text-sm font-semibold ${on ? "border-ink bg-brand text-ink" : "border-line bg-white"}`}>
               {f.label}<span className="tabular-nums text-muted">{count(f.id)}</span>
             </Link>
           );

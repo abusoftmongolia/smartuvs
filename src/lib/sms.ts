@@ -55,11 +55,17 @@ export const smsText = {
   otp: (code: string) => `Таны баталгаажуулах код: ${code}. 5 минут хүчинтэй. tsag.smartuvs.mn`,
   confirmed: (p: { tenant: string; day: string; time: string; link: string; code?: string }) =>
     `${p.tenant}: ${p.day} ${p.time} цаг баталгаажлаа.${p.code ? ` Код: ${p.code}.` : ""} Өөрчлөх: ${p.link}`,
-  pending: (p: { tenant: string; day: string; time: string; code?: string }) =>
-    `${p.tenant}: ${p.day} ${p.time} захиалга хүлээн авлаа.${p.code ? ` Код: ${p.code}.` : ""} Батлахад SMS ирнэ.`,
+  pending: (p: { tenant: string; day: string; time: string; link: string; code?: string }) =>
+    `${p.tenant}: ${p.day} ${p.time} захиалга хүлээн авлаа.${p.code ? ` Код: ${p.code}.` : ""} Батлахад SMS ирнэ. Өөрчлөх: ${p.link}`,
   /** Байгууллагад: шинэ онлайн захиалга. Үйлчлүүлэгчийн утсыг бичихгүй (самбараас харна). */
   newBooking: (p: { customer: string; service: string; day: string; time: string; code: string; pending: boolean }) =>
     `Шинэ захиалга${p.pending ? " (батлах хүлээж буй)" : ""}: ${p.customer}, ${p.service}, ${p.day} ${p.time}. Код: ${p.code}. tsag.smartuvs.mn/dashboard`,
+  /** Байгууллагад: үйлчлүүлэгч SMS-ийн холбоосоор цуцаллаа */
+  customerCancelled: (p: { customer: string; service: string; day: string; time: string; code: string }) =>
+    `Үйлчлүүлэгч цуцаллаа: ${p.customer}, ${p.service}, ${p.day} ${p.time}. Код: ${p.code}. tsag.smartuvs.mn/dashboard`,
+  /** Байгууллагад: үйлчлүүлэгч өөр цаг руу шилжүүллээ */
+  customerRescheduled: (p: { customer: string; service: string; from: string; day: string; time: string; code: string; pending: boolean }) =>
+    `Цаг шилжлээ${p.pending ? " (батлах хүлээж буй)" : ""}: ${p.customer}, ${p.service}, ${p.from} → ${p.day} ${p.time}. Код: ${p.code}. tsag.smartuvs.mn/dashboard`,
   rescheduled: (p: { tenant: string; day: string; time: string; link: string }) =>
     `${p.tenant}: таны цагийг ${p.day} ${p.time} болгож өөрчиллөө. Тохирохгүй бол: ${p.link}`,
   reminder: (p: { tenant: string; day: string; time: string; link: string }) =>

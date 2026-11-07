@@ -100,7 +100,7 @@ export async function notifyCustomer(tenant: Tenant, booking: Booking, phone: st
     kind === "confirmed" ? smsText.confirmed({ ...base, link })
     : kind === "rescheduled" ? smsText.rescheduled({ ...base, link })
     : kind === "cancelled" ? smsText.cancelled(base)
-    : smsText.pending(base);
+    : smsText.pending({ ...base, link });
   try {
     const r = await sms().send(phone, text);
     if (!r.ok) console.error(`[sms] ${kind} илгээж чадсангүй: ${r.error}`);
@@ -109,23 +109,39 @@ export async function notifyCustomer(tenant: Tenant, booking: Booking, phone: st
   }
 }
 
+export type BusinessMessage =
+  | { kind: "new" }
+  | { kind: "cancelled" }
+  /** `from` — шилжүүлэхээс өмнөх эхлэх цаг */
+  | { kind: "rescheduled"; from: Date };
+
 /**
- * Байгууллагад шинэ онлайн захиалгын SMS (тохиргоонд унтраагаагүй бол). SMS-ийн зардлыг байгууллага хариуцна.
- * Үйлчлүүлэгчийн утсыг SMS-д бичихгүй — самбараас харна. Алдаа гарвал захиалгыг унагаахгүй.
+ * Байгууллагад SMS: шинэ онлайн захиалга, үйлчлүүлэгч цуцалсан/шилжүүлсэн (тохиргоонд унтраагаагүй бол).
+ * SMS-ийн зардлыг байгууллага хариуцна. Үйлчлүүлэгчийн утсыг SMS-д бичихгүй — самбараас харна.
+ * Алдаа гарвал захиалгыг унагаахгүй.
  */
-export async function notifyBusiness(tenant: Tenant, booking: Booking, p: { customerName: string; serviceName: string }) {
+export async function notifyBusiness(
+  tenant: Tenant,
+  booking: Booking,
+  p: { customerName: string; serviceName: string },
+  msg: BusinessMessage = { kind: "new" },
+) {
   if (tenant.settings.notifyNewBookings === false) return;
   try {
     const phones = await listBookingAlertPhones(tenant, booking.staffId);
     const { day, time } = bookingWhen(tenant, booking.startsAt);
-    const text = smsText.newBooking({
-      customer: p.customerName, service: p.serviceName, day, time, code: booking.code, pending: booking.status === "pending",
-    });
+    const base = { customer: p.customerName, service: p.serviceName, day, time, code: booking.code };
+    let text: string;
+    if (msg.kind === "cancelled") text = smsText.customerCancelled(base);
+    else if (msg.kind === "rescheduled") {
+      const was = bookingWhen(tenant, msg.from);
+      text = smsText.customerRescheduled({ ...base, from: `${was.day} ${was.time}`, pending: booking.status === "pending" });
+    } else text = smsText.newBooking({ ...base, pending: booking.status === "pending" });
     for (const to of phones) {
       const r = await sms().send(to, text);
-      if (!r.ok) console.error(`[sms] newBooking илгээж чадсангүй: ${r.error}`);
+      if (!r.ok) console.error(`[sms] business/${msg.kind} илгээж чадсангүй: ${r.error}`);
     }
   } catch (e) {
-    console.error("[sms] newBooking", e);
+    console.error(`[sms] business/${msg.kind}`, e);
   }
 }

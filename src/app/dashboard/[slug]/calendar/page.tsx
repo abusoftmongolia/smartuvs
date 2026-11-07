@@ -110,7 +110,7 @@ export default async function CalendarPage({ params, searchParams }: Props) {
 
 /** Өдөр / Сар сонголт */
 function ViewToggle({ base, view, date, month }: { base: string; view: "day" | "month"; date: string; month: string }) {
-  const cls = (on: boolean) => `inline-flex min-h-9 items-center rounded-md px-3.5 text-sm ${on ? "bg-white font-medium shadow-[0_1px_2px_rgba(0,0,0,0.08)]" : "text-ink/70 hover:text-ink"}`;
+  const cls = (on: boolean) => `inline-flex min-h-11 items-center rounded-md px-3.5 text-sm ${on ? "bg-white font-medium shadow-[0_1px_2px_rgba(0,0,0,0.08)]" : "text-ink/70 hover:text-ink"}`;
   return (
     <div role="group" aria-label="Харагдац" className="flex rounded-lg bg-[#f0f0f0] p-1">
       <Link href={`${base}?date=${view === "month" && date.slice(0, 7) !== month ? `${month}-01` : date}`} aria-current={view === "day" ? "page" : undefined} className={cls(view === "day")}>Өдөр</Link>

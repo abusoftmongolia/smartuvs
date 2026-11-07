@@ -7,7 +7,8 @@
   --color-brand-deep: #8a5a00;   /* шар өнгөтэй холбоос, цагаан дээр уншигдана */
   --color-ink: #0b0b0b;          /* хар — бичиг, шар товч дээрх бичиг */
   --color-muted: #555555;        /* туслах бичиг (цагаан дээр 7:1) */
-  --color-line: #e4e4e4;
+  --color-line: #e4e4e4;         /* чимэглэлийн хүрээ (карт, хуваагч) */
+  --color-field: #8f8f8f;        /* input-ийн хүрээ — цагаан дээр ≥3:1 (WCAG 1.4.11) */
   --color-ground: #f2f2f2;       /* дотор дүүргэлт (хуудасны дэвсгэр #fcfcfc) */
   --color-pending: #2563eb;      /* батлах хүлээж буй (календарь) */
   --color-danger: #dc2626;
@@ -22,3 +23,9 @@ html, body {
 
 /* Хуруунд ээлтэй: товч, линк хамгийн багадаа 44px */
 button, a { -webkit-tap-highlight-color: transparent; }
+
+/* Гар/switch удирдлагад фокус үргэлж харагдана (WCAG 2.4.7) */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}

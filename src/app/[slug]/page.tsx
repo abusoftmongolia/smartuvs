@@ -5,9 +5,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isTsagMaintenance } from "@/db/platform";
-import { getTenantBySlug, listResources, listServices, listStaffForService } from "@/db/tenant";
+import { getTenantBySlug, listResources, listServices, listStaffByServices } from "@/db/tenant";
 import { isValidSlug } from "@/lib/slug";
-import { addDays, formatPrice, todayIn, weekdayName } from "@/lib/time";
+import { bookingDays, cancelPolicyText } from "@/lib/booking-ui";
+import { formatPrice, todayIn } from "@/lib/time";
 import { BookingFlow, type BookingFlowProps } from "@/components/BookingFlow";
 import { SiteHeader } from "@/components/SiteHeader";
 
@@ -29,17 +30,13 @@ export default async function TenantBookingPage({ params }: Props) {
   if (!tenant) notFound();
 
   const [svc, maintenance] = await Promise.all([listServices(tenant.id), isTsagMaintenance()]);
-  const staffByService: BookingFlowProps["staffByService"] = {};
-  if (tenant.bookingMode === "staff") {
-    for (const s of svc) staffByService[s.id] = await listStaffForService(tenant.id, s.id);
-  }
-  const hasResources = tenant.bookingMode === "resource" ? (await listResources(tenant.id)).length > 0 : true;
+  const [staffByService, hasResources]: [BookingFlowProps["staffByService"], boolean] = await Promise.all([
+    tenant.bookingMode === "staff" ? listStaffByServices(tenant.id, svc.map((s) => s.id)) : Promise.resolve({}),
+    tenant.bookingMode === "resource" ? listResources(tenant.id).then((r) => r.length > 0) : Promise.resolve(true),
+  ]);
 
-  const today = todayIn(tenant.timezone);
-  const days = Array.from({ length: 14 }, (_, i) => {
-    const date = addDays(today, i);
-    return { date, wd: weekdayName(date, true), num: String(Number(date.slice(8))), sub: i === 0 ? "Өнөөдөр" : i === 1 ? "Маргааш" : "" };
-  });
+  // 14 хоног, гэхдээ байгууллагын maxAdvanceDays-аас цааш хоосон өдөр харуулахгүй
+  const days = bookingDays(todayIn(tenant.timezone), tenant.settings.maxAdvanceDays);
 
   return (
     <div className="min-h-dvh">
@@ -47,7 +44,7 @@ export default async function TenantBookingPage({ params }: Props) {
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Цаг захиалах</h1>
-          <p className="mt-1 text-sm text-muted">Төлбөргүй — утасны дугаараа баталгаажуулаад л болно.</p>
+          <p className="mt-1 text-sm text-muted">Захиалга төлбөргүй — үйлчилгээний төлбөрөө газар дээр нь төлнө.</p>
         </div>
         {maintenance ? (
           <p role="status" className="rounded-card border border-line bg-white p-6 text-muted">
@@ -69,6 +66,7 @@ export default async function TenantBookingPage({ params }: Props) {
             }))}
             staffByService={staffByService}
             days={days}
+            cancelPolicy={cancelPolicyText(tenant.settings.cancellationHours)}
           />
         )}
       </main>

@@ -4,7 +4,7 @@ import { parseHm, type DayHours } from "@/lib/hours";
 
 const NAMES: Record<number, string> = { 0: "Ням", 1: "Даваа", 2: "Мягмар", 3: "Лхагва", 4: "Пүрэв", 5: "Баасан", 6: "Бямба" };
 const hm = (m: number | null) => (m == null ? "" : `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`);
-const input = "min-h-11 w-[6.5rem] rounded-lg border-[1.5px] border-[#d4d4d4] bg-white px-2 text-sm";
+const input = "min-h-11 w-[6.5rem] rounded-lg border-[1.5px] border-field bg-white px-2 text-sm";
 
 export function HoursEditor({ value, onChange }: { value: DayHours[]; onChange: (v: DayHours[]) => void }) {
   const set = (i: number, patch: Partial<DayHours>) => onChange(value.map((d, j) => (j === i ? { ...d, ...patch } : d)));

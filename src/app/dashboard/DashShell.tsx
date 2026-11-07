@@ -24,6 +24,14 @@ export function DashShell(p: {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [path]);
+  // Утасны цэс: нээгдэхэд эхний холбоос руу фокус, Escape-аар хаагдана
+  useEffect(() => {
+    if (!open) return;
+    document.querySelector<HTMLElement>("#dash-nav a")?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   const base = `/dashboard/${p.slug}`;
   const groups: { title: string; items: Item[] }[] = [
@@ -40,6 +48,7 @@ export function DashShell(p: {
       ? [{
           title: "Удирдах",
           items: [
+            { href: `${base}/reports`, label: "Тайлан", icon: "chart" as const },
             { href: `${base}/services`, label: "Үйлчилгээ", icon: "list" as const },
             { href: `${base}/staff`, label: p.staffTerm, icon: "users" as const },
             { href: `${base}/hours`, label: "Ажлын цаг, чөлөө", icon: "clock" as const },
@@ -60,7 +69,7 @@ export function DashShell(p: {
             const on = active(it);
             return (
               <Link key={it.href} href={it.href} aria-current={on ? "page" : undefined}
-                className={`flex min-h-10 items-center gap-2.5 rounded-lg px-3 text-sm transition ${on ? "bg-white font-medium text-ink shadow-[0_1px_2px_rgba(0,0,0,0.06)] ring-1 ring-line" : "text-ink/75 hover:bg-white/70 hover:text-ink"}`}>
+                className={`flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-sm transition ${on ? "bg-white font-medium text-ink shadow-[0_1px_2px_rgba(0,0,0,0.06)] ring-1 ring-line" : "text-ink/75 hover:bg-white/70 hover:text-ink"}`}>
                 <span className={on ? "text-ink" : "text-muted"}>{ICONS[it.icon]}</span>
                 <span className="flex-1">{it.label}</span>
                 {!!it.badge && (
@@ -74,11 +83,11 @@ export function DashShell(p: {
         </div>
       ))}
       <div className="flex flex-col gap-0.5 border-t border-line pt-4">
-        <a href={`/${p.slug}`} target="_blank" className="flex min-h-10 items-center gap-2.5 rounded-lg px-3 text-sm text-ink/75 hover:bg-white/70 hover:text-ink">
+        <a href={`/${p.slug}`} target="_blank" className="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-sm text-ink/75 hover:bg-white/70 hover:text-ink">
           <span className="text-muted">{ICONS.external}</span>Захиалгын хуудас
         </a>
         {p.multiTenant && (
-          <Link href="/dashboard" className="flex min-h-10 items-center gap-2.5 rounded-lg px-3 text-sm text-ink/75 hover:bg-white/70 hover:text-ink">
+          <Link href="/dashboard" className="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-sm text-ink/75 hover:bg-white/70 hover:text-ink">
             <span className="text-muted">{ICONS.switch}</span>Байгууллага солих
           </Link>
         )}
@@ -89,19 +98,19 @@ export function DashShell(p: {
   return (
     <div className="min-h-dvh bg-[#fcfcfc]">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-white px-3 sm:px-4 print:hidden">
-        <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="dash-nav" aria-label={open ? "Цэс хаах" : "Цэс нээх"}
-          className="inline-flex size-10 items-center justify-center rounded-lg border border-line lg:hidden">
+        <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls={open ? "dash-nav" : undefined} aria-label={open ? "Цэс хаах" : "Цэс нээх"}
+          className="inline-flex size-11 items-center justify-center rounded-lg border border-line lg:hidden">
           {open ? ICONS.close : ICONS.menu}
         </button>
         <Link href={base} aria-label="Хянах самбар" className="flex items-center">
-          <Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={1200} height={175} className="h-6 w-auto" priority />
+          <Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={165} height={24} className="h-6 w-auto" priority />
         </Link>
         <span aria-hidden className="hidden h-6 w-px bg-line sm:block" />
         <span className="hidden truncate text-sm font-medium sm:block">{p.tenantName}</span>
         <div className="ml-auto flex items-center gap-2">
           <span className="hidden text-sm text-muted md:inline">{p.userName}</span>
           <form action={logout}>
-            <button className="inline-flex min-h-10 items-center rounded-lg border border-line px-3.5 text-sm font-medium">Гарах</button>
+            <button className="inline-flex min-h-11 items-center rounded-lg border border-line px-3.5 text-sm font-medium">Гарах</button>
           </form>
         </div>
       </header>
@@ -127,6 +136,7 @@ const ICONS = {
   calendar: <svg {...ic}><rect x="3" y="5" width="18" height="16" rx="2.5" /><path d="M8 3v4M16 3v4M3 10h18" /></svg>,
   inbox: <svg {...ic}><path d="M3 13l2.5-7.5A2 2 0 0 1 7.4 4h9.2a2 2 0 0 1 1.9 1.5L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M3 13h5l1.5 2.5h5L16 13h5" /></svg>,
   history: <svg {...ic}><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5M12 7v5l3 2" /></svg>,
+  chart: <svg {...ic}><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>,
   list: <svg {...ic}><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" /></svg>,
   users: <svg {...ic}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6" /></svg>,
   clock: <svg {...ic}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>,

@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { listBookingsInRange, listPendingBookings } from "@/db/tenant";
+import { countRows, formatPercent, noShowRate } from "@/lib/report";
 import { addDays, formatDayMn, formatHm, localToUtc, todayIn, utcToLocalMinute } from "@/lib/time";
 import { requireMember } from "@/server/auth";
 import { PageBody, PageHeader, Panel } from "../PageHeader";
@@ -36,10 +37,10 @@ export default async function Overview({ params, searchParams }: { params: Promi
     listPendingBookings(tenant.id),
   ]);
 
-  // Энэ сард өнгөрсөн захиалгаас ирээгүй хувь
-  const done = month.filter((b) => b.startsAt < now && b.status !== "pending");
-  const noShow = done.filter((b) => b.status === "no_show").length;
-  const noShowPct = done.length ? Math.round((noShow / done.length) * 100) : null;
+  // Энэ сарын ирээгүй хувь — тайлантай ижил тооцоо (ирээгүй / тэмдэглэсэн)
+  const monthCounts = countRows(month, now);
+  const marked = monthCounts.attended + monthCounts.noShow;
+  const rate = noShowRate(monthCounts);
 
   const base = `/dashboard/${slug}`;
   const canManage = role === "owner" || role === "manager";
@@ -47,7 +48,7 @@ export default async function Overview({ params, searchParams }: { params: Promi
     { label: "Өнөөдөр", value: String(todayList.length), sub: "захиалга", href: `${base}/calendar` },
     { label: "Хүлээгдэж буй", value: String(pending.length), sub: "батлах шаардлагатай", href: `${base}/pending`, alert: pending.length > 0 },
     { label: "Ирэх 7 хоног", value: String(week.length), sub: "захиалга", href: `${base}/calendar` },
-    { label: "Ирээгүй (энэ сар)", value: noShowPct == null ? "—" : `${noShowPct}%`, sub: noShowPct == null ? "өгөгдөл алга" : `${noShow} / ${done.length}`, href: `${base}/history?status=no_show` },
+    { label: "Ирээгүй (энэ сар)", value: formatPercent(rate), sub: rate == null ? "өгөгдөл алга" : `${monthCounts.noShow} / ${marked}`, href: canManage ? `${base}/reports` : `${base}/history?status=no_show` },
   ];
 
   return (
@@ -120,7 +121,7 @@ export default async function Overview({ params, searchParams }: { params: Promi
                       );
                     })}
                   </ul>
-                  <Link href={`${base}/pending`} className="inline-flex min-h-10 items-center justify-center rounded-lg border border-line text-sm font-medium">
+                  <Link href={`${base}/pending`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line text-sm font-medium">
                     Бүгдийг харах ({pending.length})
                   </Link>
                 </>
@@ -129,7 +130,7 @@ export default async function Overview({ params, searchParams }: { params: Promi
             <Panel title="Захиалгын холбоос">
               <a href={`/${slug}`} target="_blank" className="break-all text-sm font-medium text-brand-deep underline">tsag.smartuvs.mn/{slug}</a>
               {canManage && (
-                <Link href={`${base}/share`} className="inline-flex min-h-10 items-center justify-center rounded-lg border border-line text-sm font-medium">QR код, постер</Link>
+                <Link href={`${base}/share`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line text-sm font-medium">QR код, постер</Link>
               )}
             </Panel>
           </div>

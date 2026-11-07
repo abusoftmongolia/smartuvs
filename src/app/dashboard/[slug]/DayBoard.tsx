@@ -85,10 +85,13 @@ export function DayBoard(p: Props) {
   const go = (date: string) => router.push(`/dashboard/${p.slug}/calendar?date=${date}`);
 
   // Өөр төхөөрөмжөөс орсон захиалгыг харуулахын тулд минут тутам шинэчилнэ
+  // Таб нуугдсан эсвэл диалог нээлттэй үед шинэчлэхгүй (сул сүлжээнд дэмий RSC татахгүй, нээлттэй формыг алдахгүй)
   useEffect(() => {
-    const t = setInterval(() => router.refresh(), 60_000);
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible" && !open && !creating) router.refresh();
+    }, 60_000);
     return () => clearInterval(t);
-  }, [router]);
+  }, [router, open, creating]);
 
   const hours: number[] = [];
   for (let m = p.fromMin; m < p.toMin; m += 60) hours.push(m);
@@ -379,17 +382,21 @@ function SlotPicker(p: {
   const [date, setDate] = useState(p.initialDate);
   const [ownerId, setOwnerId] = useState<string | null>(p.initialOwner);
   const [slots, setSlots] = useState<DashSlot[] | null>(null);
+  const [slotsError, setSlotsError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [startMin, setStartMin] = useState<number | null>(null);
 
   useEffect(() => {
     let live = true;
     setSlots(null);
+    setSlotsError(false);
     setStartMin(null);
     dashboardSlots({ slug: p.slug, serviceId: p.serviceId, date, ownerId, excludeBookingId: p.excludeBookingId })
       .then((s) => live && setSlots(s))
-      .catch(() => live && setSlots([]));
+      // Сүлжээний алдааг "Сул цаг алга" гэж харуулахгүй
+      .catch(() => live && setSlotsError(true));
     return () => { live = false; };
-  }, [p.slug, p.serviceId, date, ownerId, p.excludeBookingId]);
+  }, [p.slug, p.serviceId, date, ownerId, p.excludeBookingId, reloadKey]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -397,18 +404,25 @@ function SlotPicker(p: {
         <label className="flex flex-1 flex-col gap-1.5 text-sm font-medium">
           Өдөр
           <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)}
-            className="min-h-11 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-base font-normal" />
+            className="min-h-11 rounded-xl border-[1.5px] border-field bg-white px-3 text-base font-normal" />
         </label>
         <label className="flex flex-1 flex-col gap-1.5 text-sm font-medium">
           {p.ownerTerm}
           <select value={ownerId ?? ""} onChange={(e) => setOwnerId(e.target.value || null)}
-            className="min-h-11 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-base font-normal">
+            className="min-h-11 rounded-xl border-[1.5px] border-field bg-white px-3 text-base font-normal">
             <option value="">Хэн ч болно</option>
             {p.owners.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
         </label>
       </div>
-      {slots === null ? (
+      {slotsError ? (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ground p-3 text-sm">
+          <span>Сул цагийг ачаалж чадсангүй.</span>
+          <button type="button" onClick={() => setReloadKey((k) => k + 1)} className="min-h-11 rounded-xl border-[1.5px] border-ink bg-white px-4 font-medium">
+            Дахин оролдох
+          </button>
+        </div>
+      ) : slots === null ? (
         <p className="text-sm text-muted" aria-live="polite">Сул цаг хайж байна…</p>
       ) : slots.length === 0 ? (
         <p className="rounded-xl bg-ground p-3 text-sm text-muted" aria-live="polite">Сул цаг алга.</p>
@@ -416,7 +430,7 @@ function SlotPicker(p: {
         <div className="grid max-h-56 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] gap-2 overflow-y-auto">
           {slots.map((s) => (
             <button key={s.startMin} type="button" onClick={() => setStartMin(s.startMin)} aria-pressed={s.startMin === startMin}
-              className={`min-h-11 rounded-xl border-[1.5px] text-sm font-semibold ${s.startMin === startMin ? "border-brand bg-brand" : "border-line bg-white"}`}>
+              className={`min-h-11 rounded-xl border-[1.5px] text-sm font-semibold ${s.startMin === startMin ? "border-ink bg-brand" : "border-line bg-white"}`}>
               {s.label}
             </button>
           ))}
@@ -458,7 +472,7 @@ function NewBookingDialog(p: Props & { onClose: () => void }) {
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             Үйлчилгээ
             <select value={serviceId} onChange={(e) => setServiceId(e.target.value)}
-              className="min-h-12 rounded-xl border-[1.5px] border-[#d4d4d4] bg-white px-3 text-base font-normal">
+              className="min-h-12 rounded-xl border-[1.5px] border-field bg-white px-3 text-base font-normal">
               {p.services.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.durationMin} мин)</option>)}
             </select>
           </label>

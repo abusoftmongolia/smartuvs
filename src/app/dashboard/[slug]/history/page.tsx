@@ -29,7 +29,7 @@ export default async function HistoryPage({ params, searchParams }: Props) {
   const sp = await searchParams;
   const q = (sp.q ?? "").trim().slice(0, 60);
   const period: Period = sp.period === "upcoming" || sp.period === "past" ? sp.period : "all";
-  const status = sp.status && sp.status in STATUS ? (sp.status as Status) : undefined;
+  const status = sp.status && Object.hasOwn(STATUS, sp.status) ? (sp.status as Status) : undefined;
 
   const digits = q.replace(/\D/g, "");
   const now = new Date();
@@ -52,7 +52,7 @@ export default async function HistoryPage({ params, searchParams }: Props) {
     const s = u.toString();
     return s ? `${base}?${s}` : base;
   };
-  const chip = (on: boolean) => `inline-flex min-h-9 items-center rounded-full border px-3.5 text-sm ${on ? "border-ink bg-ink font-medium text-white" : "border-line bg-white text-ink/80 hover:border-ink/30"}`;
+  const chip = (on: boolean) => `inline-flex min-h-11 items-center rounded-full border px-3.5 text-sm ${on ? "border-ink bg-ink font-medium text-white" : "border-line bg-white text-ink/80 hover:border-ink/30"}`;
 
   return (
     <>

@@ -15,17 +15,24 @@ import {
 } from "@/db/tenant";
 import { customerChangeBlock } from "@/lib/policy";
 import { getAvailability } from "./availability";
-import { scheduleReminders, SLOT_TAKEN_MESSAGE } from "./booking-core";
+import { bookingWhen, notifyBusiness, notifyCustomer, scheduleReminders, SLOT_TAKEN_MESSAGE } from "./booking-core";
 
 export type ManageResult = { ok: true } | { ok: false; message: string };
+/** Шилжүүлсний дараа: шинэ цаг ба төлөв (гараар батлах байгууллагад дахин "pending" болно) */
+export type RescheduleResult =
+  | { ok: true; status: "pending" | "confirmed"; day: string; time: string }
+  | { ok: false; message: string };
+/** Сул цаг: ok=false бол "сул цаг алга" биш, ачаалах алдаа */
+export type ManageSlotsResult = { ok: true; slots: { label: string; startMin: number }[] } | { ok: false; message: string };
 
 const Token = z.string().min(16).max(64).regex(/^[A-Za-z0-9_-]+$/);
 const DateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
-const NOT_FOUND: ManageResult = { ok: false, message: "Захиалга олдсонгүй" };
+type Failure = { ok: false; message: string };
+const NOT_FOUND: Failure = { ok: false, message: "Захиалга олдсонгүй" };
 
 type Loaded =
-  | { error: ManageResult; row?: undefined }
+  | { error: Failure; row?: undefined }
   | { error?: undefined; row: NonNullable<Awaited<ReturnType<typeof getBookingByManageToken>>> };
 
 async function load(token: string): Promise<Loaded> {
@@ -67,15 +74,27 @@ export async function cancelByCustomer(raw: unknown): Promise<ManageResult> {
   if (!after) return { ok: false, message: "Энэ захиалгыг өөрчлөх боломжгүй" };
   await cancelScheduledNotifications(tenant.id, booking.id);
   await audit(tenant.id, "booking.customer_cancel", booking.id);
+  // Байгууллага ба үйлчлүүлэгчид мэдэгдэнэ (SMS алдаа цуцлалтыг унагаахгүй)
+  await notifyBusiness(tenant, after, { customerName: r.row.customerName, serviceName: r.row.serviceName }, { kind: "cancelled" });
+  await notifyCustomer(tenant, after, r.row.customerPhone, "cancelled");
   revalidatePath(`/manage/${parsed.data}`);
   revalidatePath(`/dashboard/${tenant.slug}`, "layout");
   return { ok: true };
 }
 
-export async function manageSlots(raw: unknown): Promise<{ label: string; startMin: number }[]> {
+export async function manageSlots(raw: unknown): Promise<ManageSlotsResult> {
   const parsed = z.object({ token: Token, date: DateStr }).safeParse(raw);
-  if (!parsed.success) return [];
-  const row = await getBookingByManageToken(parsed.data.token);
+  if (!parsed.success) return { ok: false, message: "Мэдээлэл буруу" };
+  try {
+    return { ok: true, slots: await loadManageSlots(parsed.data.token, parsed.data.date) };
+  } catch (err) {
+    console.error("manageSlots", err);
+    return { ok: false, message: "Сул цагийг ачаалж чадсангүй. Дахин оролдоно уу." };
+  }
+}
+
+async function loadManageSlots(token: string, date: string) {
+  const row = await getBookingByManageToken(token);
   if (!row) return [];
   const { booking, tenant } = row;
   const service = await getService(tenant.id, booking.serviceId);
@@ -83,7 +102,7 @@ export async function manageSlots(raw: unknown): Promise<{ label: string; startM
   const slots = await getAvailability({
     tenant,
     service,
-    date: parsed.data.date,
+    date,
     // Ажилтан горимд ижил ажилтантай нь үлдээнэ; бокс горимд аль ч сул бокс
     staffId: tenant.bookingMode === "staff" ? booking.staffId : null,
     excludeBookingId: booking.id,
@@ -93,7 +112,7 @@ export async function manageSlots(raw: unknown): Promise<{ label: string; startM
 
 const MoveInput = z.object({ token: Token, date: DateStr, startMin: z.number().int().min(0).max(1439) });
 
-export async function rescheduleByCustomer(raw: unknown): Promise<ManageResult> {
+export async function rescheduleByCustomer(raw: unknown): Promise<RescheduleResult> {
   const parsed = MoveInput.safeParse(raw);
   if (!parsed.success) return { ok: false, message: "Мэдээлэл буруу" };
   const r = await load(parsed.data.token);
@@ -133,7 +152,12 @@ export async function rescheduleByCustomer(raw: unknown): Promise<ManageResult> 
       });
       revalidatePath(`/manage/${parsed.data.token}`);
       revalidatePath(`/dashboard/${tenant.slug}`, "layout");
-      return { ok: true };
+      const msg = { customerName: r.row.customerName, serviceName: service.name };
+      await notifyBusiness(tenant, after, msg, { kind: "rescheduled", from: booking.startsAt });
+      // Батлах хүлээж буй бол "хүлээн авлаа, батлахад SMS ирнэ", үгүй бол "цаг өөрчлөгдлөө"
+      await notifyCustomer(tenant, after, r.row.customerPhone, after.status === "pending" ? "pending" : "rescheduled");
+      const { day, time } = bookingWhen(tenant, after.startsAt);
+      return { ok: true, status: after.status === "pending" ? "pending" : "confirmed", day, time };
     } catch (err) {
       if (pgErrorCode(err) === PG_EXCLUSION_VIOLATION) continue;
       console.error("rescheduleByCustomer", err);

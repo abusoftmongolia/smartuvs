@@ -8,7 +8,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { getBookingByManageToken } from "@/db/tenant";
 import { formatBookingCode } from "@/lib/booking-code";
 import { customerChangeBlock } from "@/lib/policy";
-import { addDays, formatDayMn, formatHm, todayIn, utcToLocalMinute, weekdayName } from "@/lib/time";
+import { approvalWaitText, bookingDays } from "@/lib/booking-ui";
+import { formatDayMn, formatHm, todayIn, utcToLocalMinute } from "@/lib/time";
 import { ManageBooking } from "./ManageBooking";
 
 export const dynamic = "force-dynamic";
@@ -42,12 +43,7 @@ export default async function ManagePage({ params }: { params: Promise<{ token: 
   });
   const active = booking.status === "pending" || booking.status === "confirmed";
 
-  const today = todayIn(tz);
-  const horizon = Math.min(14, tenant.settings.maxAdvanceDays + 1);
-  const days = Array.from({ length: horizon }, (_, i) => {
-    const d = addDays(today, i);
-    return { date: d, wd: weekdayName(d, true), num: String(Number(d.slice(8))), sub: i === 0 ? "Өнөөдөр" : i === 1 ? "Маргааш" : "" };
-  });
+  const days = bookingDays(todayIn(tz), tenant.settings.maxAdvanceDays);
 
   return (
     <div className="min-h-dvh">
@@ -72,6 +68,7 @@ export default async function ManagePage({ params }: { params: Promise<{ token: 
           slug={tenant.slug}
           days={days}
           currentDate={date}
+          approvalText={approvalWaitText(tenant.bookingMode, tenant.settings.terminology.staff)}
         />
       </main>
     </div>

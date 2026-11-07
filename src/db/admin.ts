@@ -3,6 +3,7 @@
  * хуудас/action болон ADMIN_API_TOKEN-тэй /api/admin/stats-аас дуудна.
  */
 import { and, count, desc, eq, gte, ilike, inArray, lt, or, sql } from "drizzle-orm";
+import { noShowRate } from "@/lib/report";
 import { db, schema } from "./index";
 
 const { tenants, bookings, users, memberships, auditLogs, services, customers } = schema;
@@ -42,7 +43,7 @@ export async function platformStats() {
     users: u.total,
     usersNew30d: u.new30d,
     /** Ирээгүй хувь: ирээгүй / (ирсэн + ирээгүй), 30 хоног */
-    noShowRate30d: b.noShow30d + b.attended30d > 0 ? b.noShow30d / (b.noShow30d + b.attended30d) : null,
+    noShowRate30d: noShowRate({ attended: b.attended30d, noShow: b.noShow30d }),
   };
 }
 
