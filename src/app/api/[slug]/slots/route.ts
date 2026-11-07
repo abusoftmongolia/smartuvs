@@ -3,10 +3,8 @@
  * Сул цагуудыг буцаана. Захиалгын хуудас өдөр солих бүрт дуудна.
  */
 import { NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { db, schema } from "@/db";
-import { getTenantBySlug } from "@/db/tenant";
+import { getService, getTenantBySlug } from "@/db/tenant";
 import { getAvailability } from "@/server/availability";
 
 const Query = z.object({
@@ -23,10 +21,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
   const tenant = await getTenantBySlug(slug);
   if (!tenant) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  const [service] = await db()
-    .select()
-    .from(schema.services)
-    .where(and(eq(schema.services.id, parsed.data.serviceId), eq(schema.services.tenantId, tenant.id)));
+  const service = await getService(tenant.id, parsed.data.serviceId);
   if (!service) return NextResponse.json({ error: "service_not_found" }, { status: 404 });
 
   const slots = await getAvailability({ tenant, service, staffId: parsed.data.staffId ?? null, date: parsed.data.date });

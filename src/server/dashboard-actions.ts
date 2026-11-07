@@ -94,39 +94,6 @@ export async function setBookingStatus(raw: unknown): Promise<ActionResult> {
   return { ok: true };
 }
 
-// ── Ажилтны самбарын сул цаг (хамгийн эрт хязгааргүй) ─────────────────────
-
-const SlotsInput = z.object({
-  slug: Slug,
-  serviceId: Id,
-  date: DateStr,
-  ownerId: Id.nullable(),
-  excludeBookingId: Id.optional(),
-});
-
-export type DashSlot = { label: string; startMin: number; ownerIds: string[] };
-
-export async function dashboardSlots(raw: unknown): Promise<DashSlot[]> {
-  const parsed = SlotsInput.safeParse(raw);
-  if (!parsed.success) return [];
-  const m = await memberOrNull(parsed.data.slug);
-  if (!m) return [];
-  const service = await getService(m.tenant.id, parsed.data.serviceId);
-  if (!service) return [];
-  const slots = await getAvailability({
-    tenant: m.tenant,
-    service,
-    staffId: m.tenant.bookingMode === "staff" ? parsed.data.ownerId : null,
-    date: parsed.data.date,
-    ignoreLead: true,
-    excludeBookingId: parsed.data.excludeBookingId,
-  });
-  const ownerId = parsed.data.ownerId;
-  return slots
-    .filter((s) => !ownerId || s.ownerIds.includes(ownerId))
-    .map((s) => ({ label: s.label, startMin: s.startMin, ownerIds: ownerId ? [ownerId] : s.ownerIds }));
-}
-
 // ── Өөр цаг санал болгох (шилжүүлэх) ──────────────────────────────────────
 
 const MoveInput = z.object({

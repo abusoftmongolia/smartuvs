@@ -4,7 +4,8 @@ import { useEffect, useState, useTransition } from "react";
 import { ErrorBox, btnDanger, btnPrimary, btnSecondary } from "@/components/ui";
 import type { DayChip } from "@/lib/booking-ui";
 import type { ChangeBlock } from "@/lib/policy";
-import { cancelByCustomer, manageSlots, rescheduleByCustomer } from "@/server/manage-actions";
+import { cancelByCustomer, rescheduleByCustomer } from "@/server/manage-actions";
+import { getJson, HttpError } from "@/lib/fetch-json";
 
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
@@ -117,18 +118,22 @@ function MovePicker(p: {
   const [startMin, setStartMin] = useState<number | null>(null);
 
   useEffect(() => {
-    let live = true;
+    const ctrl = new AbortController();
     setSlots(null);
     setLoadError(null);
     setStartMin(null);
-    manageSlots({ token: p.token, date })
-      .then((r) => {
-        if (!live) return;
-        if (r.ok) setSlots(r.slots);
-        else setLoadError(r.message);
-      })
-      .catch(() => live && setLoadError("Сул цагийг ачаалж чадсангүй. Интернэт холболтоо шалгаад дахин оролдоно уу."));
-    return () => { live = false; };
+    getJson<{ slots: { label: string; startMin: number }[] }>(`/api/manage/${p.token}/slots?date=${date}`, { signal: ctrl.signal })
+      .then((d) => setSlots(d.slots))
+      .catch((e) => {
+        // Цэвэрлэх үеийн abort бол юу ч хийхгүй (timeout бол getJson-ийн дотоод abort → мессеж харуулна)
+        if (ctrl.signal.aborted) return;
+        setLoadError(
+          e instanceof HttpError && e.status === 404
+            ? "Захиалга олдсонгүй. Хуудсыг дахин ачаална уу."
+            : "Сул цагийг ачаалж чадсангүй. Интернэт холболтоо шалгаад дахин оролдоно уу.",
+        );
+      });
+    return () => ctrl.abort();
   }, [p.token, date, reloadKey]);
 
   return (

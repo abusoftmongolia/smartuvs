@@ -10,7 +10,9 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { countdownAnnouncement, formatCountdown, showVerifyHelp } from "@/lib/booking-ui";
-import { checkPhoneVerification, startPhoneVerification } from "@/server/verify-actions";
+import { startPhoneVerification } from "@/server/verify-actions";
+import { getJson } from "@/lib/fetch-json";
+import type { VerificationState } from "@/server/phone-verification";
 
 export type Verification = {
   token: string;
@@ -84,7 +86,11 @@ export function usePhoneVerification(onVerified: (token: string, phone: string) 
     const { token, phone } = v;
     const p = (async (): Promise<CheckState> => {
       try {
-        const s = await checkPhoneVerification(token);
+        // GET — server action-ууд дараалан ажилладаг тул poll нь createBooking-ийг хүлээлгэхгүй
+        const { state: s } = await getJson<{ state: VerificationState }>("/api/verify/status", {
+          headers: { "x-verify-token": token },
+          timeoutMs: 8_000,
+        });
         failures.current = 0;
         setNetError(false);
         if (s === "pending") return "pending";

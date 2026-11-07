@@ -22,8 +22,6 @@ export type ManageResult = { ok: true } | { ok: false; message: string };
 export type RescheduleResult =
   | { ok: true; status: "pending" | "confirmed"; day: string; time: string }
   | { ok: false; message: string };
-/** Сул цаг: ok=false бол "сул цаг алга" биш, ачаалах алдаа */
-export type ManageSlotsResult = { ok: true; slots: { label: string; startMin: number }[] } | { ok: false; message: string };
 
 const Token = z.string().min(16).max(64).regex(/^[A-Za-z0-9_-]+$/);
 const DateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -80,34 +78,6 @@ export async function cancelByCustomer(raw: unknown): Promise<ManageResult> {
   revalidatePath(`/manage/${parsed.data}`);
   revalidatePath(`/dashboard/${tenant.slug}`, "layout");
   return { ok: true };
-}
-
-export async function manageSlots(raw: unknown): Promise<ManageSlotsResult> {
-  const parsed = z.object({ token: Token, date: DateStr }).safeParse(raw);
-  if (!parsed.success) return { ok: false, message: "Мэдээлэл буруу" };
-  try {
-    return { ok: true, slots: await loadManageSlots(parsed.data.token, parsed.data.date) };
-  } catch (err) {
-    console.error("manageSlots", err);
-    return { ok: false, message: "Сул цагийг ачаалж чадсангүй. Дахин оролдоно уу." };
-  }
-}
-
-async function loadManageSlots(token: string, date: string) {
-  const row = await getBookingByManageToken(token);
-  if (!row) return [];
-  const { booking, tenant } = row;
-  const service = await getService(tenant.id, booking.serviceId);
-  if (!service) return [];
-  const slots = await getAvailability({
-    tenant,
-    service,
-    date,
-    // Ажилтан горимд ижил ажилтантай нь үлдээнэ; бокс горимд аль ч сул бокс
-    staffId: tenant.bookingMode === "staff" ? booking.staffId : null,
-    excludeBookingId: booking.id,
-  });
-  return slots.map((s) => ({ label: s.label, startMin: s.startMin }));
 }
 
 const MoveInput = z.object({ token: Token, date: DateStr, startMin: z.number().int().min(0).max(1439) });

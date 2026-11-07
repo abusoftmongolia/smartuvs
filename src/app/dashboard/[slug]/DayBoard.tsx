@@ -9,12 +9,12 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { ErrorBox, Field, btnDanger, btnPrimary, btnSecondary } from "@/components/ui";
 import {
   createManualBooking,
-  dashboardSlots,
   rescheduleBooking,
   setBookingStatus,
   type ActionResult,
-  type DashSlot,
 } from "@/server/dashboard-actions";
+import type { DashSlot } from "@/server/slot-queries";
+import { getJson, query } from "@/lib/fetch-json";
 
 export type BoardBooking = {
   id: string;
@@ -387,15 +387,16 @@ function SlotPicker(p: {
   const [startMin, setStartMin] = useState<number | null>(null);
 
   useEffect(() => {
-    let live = true;
+    const ctrl = new AbortController();
     setSlots(null);
     setSlotsError(false);
     setStartMin(null);
-    dashboardSlots({ slug: p.slug, serviceId: p.serviceId, date, ownerId, excludeBookingId: p.excludeBookingId })
-      .then((s) => live && setSlots(s))
-      // Сүлжээний алдааг "Сул цаг алга" гэж харуулахгүй
-      .catch(() => live && setSlotsError(true));
-    return () => { live = false; };
+    const qs = query({ serviceId: p.serviceId, date, ownerId, excludeBookingId: p.excludeBookingId });
+    getJson<{ slots: DashSlot[] }>(`/api/dashboard/${p.slug}/slots?${qs}`, { signal: ctrl.signal })
+      .then((d) => setSlots(d.slots))
+      // Сүлжээний алдааг "Сул цаг алга" гэж харуулахгүй (цэвэрлэх үеийн abort-оос бусад)
+      .catch(() => { if (!ctrl.signal.aborted) setSlotsError(true); });
+    return () => ctrl.abort();
   }, [p.slug, p.serviceId, date, ownerId, p.excludeBookingId, reloadKey]);
 
   return (

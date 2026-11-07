@@ -1,8 +1,8 @@
 "use server";
-/** Утас баталгаажуулах server action-ууд — захиалгын хуудаснаас дуудагдана. */
+/** Утас баталгаажуулалт эхлүүлэх server action. Төлөвийг GET /api/verify/status-аас уншина. */
 import { z } from "zod";
 import { normalizePhone } from "@/lib/sms";
-import { startVerification, verificationState, type VerificationState } from "./phone-verification";
+import { startVerification } from "./phone-verification";
 
 export type StartVerificationResult =
   | { ok: true; token: string; shortcode: string; code: string; smsUri: string; expiresAt: string; displayInstruction: string | null }
@@ -16,10 +16,4 @@ export async function startPhoneVerification(raw: unknown): Promise<StartVerific
   const started = await startVerification(phone);
   if (!started) return { ok: false, message: "Баталгаажуулалт эхлүүлж чадсангүй. Дахин оролдоно уу." };
   return { ok: true, ...started };
-}
-
-export async function checkPhoneVerification(raw: unknown): Promise<VerificationState> {
-  const parsed = z.string().min(1).max(1024).safeParse(raw);
-  if (!parsed.success) return "invalid";
-  return verificationState(parsed.data);
 }
