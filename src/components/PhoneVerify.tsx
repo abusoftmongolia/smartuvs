@@ -185,48 +185,55 @@ export function PhoneVerifyPanel({ v, onCancel, netError, onCheck }: {
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border-2 border-brand bg-brand-tint p-4">
-      <p className="text-base font-semibold">Одоо {v.shortcode} руу SMS илгээнэ үү</p>
-
-      {/* 1. Хаанаас, хаашаа — хамгийн түгээмэл алдаа (өөр SIM/дугаар) */}
-      <div className="grid grid-cols-2 gap-2 text-center">
-        <div className="rounded-lg bg-white p-2.5">
-          <div className="text-xs text-muted">Таны дугаараас</div>
-          <div className="text-lg font-semibold tabular-nums">{spaced(v.phone)}</div>
-        </div>
-        <div className="rounded-lg bg-white p-2.5">
-          <div className="text-xs text-muted">Энэ дугаар руу</div>
-          <div className="text-2xl font-bold tabular-nums">{v.shortcode}</div>
-        </div>
-      </div>
-
-      <p className="text-sm">
-        {v.displayInstruction ?? `Та өөрийн ${v.phone} дугаараас ${v.shortcode} дугаарт “${v.code}” гэж SMS илгээнэ үү. Хоёр SIM-тэй бол зөв SIM-ээ сонгоно уу.`}
-      </p>
-
-      <div className="rounded-lg bg-white py-2 text-center">
-        <div className="text-xs text-muted">Илгээх код</div>
-        <div className="font-mono text-3xl font-bold tracking-[0.2em]" aria-label={`Код ${v.code.split("").join(" ")}`}>{v.code}</div>
-      </div>
-
-      {/* 3. Дугаар, текст урьдчилан бөглөгдсөн — гараар бичих алдаагүй */}
-      <a href={v.smsUri} className={`flex min-h-12 items-center justify-center gap-2 rounded-card bg-ink text-[15px] font-semibold text-white ${focusRing}`}>
-        Мессеж илгээх
-      </a>
-      <p className="text-sm">Дарахад дугаар, код автоматаар бөглөгдөнө — Мессеж апп-даа “Илгээх” дараад энд буцаж ирээрэй. Операторын SMS-ийн төлбөр (≈150₮) таны утаснаас гарна.</p>
-
-      {/* 2. Үлдсэн хугацаа — харагдах цаг секунд бүр шинэчлэгдэх тул live биш; зөвхөн 1 минут үлдсэн/дууссан үед зарлана */}
+      {/* Гарчиг + үлдсэн хугацаа нэг мөрөнд. Цаг секунд бүр шинэчлэгдэх тул live биш; 1 минут үлдсэн/дууссан үед л зарлана */}
       <div className="flex flex-col gap-1.5">
-        <div className={`flex justify-between text-sm font-semibold ${low ? "text-red-700" : ""}`}>
-          <span>SMS хүлээж байна…</span>
-          <span className="tabular-nums" role="timer" aria-label={`${Math.floor(left / 60)} минут ${left % 60} секунд үлдлээ`}>
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="font-semibold">SMS-ээр баталгаажуулах</p>
+          <span className={`text-sm font-semibold tabular-nums ${low ? "text-red-700" : "text-muted"}`} role="timer"
+            aria-label={`${Math.floor(left / 60)} минут ${left % 60} секунд үлдлээ`}>
             {formatCountdown(left)}
           </span>
         </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-white" aria-hidden>
+        <div className="h-1 overflow-hidden rounded-full bg-white" aria-hidden>
           <div className={`h-full rounded-full transition-[width] duration-1000 ${low ? "bg-red-600" : "bg-brand"}`} style={{ width: `${Math.min(100, (left / total) * 100)}%` }} />
         </div>
         <p className="sr-only" aria-live="polite">{countdownAnnouncement(left)}</p>
       </div>
+
+      {/* Хаашаа, юу — хамгийн чухал хоёр утга; хаанаас нь доор жижгээр (өөр SIM-ээс илгээх алдаанаас сэргийлнэ) */}
+      <div className="rounded-lg bg-white px-3 py-2.5">
+        <dl className="grid grid-cols-2 gap-2 text-center">
+          <div>
+            <dt className="text-xs text-muted">Хүлээн авагч</dt>
+            <dd className="text-2xl font-bold tabular-nums">{v.shortcode}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted">Текст</dt>
+            <dd className="font-mono text-2xl font-bold tracking-[0.12em]" aria-label={`Код ${v.code.split("").join(" ")}`}>{v.code}</dd>
+          </div>
+        </dl>
+        <p className="mt-1.5 border-t border-line pt-1.5 text-center text-xs text-muted">
+          <b className="font-semibold text-ink tabular-nums">{spaced(v.phone)}</b> дугаараас илгээнэ
+        </p>
+      </div>
+
+      {/* Дугаар, текст урьдчилан бөглөгдсөн — гараар бичих алдаагүй */}
+      <a href={v.smsUri} className={`flex min-h-12 items-center justify-center gap-2 rounded-card bg-ink text-[15px] font-semibold text-white ${focusRing}`}>
+        Мессеж илгээх
+      </a>
+      <p className="text-center text-xs text-muted">Илгээгээд энд буцаж ирнэ үү · SMS-ийн үнэ таны данснаас гарна</p>
+
+      {/* Дэлгэрэнгүй заавар (verify.mn-ийн displayInstruction) — хэрэгтэй хүн нээнэ */}
+      <details className="group text-sm">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-center gap-1 rounded-lg font-medium text-brand-deep [&::-webkit-details-marker]:hidden">
+          Гараар илгээх заавар
+          <span aria-hidden className="transition group-open:rotate-180">▾</span>
+        </summary>
+        <p className="rounded-lg bg-white p-3">
+          {v.displayInstruction ?? `Та өөрийн ${v.phone} дугаараас ${v.shortcode} дугаарт “${v.code}” гэж SMS илгээнэ үү.`}
+          {" "}Хоёр SIM-тэй бол зөв SIM-ээ сонгоно уу.
+        </p>
+      </details>
 
       {netError && (
         <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm font-semibold text-red-800">
@@ -253,7 +260,7 @@ export function PhoneVerifyPanel({ v, onCancel, netError, onCheck }: {
         )}
       </div>
 
-      <button type="button" onClick={onCancel} className={`min-h-11 rounded-xl border border-line bg-white text-sm font-medium ${focusRing}`}>
+      <button type="button" onClick={onCancel} className={`min-h-11 rounded-xl text-sm font-medium text-muted underline-offset-2 hover:underline ${focusRing}`}>
         Болих
       </button>
     </div>

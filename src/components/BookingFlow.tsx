@@ -279,7 +279,7 @@ export function BookingFlow(p: BookingFlowProps) {
         >
           <Field id="nm" name="name" label="Нэр" value={name} onChange={setName} placeholder="Таны нэр" autoComplete="name" />
           <Field id="ph" name="tel" label="Утасны дугаар" value={phone} onChange={changePhone} placeholder="9911 2233" type="tel" autoComplete="tel"
-            hint="Захиалгаа батлахын тулд та энэ дугаараас 144773 руу 1 SMS илгээнэ (операторын үнээр ≈150₮)." />
+            hint={verification?.state === "pending" ? undefined : "Захиалгаа батлахын тулд та энэ дугаараас 144773 руу 1 SMS илгээнэ. SMS-ийн үнэ таны данснаас гарна."} />
           {p.customFields.map((f) => (
             <Field key={f.key} id={`cf-${f.key}`} name={`cf-${f.key}`} label={f.required ? `${f.label} (заавал)` : f.label} value={answers[f.key] ?? ""} onChange={(v) => setAnswers((a) => ({ ...a, [f.key]: v }))} />
           ))}
