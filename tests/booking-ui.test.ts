@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   bookingDays,
   approvalWaitText,
+  confirmedNoteText,
   cancelPolicyText,
   countdownAnnouncement,
   formatCountdown,
@@ -50,6 +51,9 @@ describe("бусад", () => {
   it("цуцлах бодлого нэг мөрөөр", () => {
     expect(cancelPolicyText(2)).toBe("Эхлэхээс 2 цагийн өмнө хүртэл SMS-ийн холбоосоор шилжүүлж, цуцалж болно.");
     expect(cancelPolicyText(0)).toContain("хүссэн үедээ");
+    // SMS-гүй горимд "SMS" гэж амлахгүй
+    expect(cancelPolicyText(2, false)).not.toContain("SMS");
+    expect(cancelPolicyText(0, false)).toBe("Захиалгын холбоосоор хүссэн үедээ шилжүүлж, цуцалж болно.");
   });
   it("хоосон хэсэггүй, илүү '·' үгүй", () => {
     expect(joinParts(["Үс засалт", null, ""])).toBe("Үс засалт");
@@ -59,5 +63,7 @@ describe("бусад", () => {
   it("батлах хүлээх бичвэр preset-ийн нэр томьёогоор", () => {
     expect(approvalWaitText("staff", "Үсчин")).toBe("Үсчин батлахад SMS ирнэ.");
     expect(approvalWaitText("resource", "Бокс")).toBe("Байгууллага батлахад SMS ирнэ.");
+    expect(approvalWaitText("staff", "Үсчин", false)).not.toContain("SMS");
+    expect(confirmedNoteText(false)).not.toContain("SMS");
   });
 });

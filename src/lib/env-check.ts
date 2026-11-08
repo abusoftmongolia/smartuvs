@@ -15,9 +15,11 @@ export function productionEnvProblems(env: Record<string, string | undefined> = 
   need("VERIFYMN_API_KEY", 1, "тохируулаагүй — утас баталгаажуулах боломжгүй");
   need("NEXT_PUBLIC_SITE_URL");
   if ((env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("http://")) out.push({ name: "NEXT_PUBLIC_SITE_URL", problem: "https биш" });
-  if ((env.SMS_PROVIDER ?? "console") === "console") {
-    out.push({ name: "SMS_PROVIDER", problem: "console — SMS (баталгаа, сануулга) жинхэнээр илгээгдэхгүй" });
-  } else {
+  const smsKind = env.SMS_PROVIDER ?? "console";
+  if (smsKind === "console") {
+    // console нь SMS-ийн агуулгыг (manage холбоос) лог руу бичнэ — production-д "off" эсвэл жинхэнэ provider
+    out.push({ name: "SMS_PROVIDER", problem: "console — production-д 'off' эсвэл жинхэнэ үйлчилгээ үзүүлэгч" });
+  } else if (smsKind !== "off") {
     need("SMS_API_URL");
     need("SMS_API_KEY");
   }

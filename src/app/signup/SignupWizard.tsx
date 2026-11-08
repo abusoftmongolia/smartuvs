@@ -71,7 +71,7 @@ function presetOwners(i: Industry): OwnerRow[] {
   return names.map((name) => ({ key: k(), name }));
 }
 
-export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | null; siteUrl: string }) {
+export function SignupWizard({ loggedInAs, siteUrl, smsEnabled }: { loggedInAs: string | null; siteUrl: string; smsEnabled: boolean }) {
   const router = useRouter();
   const [step, setStep] = useState(loggedInAs ? 1 : 0);
   const [error, setError] = useState<string | null>(null);
@@ -194,7 +194,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
     }
   }
 
-  if (step === 4 && slug) return <Ready slug={slug} name={orgName} siteUrl={siteUrl} />;
+  if (step === 4 && slug) return <Ready slug={slug} name={orgName} siteUrl={siteUrl} smsEnabled={smsEnabled} />;
 
   return (
     <div className="flex flex-col gap-6">
@@ -341,7 +341,7 @@ export function SignupWizard({ loggedInAs, siteUrl }: { loggedInAs: string | nul
   );
 }
 
-function Ready({ slug, name, siteUrl }: { slug: string; name: string; siteUrl: string }) {
+function Ready({ slug, name, siteUrl, smsEnabled }: { slug: string; name: string; siteUrl: string; smsEnabled: boolean }) {
   const url = `${siteUrl.replace(/\/$/, "")}/${slug}`;
   const pretty = url.replace(/^https?:\/\//, "");
   const [copied, setCopied] = useState(false);
@@ -350,7 +350,7 @@ function Ready({ slug, name, siteUrl }: { slug: string; name: string; siteUrl: s
       <SuccessMark />
       <h1 className="text-2xl font-bold">Бүртгэл илгээгдлээ!</h1>
       <p className="rounded-xl bg-brand-tint p-3 text-sm">
-        SmartUvs таны байгууллагыг шалгаад <b>батлах</b> бөгөөд батлагдмагц SMS ирнэ. Тэр хүртэл доорх хаяг нийтэд нээгдэхгүй — энэ хооронд самбартаа үйлчилгээ, ажилтнаа тохируулаарай.
+        SmartUvs таны байгууллагыг шалгаад <b>батлах</b> бөгөөд {smsEnabled ? "батлагдмагц SMS ирнэ" : "батлагдсаныг самбараасаа харна"}. Тэр хүртэл доорх хаяг нийтэд нээгдэхгүй — энэ хооронд самбартаа үйлчилгээ, ажилтнаа тохируулаарай.
       </p>
       <p className="text-muted">{name}-ийн захиалгын хуудас (батлагдсаны дараа):</p>
       <p className="break-all text-xl font-semibold">{pretty}</p>

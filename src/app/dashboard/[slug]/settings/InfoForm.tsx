@@ -13,7 +13,7 @@ const NUM_LABEL: Record<NumKey, string> = {
   cancellationHours: "Цуцлах боломж (цагийн өмнө)",
 };
 
-export function InfoForm({ slug, info }: { slug: string; info: Info }) {
+export function InfoForm({ slug, info, smsEnabled }: { slug: string; info: Info; smsEnabled: boolean }) {
   const [v, setV] = useState(info);
   // Хоосон тоон талбарууд — 0 болгож хадгалахгүй, анхааруулна
   const [blank, setBlank] = useState<Partial<Record<NumKey, true>>>({});
@@ -75,10 +75,10 @@ export function InfoForm({ slug, info }: { slug: string; info: Info }) {
           <input type="checkbox" checked={v.listed} onChange={(e) => set("listed", e.target.checked)} className="size-5 accent-brand" />
           tsag.smartuvs.mn нүүр хуудасны жагсаалтад харагдах
         </label>
-        <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
+        {smsEnabled && <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
           <input type="checkbox" checked={v.notifyNewBookings} onChange={(e) => set("notifyNewBookings", e.target.checked)} className="size-5 accent-brand" />
           <span>Шинэ захиалга орох бүрт SMS авах <span className="block text-xs font-normal text-muted">Дээрх утас руу, мөн захиалсан ажилтан системд бүртгэлтэй бол түүн рүү</span></span>
-        </label>
+        </label>}
         {status}
         <button disabled={pending} className={`${btnPrimary} self-start`}>{pending ? "Хадгалж байна…" : "Хадгалах"}</button>
       </form>

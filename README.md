@@ -52,7 +52,8 @@ npm run typecheck && npm test && npm run build:check   # .next-build руу — 
    | `SESSION_SECRET` | 32+ тэмдэгт (`openssl rand -base64 32`) |
    | `CRON_SECRET` | 16+ тэмдэгт — Vercel Cron өөрөө `Authorization: Bearer` илгээнэ |
    | `VERIFYMN_API_KEY`, `VERIFYMN_API_URL` | verify.mn (production-д заавал, mock хаалттай) |
-   | `SMS_PROVIDER`, `SMS_API_URL`, `SMS_API_KEY`, `SMS_SENDER` | `console` биш |
+   | `SMS_PROVIDER` | `off` — SMS-гүй (байгууллага самбараас харна; UI SMS амлахгүй). SMS үйлчилгээ үзүүлэгчтэй болбол `http` + `SMS_API_URL`, `SMS_API_KEY`, `SMS_SENDER` |
+| `NEXT_PUBLIC_DEMO_SLUG` | (заавал биш) /business-ийн "Жишээ хуудас" |
    | `ADMIN_HOST`, `ADMIN_API_TOKEN` | admin.smartuvs.mn |
 3. **Domains:** `tsag.smartuvs.mn`, `admin.smartuvs.mn` → CNAME. (`cag.smartuvs.mn` → redirect.)
 4. **Cron:** `/api/cron/notifications` 5 мин тутам (Vercel Pro-ийн Cron, эсвэл гадны scheduler).

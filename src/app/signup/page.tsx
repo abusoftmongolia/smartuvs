@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { currentUser } from "@/server/auth";
+import { smsEnabled } from "@/lib/sms";
 import { SignupWizard } from "./SignupWizard";
 
 export const metadata: Metadata = {
@@ -16,7 +17,7 @@ export default async function SignupPage() {
     <div className="min-h-dvh">
       <SiteHeader />
       <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
-        <SignupWizard loggedInAs={user ? user.name : null} siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "https://tsag.smartuvs.mn"} />
+        <SignupWizard loggedInAs={user ? user.name : null} siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "https://tsag.smartuvs.mn"} smsEnabled={smsEnabled()} />
       </main>
     </div>
   );

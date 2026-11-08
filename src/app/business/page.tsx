@@ -2,6 +2,7 @@
  * Байгууллагад зориулсан танилцуулга — tsag.smartuvs.mn/business
  * Цаг захиалгын системийн боломж, ажиллах зарчим, үйлчлүүлэгчийн урсгал, салбарууд, үнэ (үнэгүй).
  */
+import { smsEnabled } from "@/lib/sms";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -13,7 +14,8 @@ export const metadata: Metadata = {
 };
 
 const CONTACT = { email: "info@smartuvs.mn", phone: "+97695866262", phoneLabel: "9586 6262" };
-const DEMO = "/hatan-salon";
+/** Жишээ байгууллагын slug (жишээ нь "hatan-salon") — тохируулаагүй бол "Жишээ хуудас" товч харагдахгүй (404 руу заахгүй) */
+const DEMO = process.env.NEXT_PUBLIC_DEMO_SLUG ? `/${process.env.NEXT_PUBLIC_DEMO_SLUG}` : null;
 
 const STEPS = [
   { t: "Бүртгүүлж тохируулна", d: "Үйлчилгээ, ажлын цаг, ажилтнаа 5 минутад оруулна. Салбараа сонгоход бэлэн загвар бөглөгдөнө." },
@@ -21,16 +23,24 @@ const STEPS = [
   { t: "Үйлчлүүлэгч өөрөө захиална", d: "Сул цагаа харж, утсаа баталгаажуулаад захиална. Та самбараас нэг дор хянана." },
 ];
 
-const FEATURES: { t: string; d: string; icon: keyof typeof ICONS }[] = [
+/** SMS_PROVIDER=off үед SMS-ээр амласан онцлогуудыг харуулахгүй (худал амлахгүй) */
+const SMS_ON = smsEnabled();
+
+const ALL_FEATURES: { t: string; d: string; icon: keyof typeof ICONS; sms?: true }[] = [
   { t: "Онлайн захиалга 24/7", d: "Утсаар залгаж, чатаар тохирох шаардлагагүй. Шөнө ч захиалга орно.", icon: "calendar" },
   { t: "Ажилтны хуваарь", d: "Ажилтан, бокс тус бүрийн ажлын цаг, чөлөө. Өдрийн календарь баганаар.", icon: "users" },
-  { t: "SMS сануулга", d: "Цагаас 24 ба 2 цагийн өмнө үйлчлүүлэгчид автоматаар сануулна — ирэхгүй байх нь багасна.", icon: "bell" },
-  { t: "Шинэ захиалгын мэдэгдэл", d: "Захиалга орох бүрт танд болон тухайн ажилтанд SMS очно.", icon: "message" },
+  { t: "SMS сануулга", d: "Цагаас 24 ба 2 цагийн өмнө үйлчлүүлэгчид автоматаар сануулна — ирэхгүй байх нь багасна.", icon: "bell", sms: true },
+  { t: "Шинэ захиалгын мэдэгдэл", d: "Захиалга орох бүрт танд болон тухайн ажилтанд SMS очно.", icon: "message", sms: true },
   { t: "Батлах эсвэл автомат", d: "Шууд баталгаажуулах, эсвэл өөрөө хянаж батлах — салбартаа тохируулна.", icon: "check" },
   { t: "Захиалгын код", d: "Үйлчлүүлэгч бүр #X4K9M2 маягийн код авна. Самбараас кодоор шууд олно.", icon: "hash" },
-  { t: "Өөрөө цуцлах, шилжүүлэх", d: "Үйлчлүүлэгч SMS-ийн холбоосоор цагаа шилжүүлнэ. Танд залгах шаардлагагүй.", icon: "refresh" },
+  { t: "Өөрөө цуцлах, шилжүүлэх", d: `Үйлчлүүлэгч ${SMS_ON ? "SMS-ийн" : "захиалгын"} холбоосоор цагаа шилжүүлнэ. Танд залгах шаардлагагүй.`, icon: "refresh" },
   { t: "Давхар захиалгагүй", d: "Нэг цагт хоёр хүн хэзээ ч захиалагдахгүй — өгөгдлийн сангийн түвшинд хамгаалсан.", icon: "shield" },
 ];
+
+const FEATURES = ALL_FEATURES.filter((f) => SMS_ON || !f.sms);
+const PLAN_ITEMS = SMS_ON
+  ? ["Онлайн захиалгын хуудас", "QR постер (A4)", "Ажилтан, боксын хуваарь", "SMS сануулга", "Шинэ захиалгын мэдэгдэл", "Захиалгын түүх"]
+  : ["Онлайн захиалгын хуудас", "QR постер (A4)", "Ажилтан, боксын хуваарь", "Захиалгын код", "Өөрөө цуцлах, шилжүүлэх", "Захиалгын түүх"];
 
 export default function BusinessPage() {
   const industries = INDUSTRY_IDS.filter((i) => i !== "other").map((i) => INDUSTRY_PRESETS[i].label);
@@ -46,11 +56,13 @@ export default function BusinessPage() {
               Захиалгаа утсаар биш, <span className="whitespace-nowrap">онлайнаар</span> аваарай
             </h1>
             <p className="max-w-lg text-base text-muted">
-              Үйлчлүүлэгч таны хуудаснаас сул цагаа сонгоод захиална. Баталгаажуулалт, сануулга SMS-ээр автоматаар явна — та үйлчилгээндээ анхаарна.
+              {SMS_ON
+                ? "Үйлчлүүлэгч таны хуудаснаас сул цагаа сонгоод захиална. Баталгаажуулалт, сануулга SMS-ээр автоматаар явна — та үйлчилгээндээ анхаарна."
+                : "Үйлчлүүлэгч таны хуудаснаас сул цагаа сонгоод захиална. Бүх захиалгыг самбараасаа нэг дор харна — та үйлчилгээндээ анхаарна."}
             </p>
             <div className="flex flex-wrap gap-2">
               <Link href="/signup" className="inline-flex min-h-12 items-center rounded-card bg-brand px-6 font-semibold text-ink">Үнэгүй бүртгүүлэх</Link>
-              <Link href={DEMO} className="inline-flex min-h-12 items-center rounded-card border border-line bg-white px-6 font-medium">Жишээ хуудас үзэх</Link>
+              {DEMO && <Link href={DEMO} className="inline-flex min-h-12 items-center rounded-card border border-line bg-white px-6 font-medium">Жишээ хуудас үзэх</Link>}
             </div>
             <p className="text-sm text-muted">Бүртгэлтэй юу? <Link href="/admin/login" className="font-semibold text-brand-deep underline">Нэвтрэх</Link></p>
           </div>
@@ -112,7 +124,7 @@ export default function BusinessPage() {
                 <span className="text-xs text-muted">Таны цаг баталгаажлаа</span>
                 <span className="font-medium">Мягмар, 11:00</span>
                 <span className="mt-1 font-mono text-xl font-semibold tracking-[0.15em]">#X4K9M2</span>
-                <span className="text-[11px] text-muted">SMS-ээр сануулга очно</span>
+                <span className="text-xs text-muted">{SMS_ON ? "SMS-ээр сануулга очно" : "Холбоосоор цагаа удирдана"}</span>
               </div>
             </FlowCard>
           </ol>
@@ -138,7 +150,7 @@ export default function BusinessPage() {
                 <p className="mt-2 text-sm text-muted">Ажилтны тоо хязгааргүй. Үйлчлүүлэгчээс ч төлбөр авахгүй.</p>
               </div>
               <ul className="grid gap-2 text-sm sm:grid-cols-2">
-                {["Онлайн захиалгын хуудас", "QR постер (A4)", "Ажилтан, боксын хуваарь", "SMS сануулга", "Шинэ захиалгын мэдэгдэл", "Захиалгын түүх"].map((x) => (
+                {PLAN_ITEMS.map((x) => (
                   <li key={x} className="flex items-center gap-2"><span aria-hidden className="text-brand-deep">{ICONS.check}</span>{x}</li>
                 ))}
               </ul>

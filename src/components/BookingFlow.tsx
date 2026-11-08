@@ -5,7 +5,7 @@
  */
 import { Field, Row, SuccessMark } from "./ui";
 import { formatBookingCode } from "@/lib/booking-code";
-import { approvalWaitText, joinParts, type DayChip } from "@/lib/booking-ui";
+import { approvalWaitText, confirmedNoteText, joinParts, type DayChip } from "@/lib/booking-ui";
 import { formatDayMn } from "@/lib/time";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { createBooking, precheckBooking, type BookingResult } from "@/server/bookings";
@@ -19,6 +19,8 @@ export type BookingFlowProps = {
   services: { id: string; name: string; duration: string; price: string | null }[];
   staffByService: Record<string, { id: string; name: string; title: string | null }[]>;
   days: DayChip[];
+  /** Баталгаа, сануулгын SMS явах эсэх (SMS_PROVIDER=off бол false) */
+  smsEnabled: boolean;
   /** Цуцлах бодлого нэг мөрөөр (cancelPolicyText) */
   cancelPolicy: string;
 };
@@ -165,7 +167,7 @@ export function BookingFlow(p: BookingFlowProps) {
           <div className="font-mono text-2xl font-bold tracking-[0.15em]">{formatBookingCode(result.code)}</div>
         </div>
         <p className="text-xs text-muted">
-          {result.status === "confirmed" ? "Дэлгэрэнгүйг SMS-ээр илгээлээ. 24 цагийн өмнө сануулна." : approvalWaitText(p.bookingMode, p.staffTerm)}
+          {result.status === "confirmed" ? confirmedNoteText(p.smsEnabled) : approvalWaitText(p.bookingMode, p.staffTerm, p.smsEnabled)}
         </p>
         <div className="mt-2 flex w-full flex-col gap-2">
           <a href={`${result.managePath}/ics`} className={`flex min-h-12 items-center justify-center rounded-card bg-brand font-semibold text-ink ${focusRing}`}>

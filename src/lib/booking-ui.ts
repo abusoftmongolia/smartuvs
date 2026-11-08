@@ -56,10 +56,11 @@ export function showVerifyHelp(startedAt: number, now: number): boolean {
 }
 
 /** Үйлчлүүлэгчид харуулах цуцлах бодлого — нэг мөр */
-export function cancelPolicyText(cancellationHours: number): string {
+export function cancelPolicyText(cancellationHours: number, sms = true): string {
+  const via = sms ? "SMS-ийн холбоосоор" : "захиалгын холбоосоор";
   return cancellationHours > 0
-    ? `Эхлэхээс ${cancellationHours} цагийн өмнө хүртэл SMS-ийн холбоосоор шилжүүлж, цуцалж болно.`
-    : "SMS-ийн холбоосоор хүссэн үедээ шилжүүлж, цуцалж болно.";
+    ? `Эхлэхээс ${cancellationHours} цагийн өмнө хүртэл ${via} шилжүүлж, цуцалж болно.`
+    : `${via[0].toUpperCase()}${via.slice(1)} хүссэн үедээ шилжүүлж, цуцалж болно.`;
 }
 
 /** Амжилтын дэлгэцийн дэд мөр: "Үс засалт · Сараа" — хоосон хэсгийг алгасна */
@@ -68,6 +69,12 @@ export function joinParts(parts: (string | null | undefined)[]): string {
 }
 
 /** "Үсчин батлахад SMS ирнэ." — салбарын нэр томьёогоор; бокс горимд байгууллага батална */
-export function approvalWaitText(bookingMode: "staff" | "resource", staffTerm: string): string {
-  return bookingMode === "staff" && staffTerm.trim() ? `${staffTerm} батлахад SMS ирнэ.` : "Байгууллага батлахад SMS ирнэ.";
+export function approvalWaitText(bookingMode: "staff" | "resource", staffTerm: string, sms = true): string {
+  const who = bookingMode === "staff" && staffTerm.trim() ? staffTerm : "Байгууллага";
+  return sms ? `${who} батлахад SMS ирнэ.` : `${who} батлахыг хүлээж байна — төлвийг захиалгын холбоосоос харна уу.`;
+}
+
+/** Баталгаажсан захиалгын амжилтын дэлгэцийн мөр */
+export function confirmedNoteText(sms = true): string {
+  return sms ? "Дэлгэрэнгүйг SMS-ээр илгээлээ. 24 цагийн өмнө сануулна." : "Доорх холбоосыг хадгалаарай — цагаа эндээс харж, шилжүүлж, цуцална.";
 }

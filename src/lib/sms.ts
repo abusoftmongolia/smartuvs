@@ -1,6 +1,8 @@
 /**
  * SMS илгээгч — adapter хэлбэрээр. Үйлчилгээ үзүүлэгчийг солиход зөвхөн шинэ класс нэмнэ.
  * SMS_PROVIDER=console үед терминалд хэвлэнэ (хөгжүүлэлтэд).
+ * SMS_PROVIDER=off үед юу ч илгээхгүй, агуулгыг логлохгүй (manage холбоос лог руу задрахгүй) —
+ * SMS үйлчилгээ үзүүлэгчгүйгээр гаргах үед: байгууллага захиалгыг самбараас харна.
  */
 export interface SmsProvider {
   send(to: string, text: string): Promise<{ ok: true; id?: string } | { ok: false; error: string }>;
@@ -34,12 +36,24 @@ class HttpSmsProvider implements SmsProvider {
   }
 }
 
+class OffSmsProvider implements SmsProvider {
+  async send() {
+    return { ok: true as const };
+  }
+}
+
 let provider: SmsProvider | undefined;
+
+/** Үйлчлүүлэгч, байгууллагад SMS (баталгаа, сануулга, мэдэгдэл) жинхэнээр очих эсэх — UI-ийн амлалтыг үүгээр тааруулна */
+export function smsEnabled(): boolean {
+  return (process.env.SMS_PROVIDER ?? "console") !== "off";
+}
 
 export function sms(): SmsProvider {
   if (provider) return provider;
   const kind = process.env.SMS_PROVIDER ?? "console";
-  if (kind === "console") provider = new ConsoleSmsProvider();
+  if (kind === "off") provider = new OffSmsProvider();
+  else if (kind === "console") provider = new ConsoleSmsProvider();
   else provider = new HttpSmsProvider(process.env.SMS_API_URL ?? "", process.env.SMS_API_KEY ?? "", process.env.SMS_SENDER ?? "");
   return provider;
 }

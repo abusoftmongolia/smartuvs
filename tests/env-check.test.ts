@@ -18,6 +18,9 @@ describe("productionEnvProblems", () => {
     const names = productionEnvProblems({ ...good, SMS_PROVIDER: undefined, SESSION_SECRET: "short", NEXT_PUBLIC_SITE_URL: "http://x" }).map((p) => p.name);
     expect(names).toEqual(expect.arrayContaining(["SMS_PROVIDER", "SESSION_SECRET", "NEXT_PUBLIC_SITE_URL"]));
   });
+  it("SMS_PROVIDER=off — SMS-гүй гаргах боломжтой", () => {
+    expect(productionEnvProblems({ ...good, SMS_PROVIDER: "off", SMS_API_URL: undefined, SMS_API_KEY: undefined })).toEqual([]);
+  });
   it("утгыг буцаахгүй, зөвхөн нэр", () => {
     const out = JSON.stringify(productionEnvProblems({ ...good, SESSION_SECRET: "supersecret" }));
     expect(out).not.toContain("supersecret");

@@ -8,6 +8,7 @@ import { isTsagMaintenance } from "@/db/platform";
 import { getTenantBySlug, listResources, listServices, listStaffByServices } from "@/db/tenant";
 import { isValidSlug } from "@/lib/slug";
 import { bookingDays, cancelPolicyText } from "@/lib/booking-ui";
+import { smsEnabled } from "@/lib/sms";
 import { formatPrice, todayIn } from "@/lib/time";
 import { BookingFlow, type BookingFlowProps } from "@/components/BookingFlow";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -66,7 +67,8 @@ export default async function TenantBookingPage({ params }: Props) {
             }))}
             staffByService={staffByService}
             days={days}
-            cancelPolicy={cancelPolicyText(tenant.settings.cancellationHours)}
+            cancelPolicy={cancelPolicyText(tenant.settings.cancellationHours, smsEnabled())}
+            smsEnabled={smsEnabled()}
           />
         )}
       </main>

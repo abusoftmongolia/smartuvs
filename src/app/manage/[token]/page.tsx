@@ -11,6 +11,7 @@ import { getBookingByManageToken } from "@/db/tenant";
 import { formatBookingCode } from "@/lib/booking-code";
 import { customerChangeBlock } from "@/lib/policy";
 import { approvalWaitText, bookingDays } from "@/lib/booking-ui";
+import { smsEnabled } from "@/lib/sms";
 import { formatDayMn, formatHm, todayIn, utcToLocalMinute } from "@/lib/time";
 import { ManageBooking } from "./ManageBooking";
 
@@ -61,7 +62,7 @@ export default async function ManagePage({ params }: { params: Promise<{ token: 
           slug={tenant.slug}
           days={days}
           currentDate={date}
-          approvalText={approvalWaitText(tenant.bookingMode, tenant.settings.terminology.staff)}
+          approvalText={approvalWaitText(tenant.bookingMode, tenant.settings.terminology.staff, smsEnabled())}
         />
       </main>
     </div>
