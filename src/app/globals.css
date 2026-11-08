@@ -50,3 +50,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   outline: 2px solid var(--color-ink);
   outline-offset: 2px;
 }
+
+/* Утасны цэс зүүнээс гулсаж орно */
+@keyframes menu-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) { dialog[open] { animation: none !important; } }

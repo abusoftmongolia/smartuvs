@@ -16,61 +16,57 @@ const SORTS = {
 type SortKey = keyof typeof SORTS;
 
 export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; industries: { id: string; label: string }[] }) {
-  // smartuvs.mn-ийн хайлтаас ирэхэд: tsag.smartuvs.mn/?q=Үсчин
+  // Хайлт, салбар нь URL-аас (толгойн хайлт /?q=, салбарын цэс /?industry=barber,beauty) — холбоосоор хуваалцаж болно
   const params = useSearchParams();
-  const [q, setQ] = useState(() => params.get("q")?.slice(0, 80) ?? "");
-  const [industry, setIndustry] = useState<string | null>(null);
+  const q = params.get("q")?.slice(0, 80) ?? "";
+  const industryParam = params.get("industry") ?? "";
+  const picked = useMemo(() => new Set(industryParam.split(",").filter((x) => industries.some((i) => i.id === x))), [industryParam, industries]);
   const [sort, setSort] = useState<SortKey>("az");
 
-  // Зөвхөн байгууллагатай салбаруудыг шүүлтүүрт харуулна
-  const present = industries.filter((i) => tenants.some((t) => t.industry === i.id));
   const list = useMemo(
     () =>
       tenants
         .filter(
           (t) =>
-            (!industry || t.industry === industry) &&
+            (picked.size === 0 || picked.has(t.industry)) &&
             // Нэр, хаяг эсвэл салбараар ("Үсчин" → бүх үсчин)
             (matchesQuery(t, q) || matchesQuery({ name: t.industryLabel, slug: "", address: null }, q)),
         )
         .sort(SORTS[sort].cmp),
-    [tenants, industry, q, sort],
+    [tenants, picked, q, sort],
   );
 
-  if (tenants.length === 0) {
-    return <p className="rounded-card border border-line bg-white p-6 text-muted">Одоогоор бүртгэлтэй байгууллага алга.</p>;
-  }
-
-  const chip = (on: boolean) =>
-    `min-h-11 rounded-full border-[1.5px] px-4 text-sm font-semibold ${on ? "border-ink bg-brand text-ink" : "border-line bg-white text-ink"}`;
+  const filterLabel = [
+    picked.size ? industries.filter((i) => picked.has(i.id)).map((i) => i.label).join(", ") : null,
+    q ? `“${q}”` : null,
+  ].filter(Boolean).join(" · ");
 
   return (
-    <section aria-label="Байгууллагууд" className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3">
-        <label htmlFor="search" className="sr-only">Байгууллага хайх</label>
-        <input
-          id="search"
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Нэр эсвэл хаягаар хайх…"
-          autoComplete="off"
-          className="min-h-12 w-full rounded-card border-[1.5px] border-field bg-white px-4 text-base outline-none focus:border-ink"
-        />
-        {present.length > 1 && (
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Салбар">
-            <button onClick={() => setIndustry(null)} aria-pressed={industry === null} className={chip(industry === null)}>Бүгд</button>
-            {present.map((i) => (
-              <button key={i.id} onClick={() => setIndustry(industry === i.id ? null : i.id)} aria-pressed={industry === i.id} className={chip(industry === i.id)}>
-                {i.label}
-              </button>
-            ))}
+    <section id="list" aria-labelledby="h-list" className="flex scroll-mt-4 flex-col gap-3 sm:scroll-mt-32 sm:gap-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span aria-hidden className="flex size-10 flex-none items-center justify-center rounded-full bg-brand-tint text-lg text-brand-deep sm:size-12 sm:text-xl">★</span>
+          <div>
+            <h2 id="h-list" className="text-xl font-bold uppercase tracking-tight sm:text-2xl">Байгууллагууд</h2>
+            <p className="text-sm text-muted">{filterLabel || "Сул цагаа хараад утаснаасаа захиална"}</p>
           </div>
+        </div>
+        {(picked.size > 0 || q) && (
+          <Link href="/#list" className="inline-flex min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-medium hover:bg-ground">
+            Бүгд <span aria-hidden>→</span>
+          </Link>
         )}
       </div>
 
+      {tenants.length === 0 ? (
+        <div className="flex flex-col items-start gap-3 rounded-[20px] border border-dashed border-line bg-white p-6 sm:p-8">
+          <p className="text-lg font-semibold">Удахгүй энд байгууллагууд нэмэгдэнэ</p>
+          <p className="text-sm text-muted">Та байгууллага эрхэлдэг бол 5 минутад үнэгүй бүртгүүлээд онлайн захиалга авч эхлээрэй.</p>
+          <Link href="/signup" className="inline-flex min-h-12 items-center rounded-card bg-brand px-5 font-semibold text-ink">Байгууллагаа бүртгүүлэх</Link>
+        </div>
+      ) : (<>
       {/* Тоо + эрэмбэлэх — нэг цагаан туузанд */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-line bg-white px-5 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-white py-1.5 pl-4 pr-1.5 sm:rounded-[20px] sm:px-5 sm:py-3 sm:shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
         <p className="text-sm text-muted" aria-live="polite">{list.length} байгууллага</p>
         <label className="flex items-center gap-2 text-sm">
           <span className="sr-only">Эрэмбэлэх</span>
@@ -84,16 +80,16 @@ export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; in
       {list.length === 0 ? (
         <p className="rounded-card border border-line bg-white p-6 text-muted">Хайлтад тохирох байгууллага олдсонгүй.</p>
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+        <ul className="grid grid-cols-2 gap-2.5 sm:gap-5 lg:grid-cols-3">
           {list.map((t) => (
             <li key={t.slug}>
               <Link href={`/${t.slug}`}
-                className="group flex h-full flex-col overflow-hidden rounded-[20px] border border-line bg-white transition hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-14px_rgba(17,17,17,0.28)] focus-visible:border-ink">
+                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white transition sm:rounded-[20px] hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-14px_rgba(17,17,17,0.28)] focus-visible:border-ink">
                 <Cover t={t} />
-                <div className="flex flex-1 flex-col gap-1 border-t border-line bg-[#fafafa] px-4 py-3.5 sm:px-5 sm:py-4">
-                  <span className="text-base font-semibold leading-snug sm:text-lg">{t.name}</span>
-                  {t.address && <span className="line-clamp-1 text-sm text-muted">{t.address}</span>}
-                  <span className="mt-auto pt-2 text-sm font-semibold text-brand-deep">
+                <div className="flex flex-1 flex-col gap-0.5 border-t border-line bg-[#fafafa] px-3 py-2.5 sm:gap-1 sm:px-5 sm:py-4">
+                  <span className="line-clamp-2 text-[15px] font-semibold leading-snug sm:text-lg">{t.name}</span>
+                  {t.address && <span className="line-clamp-1 text-xs text-muted sm:text-sm">{t.address}</span>}
+                  <span className="mt-auto pt-1.5 text-[13px] font-semibold text-brand-deep sm:pt-2 sm:text-sm">
                     Цаг захиалах <span aria-hidden className="inline-block transition group-hover:translate-x-0.5">→</span>
                   </span>
                 </div>
@@ -102,6 +98,7 @@ export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; in
           ))}
         </ul>
       )}
+      </>)}
     </section>
   );
 }
@@ -117,7 +114,7 @@ function Cover({ t }: { t: Tenant }) {
       ) : (
         <span aria-hidden className="text-4xl font-semibold tracking-tight sm:text-5xl" style={{ color: c.fg }}>{initials(t.name)}</span>
       )}
-      <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-xs font-medium text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
+      <span className="absolute left-2 top-2 max-w-[calc(100%-1rem)] truncate rounded-full bg-white/95 px-2 py-0.5 text-xs font-medium text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)] sm:left-3 sm:top-3 sm:px-2.5 sm:py-1">
         {t.industryLabel}
       </span>
     </div>
