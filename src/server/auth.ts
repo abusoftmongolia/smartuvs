@@ -7,6 +7,7 @@ import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { getTenantBySlugAnyStatus } from "@/db/admin";
+import { getSlugRedirect } from "@/db/tenant";
 import { deleteSession, getMembershipBySlug, getSessionUser, insertSession, type Role } from "@/db/users";
 import { hashSessionToken, newSessionToken, phoneKey, SESSION_COOKIE, SESSION_TTL_MS } from "@/lib/session-token";
 
@@ -76,7 +77,12 @@ async function resolveMembership(user: { id: string; isSuperAdmin: boolean }, sl
 export const requireMember = cache(async (slug: string, minRole: Role = "staff") => {
   const user = await requireUser();
   const m = await resolveMembership(user, slug);
-  if (!m || RANK[m.role] < RANK[minRole]) redirect("/dashboard");
+  if (!m) {
+    // Хаяг солигдсон бол хуучин самбарын холбоос шинэ рүү (гишүүнчлэлийг тэнд дахин шалгана)
+    const moved = await getSlugRedirect(slug);
+    redirect(moved ? `/dashboard/${moved}` : "/dashboard");
+  }
+  if (RANK[m.role] < RANK[minRole]) redirect("/dashboard");
   return { user, tenant: m.tenant, role: m.role };
 });
 

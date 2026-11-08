@@ -3,9 +3,9 @@
  * Байгууллагыг URL-ын замаас тодорхойлно (subdomain биш).
  */
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { isTsagMaintenance } from "@/db/platform";
-import { getTenantBySlug, listResources, listServices, listStaffByServices } from "@/db/tenant";
+import { getSlugRedirect, getTenantBySlug, listResources, listServices, listStaffByServices } from "@/db/tenant";
 import { isValidSlug } from "@/lib/slug";
 import { bookingDays, cancelPolicyText } from "@/lib/booking-ui";
 import { smsEnabled } from "@/lib/sms";
@@ -28,7 +28,12 @@ export default async function TenantBookingPage({ params }: Props) {
   const { slug } = await params;
   if (!isValidSlug(slug)) notFound();
   const tenant = await getTenantBySlug(slug);
-  if (!tenant) notFound();
+  if (!tenant) {
+    // Байгууллага хаягаа сольсон бол хуучин хаяг (QR, холбоос) шинэ рүү шилжинэ
+    const moved = await getSlugRedirect(slug);
+    if (moved) permanentRedirect(`/${moved}`);
+    notFound();
+  }
 
   const [svc, maintenance] = await Promise.all([listServices(tenant.id), isTsagMaintenance()]);
   const [staffByService, hasResources]: [BookingFlowProps["staffByService"], boolean] = await Promise.all([

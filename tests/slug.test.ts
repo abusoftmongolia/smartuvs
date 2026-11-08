@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidSlug, slugify, uniqueSlug } from "@/lib/slug";
+import { isValidSlug, slugify, slugInput, slugProblem, suggestSlug, uniqueSlug } from "@/lib/slug";
 
 describe("slugify", () => {
   it("кирилл нэрийг латин болгоно", () => {
@@ -27,5 +27,31 @@ describe("uniqueSlug", () => {
   });
   it("нөөцлөгдсөн үг бол өөрчилнө", async () => {
     expect(await uniqueSlug("Admin", async () => false)).toBe("admin-1");
+  });
+});
+
+describe("suggestSlug", () => {
+  it("богино нэрийг хэвээр үлдээнэ", () => {
+    expect(suggestSlug("Хатан Салон")).toBe("hatan-salon");
+  });
+  it("урт нэрийг ерөнхий үг хасаж, үгийн хилээр богиносгоно", () => {
+    expect(suggestSlug("Анагаах увидас уламжлалтын эмнэлэг")).toBe("anagaah-uvidas");
+    expect(suggestSlug("Улаангом шүдний эмнэлэг ХХК")).toBe("ulaangom-shudnii");
+  });
+  it("20 тэмдэгтээс хэтрэхгүй", () => {
+    expect(suggestSlug("Супермаркетынхныхандаахантайгаа").length).toBeLessThanOrEqual(20);
+  });
+});
+
+describe("slugInput / slugProblem", () => {
+  it("бичсэнийг хаяг болгоно", () => {
+    expect(slugInput("Уламжлалт Эмнэлэг")).toBe("ulamjlalt-emneleg");
+    expect(slugInput("ab--c ")).toBe("ab-c-");
+  });
+  it("алдааг монголоор буцаана", () => {
+    expect(slugProblem("ab")).toMatch(/3/);
+    expect(slugProblem("abc-")).not.toBeNull();
+    expect(slugProblem("login")).not.toBeNull();
+    expect(slugProblem("ulamjlalt")).toBeNull();
   });
 });

@@ -13,7 +13,7 @@ import { weekHoursProblem, weekHoursToWindows } from "@/lib/hours";
 import { hashPassword, passwordProblem } from "@/lib/password";
 import { defaultSettings, INDUSTRY_IDS, INDUSTRY_PRESETS } from "@/lib/presets";
 import { normalizePhone } from "@/lib/sms";
-import { uniqueSlug } from "@/lib/slug";
+import { slugProblem, uniqueSlug } from "@/lib/slug";
 import { currentUser, rateKey, startSession } from "./auth";
 import { isPhoneVerified } from "./phone-verification";
 
@@ -61,6 +61,8 @@ export async function registerAccount(raw: unknown): Promise<SignupResult> {
 
 const TenantInput = z.object({
   name: z.string().trim().min(2, "Байгууллагын нэрээ оруулна уу").max(80),
+  /** Хэрэглэгчийн сонгосон хаяг. Хоосон бол нэрнээс автоматаар (богино) үүсгэнэ. */
+  slug: z.string().trim().max(64).optional(),
   industry: z.enum(INDUSTRY_IDS),
   timezone: z.enum(["Asia/Hovd", "Asia/Ulaanbaatar"]),
   address: z.string().trim().max(160).optional(),
@@ -91,7 +93,8 @@ const TenantInput = z.object({
   owners: z.array(z.string().trim().min(1).max(60)).min(1, "Ядаж нэг ажилтан/бокс нэмнэ үү").max(30),
 });
 
-export async function createTenant(raw: unknown): Promise<SignupResult<{ slug: string }>> {
+/** field: "slug" — client хаягийн алхам руу буцаана */
+export async function createTenant(raw: unknown): Promise<SignupResult<{ slug: string }> | { ok: false; message: string; field: "slug" }> {
   const user = await currentUser();
   if (!user) return { ok: false, message: "Эхлээд бүртгэлээ үүсгэнэ үү" };
 
@@ -108,10 +111,18 @@ export async function createTenant(raw: unknown): Promise<SignupResult<{ slug: s
     return { ok: false, message: `Нэг дугаараар хоногт ${MAX_TENANTS_PER_DAY}-аас олон байгууллага үүсгэх боломжгүй` };
   }
 
+  const chosen = input.slug || null;
+  if (chosen) {
+    const problem = slugProblem(chosen);
+    if (problem) return { ok: false, message: problem, field: "slug" };
+  }
+  const SLUG_TAKEN = { ok: false as const, message: "Энэ хаяг эзэнтэй байна. Өөр хаяг сонгоно уу", field: "slug" as const };
+
   const preset = INDUSTRY_PRESETS[input.industry];
   // Хоёр хүн нэг нэрийг зэрэг бүртгүүлбэл slug давхцаж болно (23505) — дахин оролдоно
   for (let attempt = 0; attempt < 3; attempt++) {
-    const slug = await uniqueSlug(input.name, isSlugTaken);
+    if (chosen && (await isSlugTaken(chosen))) return SLUG_TAKEN;
+    const slug = chosen ?? (await uniqueSlug(input.name, (x) => isSlugTaken(x)));
     try {
       const t = await insertTenantSetup({
         tenant: {
@@ -135,7 +146,10 @@ export async function createTenant(raw: unknown): Promise<SignupResult<{ slug: s
       revalidatePath("/");
       return { ok: true, slug: t.slug };
     } catch (err) {
-      if (pgErrorCode(err) === PG_UNIQUE_VIOLATION) continue;
+      if (pgErrorCode(err) === PG_UNIQUE_VIOLATION) {
+        if (chosen) return SLUG_TAKEN;
+        continue;
+      }
       console.error("createTenant", err);
       return { ok: false, message: "Алдаа гарлаа. Дахин оролдоно уу." };
     }

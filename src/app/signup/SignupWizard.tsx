@@ -13,6 +13,8 @@ import { ErrorBox, Field, SuccessMark, btnPrimary, btnSecondary, inputCls, selec
 import { defaultWeekHours, weekHoursProblem, type DayHours } from "@/lib/hours";
 import { PASSWORD_MIN } from "@/lib/password-rules";
 import { INDUSTRY_IDS, INDUSTRY_PRESETS, type Industry } from "@/lib/presets";
+import { slugProblem, suggestSlug } from "@/lib/slug";
+import { SlugField } from "@/components/SlugField";
 import { createTenant, registerAccount } from "@/server/signup-actions";
 
 // QR зөвхөн "Бэлэн" алхамд — qrcode санг эхнээс нь ачаалахгүй
@@ -33,6 +35,8 @@ const DRAFT_KEY = "tsag-signup-draft-v1";
 type Draft = {
   step: number;
   orgName: string;
+  /** Хэрэглэгч хаягаа өөрөө зассан бол; үгүй бол нэрнээс санал болгоно */
+  orgSlug?: string;
   industry: Industry;
   timezone: "Asia/Hovd" | "Asia/Ulaanbaatar";
   address: string;
@@ -83,6 +87,9 @@ export function SignupWizard({ loggedInAs, siteUrl, smsEnabled }: { loggedInAs: 
   const [password, setPassword] = useState("");
   // 2. Байгууллага
   const [orgName, setOrgName] = useState("");
+  /** null = нэрнээс автоматаар санал болгоно; string = хэрэглэгч өөрөө зассан */
+  const [customSlug, setCustomSlug] = useState<string | null>(null);
+  const orgSlug = customSlug ?? suggestSlug(orgName);
   const [industry, setIndustry] = useState<Industry>("barber");
   const [timezone, setTimezone] = useState<"Asia/Hovd" | "Asia/Ulaanbaatar">("Asia/Hovd");
   const [address, setAddress] = useState("");
@@ -103,6 +110,7 @@ export function SignupWizard({ loggedInAs, siteUrl, smsEnabled }: { loggedInAs: 
     const d = loggedInAs ? readDraft() : null;
     if (!d) return;
     setOrgName(d.orgName);
+    if (d.orgSlug) setCustomSlug(d.orgSlug);
     setIndustry(d.industry);
     setTimezone(d.timezone);
     setAddress(d.address);
@@ -115,11 +123,11 @@ export function SignupWizard({ loggedInAs, siteUrl, smsEnabled }: { loggedInAs: 
   useEffect(() => {
     if (!restored.current || step < 1 || step > 3) return;
     writeDraft({
-      step, orgName, industry, timezone, address, orgPhone, hours,
+      step, orgName, orgSlug: customSlug ?? undefined, industry, timezone, address, orgPhone, hours,
       services: services.map(({ key: _key, ...s }) => s),
       owners: owners.map((o) => o.name),
     });
-  }, [step, orgName, industry, timezone, address, orgPhone, services, hours, owners]);
+  }, [step, orgName, customSlug, industry, timezone, address, orgPhone, services, hours, owners]);
 
   // Алхам солигдоход шинэ гарчиг руу фокус — дэлгэц уншигч өөрчлөлтийг мэднэ
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -160,6 +168,8 @@ export function SignupWizard({ loggedInAs, siteUrl, smsEnabled }: { loggedInAs: 
     }
     if (step === 1) {
       if (orgName.trim().length < 2) return setError("Байгууллагын нэрээ оруулна уу");
+      const sp = slugProblem(orgSlug);
+      if (sp) return setError(`Хаяг: ${sp}`);
       return setStep(2);
     }
     if (step === 2) {
@@ -176,6 +186,7 @@ export function SignupWizard({ loggedInAs, siteUrl, smsEnabled }: { loggedInAs: 
       start(async () => {
         const r = await createTenant({
           name: orgName,
+          slug: orgSlug,
           industry,
           timezone,
           address,
@@ -186,7 +197,11 @@ export function SignupWizard({ loggedInAs, siteUrl, smsEnabled }: { loggedInAs: 
           hours,
           owners: names,
         });
-        if (!r.ok) return setError(r.message);
+        if (!r.ok) {
+          // Хаяг эзэнтэй болсон бол хаягийн алхам руу буцаана
+          if ("field" in r && r.field === "slug") setStep(1);
+          return setError(r.message);
+        }
         writeDraft(null);
         setSlug(r.slug);
         setStep(4);
@@ -235,6 +250,9 @@ export function SignupWizard({ loggedInAs, siteUrl, smsEnabled }: { loggedInAs: 
             <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold">Байгууллага</h2>
             {loggedInAs && <p className="text-sm text-muted">{loggedInAs} нэрээр бүртгүүлж байна.</p>}
             <Field id="org-name" label="Байгууллагын нэр" value={orgName} onChange={setOrgName} placeholder="Хатан Салон" />
+            {orgName.trim().length >= 2 && (
+              <SlugField id="org-slug" value={orgSlug} onChange={setCustomSlug} host={siteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")} />
+            )}
             <fieldset className="flex flex-col gap-2">
               <legend className="mb-1.5 text-sm font-semibold">Салбар</legend>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">

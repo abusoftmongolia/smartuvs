@@ -300,9 +300,47 @@ export async function cancelScheduledNotifications(tenantId: string, bookingId: 
 export type SetupService = { name: string; durationMin: number; bufferMin: number; price: number | null };
 export type ScheduleRow = { weekday: number; startMin: number; endMin: number };
 
-export async function isSlugTaken(slug: string) {
-  const [r] = await db().select({ id: tenants.id }).from(tenants).where(eq(tenants.slug, slug)).limit(1);
-  return !!r;
+/**
+ * Хаяг эзэнтэй эсэх: одоогийн хаяг ЭСВЭЛ өөр байгууллагын хуучин (шилжүүлэх) хаяг.
+ * `exceptTenantId` — тухайн байгууллага өөрийн хуучин хаяг руугаа буцаж болно.
+ */
+export async function isSlugTaken(slug: string, exceptTenantId?: string) {
+  const redirects = schema.tenantSlugRedirects;
+  const [a, b] = await Promise.all([
+    db().select({ id: tenants.id }).from(tenants)
+      .where(exceptTenantId ? and(eq(tenants.slug, slug), ne(tenants.id, exceptTenantId)) : eq(tenants.slug, slug)).limit(1),
+    db().select({ id: redirects.tenantId }).from(redirects)
+      .where(exceptTenantId ? and(eq(redirects.slug, slug), ne(redirects.tenantId, exceptTenantId)) : eq(redirects.slug, slug)).limit(1),
+  ]);
+  return a.length > 0 || b.length > 0;
+}
+
+/** Хуучин хаяг → байгууллагын одоогийн хаяг (шилжүүлэхэд). Олдохгүй бол null. */
+export const getSlugRedirect = cache(async (oldSlug: string) => {
+  const redirects = schema.tenantSlugRedirects;
+  const [r] = await db()
+    .select({ slug: tenants.slug })
+    .from(redirects)
+    .innerJoin(tenants, eq(tenants.id, redirects.tenantId))
+    .where(eq(redirects.slug, oldSlug))
+    .limit(1);
+  return r?.slug ?? null;
+});
+
+/**
+ * Байгууллагын хаягийг солино. Хуучин хаягийг шилжүүлэх жагсаалтад нэмж,
+ * шинэ хаяг нь өөрийн хуучин хаяг байсан бол түүнийг жагсаалтаас хасна. Лого холбоосыг шинэчилнэ.
+ * Давхцвал unique алдаа (23505) шиднэ — дуудагч барина.
+ */
+export async function changeTenantSlug(tenantId: string, oldSlug: string, newSlug: string, logoUrl: string | null) {
+  const redirects = schema.tenantSlugRedirects;
+  await db().transaction(async (tx) => {
+    await tx.delete(redirects).where(and(eq(redirects.slug, newSlug), eq(redirects.tenantId, tenantId)));
+    await tx.update(tenants)
+      .set({ slug: newSlug, logoUrl: logoUrl ? logoUrl.replace(`/api/logo/${oldSlug}`, `/api/logo/${newSlug}`) : null })
+      .where(eq(tenants.id, tenantId));
+    await tx.insert(redirects).values({ slug: oldSlug, tenantId });
+  });
 }
 
 /**

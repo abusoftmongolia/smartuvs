@@ -36,6 +36,13 @@
       "when": 1793946382927,
       "tag": "0004_volatile_baron_strucker",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794143345673,
+      "tag": "0005_melodic_mad_thinker",
+      "breakpoints": true
     }
   ]
 }

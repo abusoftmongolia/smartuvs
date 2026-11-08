@@ -38,12 +38,67 @@ export function isValidSlug(slug: string): boolean {
   return /^[a-z0-9](?:[a-z0-9-]{1,46}[a-z0-9])?$/.test(slug) && !RESERVED_SLUGS.has(slug);
 }
 
+/** Хэрэглэгч өөрөө сонгох хаягийн урт */
+export const SLUG_MIN = 3;
+export const SLUG_MAX = 30;
+/** Автоматаар санал болгох хаягийн дээд урт — ярихад, гараар бичихэд амар */
+const SUGGEST_MAX = 20;
+
+/** Урт нэрнээс хасаж болох ерөнхий үгс (латинаар) — хаягт мэдээлэл нэмдэггүй */
+const GENERIC_WORDS = new Set([
+  "hhk", "hk", "llc", "tuv", "emneleg", "salon", "baiguullaga", "kompani", "uilchilgee", "delguur", "studi", "studio",
+]);
+
+/**
+ * Нэрнээс БОГИНО хаяг санал болгоно:
+ *  "Анагаах увидас уламжлалтын эмнэлэг" → "anagaah-uvidas"
+ *  "Хатан Салон" → "hatan-salon" (богино тул хэвээр)
+ * Урт бол ерөнхий үгсийг хасаад, үгийн хилээр SUGGEST_MAX хүртэл таслана.
+ */
+export function suggestSlug(name: string): string {
+  const full = slugify(name);
+  if (full.length <= SUGGEST_MAX) return full;
+  const words = full.split("-");
+  const meaningful = words.filter((w) => !GENERIC_WORDS.has(w));
+  const pool = meaningful.length > 0 ? meaningful : words;
+  let out = "";
+  for (const w of pool) {
+    const next = out ? `${out}-${w}` : w;
+    if (next.length > SUGGEST_MAX) break;
+    out = next;
+  }
+  // Эхний үг дангаараа хэт урт бол таслана
+  return out || pool[0].slice(0, SUGGEST_MAX);
+}
+
+/** Бичих явцад оролтыг хаяг болгоно: кирилл → латин, зай → "-", бусдыг хасна (төгсгөлийн "-"-г үлдээнэ) */
+export function slugInput(raw: string): string {
+  return raw
+    .toLowerCase()
+    .split("")
+    .map((c) => CYRILLIC_TO_LATIN[c] ?? c)
+    .join("")
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-+/, "")
+    .slice(0, SLUG_MAX);
+}
+
+/** Хэрэглэгчийн сонгосон хаягийн алдаа (монголоор), зөв бол null */
+export function slugProblem(slug: string): string | null {
+  if (slug.length < SLUG_MIN) return `Хаяг хамгийн багадаа ${SLUG_MIN} тэмдэгт байна`;
+  if (slug.length > SLUG_MAX) return `Хаяг ${SLUG_MAX} тэмдэгтээс урт байж болохгүй`;
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return "Зөвхөн латин жижиг үсэг, тоо, зураас (-) ашиглана. Зураасаар эхэлж, дуусахгүй";
+  if (RESERVED_SLUGS.has(slug)) return "Энэ хаягийг ашиглах боломжгүй. Өөр хаяг сонгоно уу";
+  return null;
+}
+
 /**
  * Давхцахгүй slug олно. `isTaken` нь өгөгдлийн сангаас шалгах функц.
- * hatan-salon → hatan-salon-2 → hatan-salon-3 ...
+ * Богино санал (suggestSlug) дээр үндэслэнэ: hatan-salon → hatan-salon-2 → hatan-salon-3 ...
  */
 export async function uniqueSlug(name: string, isTaken: (slug: string) => Promise<boolean>): Promise<string> {
-  let base = slugify(name);
+  let base = suggestSlug(name);
   if (base.length < 3) base = `${base || "baiguullaga"}-uvs`.replace(/^-/, "");
   if (RESERVED_SLUGS.has(base)) base = `${base}-1`;
   if (!(await isTaken(base))) return base;

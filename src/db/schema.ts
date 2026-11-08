@@ -240,6 +240,17 @@ export const tenantLogos = pgTable("tenant_logos", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * Байгууллага хаягаа (slug) сольсон үед хуучин хаяг → байгууллага.
+ * Хэвлэсэн QR, тараасан холбоос ажилласаар байна: /<хуучин> → /<шинэ> руу шилжинэ.
+ * Хуучин хаягийг өөр байгууллага авах боломжгүй (isSlugTaken хоёр хүснэгтийг шалгана).
+ */
+export const tenantSlugRedirects = pgTable("tenant_slug_redirects", {
+  slug: text("slug").primaryKey(),
+  tenantId: uuid("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
+  createdAt: createdAt(),
+}, (t) => [index("tenant_slug_redirects_tenant_idx").on(t.tenantId)]);
+
 /** Платформын тохиргоо (key → JSON). Жишээ: "maintenance.tsag" = true → захиалгын хуудас "Засвартай". */
 export const platformSettings = pgTable("platform_settings", {
   key: text("key").primaryKey(),
