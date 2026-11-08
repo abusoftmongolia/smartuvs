@@ -193,7 +193,7 @@ export function PhoneVerifyPanel({ v, onCancel, netError, onCheck }: {
 
       {/* 1. Хаанаас — өөр SIM-ээс илгээх нь хамгийн түгээмэл алдаа */}
       <div className={`${card} flex items-center justify-between gap-3`}>
-        <span className="text-sm text-muted">Таны дугаар:</span>
+        <span className="whitespace-nowrap text-sm text-muted">Таны дугаар:</span>
         <span className="text-lg font-bold tabular-nums" aria-label={`${v.phone.split("").join(" ")}`}>{masked(v.phone)}</span>
       </div>
 
@@ -207,7 +207,7 @@ export function PhoneVerifyPanel({ v, onCancel, netError, onCheck }: {
       </p>
 
       {/* 3. Код + хуулах, үлдсэн хугацаа. Цаг секунд бүр шинэчлэгдэх тул live биш; 1 минут үлдсэн/дууссан үед л зарлана */}
-      <div className={`${card} flex items-center justify-between gap-3`}>
+      <div className={`${card} flex flex-wrap items-center justify-between gap-x-3 gap-y-1`}>
         <div className="flex items-center gap-1">
           <span className="font-mono text-3xl font-bold tracking-[0.08em]" aria-label={`Код ${v.code.split("").join(" ")}`}>{v.code}</span>
           <button type="button" aria-label={copied ? "Код хуулагдлаа" : "Кодыг хуулах"}
@@ -220,7 +220,7 @@ export function PhoneVerifyPanel({ v, onCancel, netError, onCheck }: {
             )}
           </button>
         </div>
-        <span className={`text-sm font-medium tabular-nums ${low ? "text-red-700" : "text-brand-deep"}`} role="timer"
+        <span className={`ml-auto whitespace-nowrap text-sm font-medium tabular-nums ${low ? "text-red-700" : "text-brand-deep"}`} role="timer"
           aria-label={`${Math.floor(left / 60)} минут ${left % 60} секунд үлдлээ`}>
           {left} секунд
         </span>
