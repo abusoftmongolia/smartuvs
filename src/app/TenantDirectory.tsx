@@ -3,28 +3,38 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { TenantLogo } from "@/components/TenantLogo";
+import { avatarColors, initials } from "@/lib/logo";
 import { matchesQuery } from "@/lib/search";
 
 type Tenant = { slug: string; name: string; industry: string; industryLabel: string; address: string | null; logoUrl: string | null };
+
+const SORTS = {
+  az: { label: "Нэр: А → Я", cmp: (a: Tenant, b: Tenant) => a.name.localeCompare(b.name, "mn") },
+  za: { label: "Нэр: Я → А", cmp: (a: Tenant, b: Tenant) => b.name.localeCompare(a.name, "mn") },
+  industry: { label: "Салбараар", cmp: (a: Tenant, b: Tenant) => a.industryLabel.localeCompare(b.industryLabel, "mn") || a.name.localeCompare(b.name, "mn") },
+} as const;
+type SortKey = keyof typeof SORTS;
 
 export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; industries: { id: string; label: string }[] }) {
   // smartuvs.mn-ийн хайлтаас ирэхэд: tsag.smartuvs.mn/?q=Үсчин
   const params = useSearchParams();
   const [q, setQ] = useState(() => params.get("q")?.slice(0, 80) ?? "");
   const [industry, setIndustry] = useState<string | null>(null);
+  const [sort, setSort] = useState<SortKey>("az");
 
   // Зөвхөн байгууллагатай салбаруудыг шүүлтүүрт харуулна
   const present = industries.filter((i) => tenants.some((t) => t.industry === i.id));
   const list = useMemo(
     () =>
-      tenants.filter(
-        (t) =>
-          (!industry || t.industry === industry) &&
-          // Нэр, хаяг эсвэл салбараар ("Үсчин" → бүх үсчин)
-          (matchesQuery(t, q) || matchesQuery({ name: t.industryLabel, slug: "", address: null }, q)),
-      ),
-    [tenants, industry, q],
+      tenants
+        .filter(
+          (t) =>
+            (!industry || t.industry === industry) &&
+            // Нэр, хаяг эсвэл салбараар ("Үсчин" → бүх үсчин)
+            (matchesQuery(t, q) || matchesQuery({ name: t.industryLabel, slug: "", address: null }, q)),
+        )
+        .sort(SORTS[sort].cmp),
+    [tenants, industry, q, sort],
   );
 
   if (tenants.length === 0) {
@@ -59,40 +69,57 @@ export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; in
         )}
       </div>
 
-      <p className="text-sm text-muted" aria-live="polite">{list.length} байгууллага</p>
+      {/* Тоо + эрэмбэлэх — нэг цагаан туузанд */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-line bg-white px-5 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <p className="text-sm text-muted" aria-live="polite">{list.length} байгууллага</p>
+        <label className="flex items-center gap-2 text-sm">
+          <span className="sr-only">Эрэмбэлэх</span>
+          <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}
+            className="min-h-11 rounded-xl border border-line bg-white px-3 pr-8 text-sm font-medium">
+            {(Object.keys(SORTS) as SortKey[]).map((k) => <option key={k} value={k}>{SORTS[k].label}</option>)}
+          </select>
+        </label>
+      </div>
 
       {list.length === 0 ? (
         <p className="rounded-card border border-line bg-white p-6 text-muted">Хайлтад тохирох байгууллага олдсонгүй.</p>
       ) : (
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
           {list.map((t) => (
             <li key={t.slug}>
-              <Link
-                href={`/${t.slug}`}
-                className="group flex h-full flex-col gap-4 rounded-[20px] border border-line bg-white p-5 transition hover:-translate-y-0.5 hover:border-ink/20 hover:shadow-[0_10px_30px_-12px_rgba(17,17,17,0.25)] focus-visible:border-ink"
-              >
-                <div className="flex items-start gap-4">
-                  <TenantLogo name={t.name} slug={t.slug} logoUrl={t.logoUrl} size={64} />
-                  <div className="flex min-w-0 flex-col items-start gap-1.5">
-                    <span className="text-lg font-semibold leading-snug">{t.name}</span>
-                    <span className="rounded-full bg-brand-tint px-2.5 py-0.5 text-xs font-medium text-brand-deep">{t.industryLabel}</span>
-                  </div>
-                </div>
-                {t.address && (
-                  <span className="flex items-start gap-1.5 text-sm text-muted">
-                    <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 flex-none"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
-                    {t.address}
+              <Link href={`/${t.slug}`}
+                className="group flex h-full flex-col overflow-hidden rounded-[20px] border border-line bg-white transition hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-14px_rgba(17,17,17,0.28)] focus-visible:border-ink">
+                <Cover t={t} />
+                <div className="flex flex-1 flex-col gap-1 border-t border-line bg-[#fafafa] px-4 py-3.5 sm:px-5 sm:py-4">
+                  <span className="text-base font-semibold leading-snug sm:text-lg">{t.name}</span>
+                  {t.address && <span className="line-clamp-1 text-sm text-muted">{t.address}</span>}
+                  <span className="mt-auto pt-2 text-sm font-semibold text-brand-deep">
+                    Цаг захиалах <span aria-hidden className="inline-block transition group-hover:translate-x-0.5">→</span>
                   </span>
-                )}
-                <span className="mt-auto flex min-h-11 items-center justify-between rounded-xl bg-ground px-4 text-sm font-semibold transition group-hover:bg-brand">
-                  Цаг захиалах
-                  <span aria-hidden className="transition group-hover:translate-x-0.5">→</span>
-                </span>
+                </div>
               </Link>
             </li>
           ))}
         </ul>
       )}
     </section>
+  );
+}
+
+/** Картын дээд хэсэг: лого төвд том; лого байхгүй бол нэрийн үсгээр өнгөт дэвсгэр. Салбар — зүүн дээд буланд */
+function Cover({ t }: { t: Tenant }) {
+  const c = avatarColors(t.slug);
+  return (
+    <div className="relative flex aspect-[4/3] items-center justify-center" style={t.logoUrl ? undefined : { background: c.bg }}>
+      {t.logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- өөрийн API-аас, жижиг
+        <img src={t.logoUrl} alt="" loading="lazy" decoding="async" className="size-[55%] object-contain transition group-hover:scale-[1.03]" />
+      ) : (
+        <span aria-hidden className="text-4xl font-semibold tracking-tight sm:text-5xl" style={{ color: c.fg }}>{initials(t.name)}</span>
+      )}
+      <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-xs font-medium text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
+        {t.industryLabel}
+      </span>
+    </div>
   );
 }
