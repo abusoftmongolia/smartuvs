@@ -1,5 +1,8 @@
 /** Платформын тохиргоо (platform_settings). Жишээ: засварын горим. */
 import { eq } from "drizzle-orm";
+import { cache } from "react";
+import { INDUSTRY_PRESETS } from "@/lib/presets";
+import { resolveIndustries, resolveMenu, resolveTiles, SETTING_KEYS } from "@/lib/site-config";
 import { db, schema } from "./index";
 
 const { platformSettings } = schema;
@@ -24,3 +27,23 @@ export async function isTsagMaintenance(): Promise<boolean> {
     return false; // Тохиргоо уншиж чадахгүй бол үйлчилгээг зогсоохгүй
   }
 }
+
+/* ── Нүүр хуудасны агуулга (Ангилал, Үндсэн цэс, хавтан) ── */
+
+const INDUSTRY_LABELS = Object.fromEntries(Object.values(INDUSTRY_PRESETS).map((p) => [p.id, p.label])) as Parameters<typeof resolveIndustries>[1];
+
+/** Тохиргоо уншиж чадахгүй бол анхны утгаар (нүүр хуудас унахгүй) */
+async function safeSetting(key: string): Promise<unknown> {
+  try {
+    return await getSetting<unknown>(key, undefined);
+  } catch {
+    return undefined;
+  }
+}
+
+export const getSiteConfig = cache(async () => {
+  const [ind, menu, tiles] = await Promise.all([
+    safeSetting(SETTING_KEYS.industries), safeSetting(SETTING_KEYS.menu), safeSetting(SETTING_KEYS.tiles),
+  ]);
+  return { industries: resolveIndustries(ind, INDUSTRY_LABELS), menu: resolveMenu(menu), tiles: resolveTiles(tiles) };
+});

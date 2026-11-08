@@ -1,4 +1,5 @@
 /** Дэд системүүдийн карт — Тойм болон /admin/systems хуудсанд */
+import Link from "next/link";
 import { DisabledToggle, SystemToggle } from "./parts";
 
 export function SystemsCard({ tsagMaintenance }: { tsagMaintenance: boolean }) {
@@ -18,6 +19,9 @@ export function SystemsCard({ tsagMaintenance }: { tsagMaintenance: boolean }) {
               <div className="font-medium">{r.name}</div>
               <div className="truncate text-sm text-muted">{r.host} · {r.state}</div>
             </div>
+            {r.key === "tsag" && (
+              <Link href="/tsag" className="inline-flex min-h-11 flex-none items-center rounded-xl bg-ink px-3 text-sm font-semibold text-white">Удирдах →</Link>
+            )}
             {r.control}
           </li>
         ))}

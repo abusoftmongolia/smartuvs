@@ -102,7 +102,10 @@ export async function bookingsOnDay(fromUtc: Date, toUtc: Date) {
 }
 
 /** Сүүлийн үйл ажиллагаа (audit_logs) — платформын түвшний үйлдлүүд */
-const ACTIVITY_ACTIONS = ["tenant.create", "signup", "tenant.approve", "tenant.reject", "tenant.suspend", "tenant.activate", "maintenance.on", "maintenance.off"];
+const ACTIVITY_ACTIONS = [
+  "tenant.create", "signup", "tenant.approve", "tenant.reject", "tenant.suspend", "tenant.activate", "maintenance.on", "maintenance.off",
+  "content.industries", "content.tiles", "content.menu",
+];
 
 export async function recentActivity(limit = 12) {
   return db()
@@ -154,4 +157,38 @@ export async function listRecentBookingsForAdmin(limit = 200) {
     .innerJoin(customers, eq(customers.id, bookings.customerId))
     .orderBy(desc(bookings.createdAt))
     .limit(limit);
+}
+
+/** Бүх цаг үеийн захиалгын тоо (цуцлагдсаныг оруулахгүй) */
+export async function bookingsAllTime() {
+  const [r] = await db().select({ n: count() }).from(bookings).where(sql`${bookings.status} <> 'cancelled'`);
+  return r?.n ?? 0;
+}
+
+/**
+ * Сүүлийн `days` хоногийн өдөр бүрийн шинэ захиалга (үүссэн өдрөөр, Улаанбаатарын цагаар).
+ * Захиалгагүй өдөр 0-ээр бөглөгдөнө.
+ */
+export async function dailyBookings(days = 14, tz = "Asia/Ulaanbaatar") {
+  const dayExpr = sql<string>`to_char(${bookings.createdAt} at time zone ${tz}, 'YYYY-MM-DD')`;
+  const rows = await db()
+    .select({ day: dayExpr, n: sql<number>`count(*)::int` })
+    .from(bookings)
+    .where(gte(bookings.createdAt, daysAgo(days + 1)))
+    .groupBy(sql`1`); // tz параметр SELECT, GROUP BY-д тусдаа $n болдог тул байрлалаар
+  const byDay = new Map(rows.map((r) => [r.day, r.n]));
+  const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" });
+  return Array.from({ length: days }, (_, i) => {
+    const day = fmt.format(daysAgo(days - 1 - i));
+    return { day, n: byDay.get(day) ?? 0 };
+  });
+}
+
+/** Идэвхтэй байгууллага салбараар */
+export async function activeTenantsByIndustry() {
+  return db()
+    .select({ industry: tenants.industry, n: sql<number>`count(*)::int` })
+    .from(tenants)
+    .where(eq(tenants.status, "active"))
+    .groupBy(tenants.industry);
 }

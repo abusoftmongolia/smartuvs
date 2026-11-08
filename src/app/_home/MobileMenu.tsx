@@ -5,8 +5,10 @@
  */
 import Link from "next/link";
 import { useEffect, useRef } from "react";
+import type { NavLink } from "@/lib/site-config";
 
-export function MobileMenu({ industries }: { industries: { id: string; label: string }[] }) {
+/** links — Үндсэн цэсийн нэмэлт холбоосууд (салбар, "Бүх салбар"-аас бусад) */
+export function MobileMenu({ industries, links = [] }: { industries: { id: string; label: string }[]; links?: NavLink[] }) {
   const ref = useRef<HTMLDialogElement>(null);
   const open = () => ref.current?.showModal();
   const close = () => ref.current?.close();
@@ -49,6 +51,16 @@ export function MobileMenu({ industries }: { industries: { id: string; label: st
                 <li key={i.id}><Link href={`/?industry=${i.id}#list`} className={item}>{i.label}</Link></li>
               ))}
             </ul>
+            {links.length > 0 && (
+              <>
+                <p className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-muted">Цэс</p>
+                <ul>
+                  {links.map((l) => (
+                    <li key={l.key}><Link href={l.href} className={`${item} ${l.accent ? "font-medium text-brand-deep" : ""}`}>{l.label}</Link></li>
+                  ))}
+                </ul>
+              </>
+            )}
           </nav>
 
           {/* Байгууллагын хэсэг — доод талд, эрхий хуруунд ойр */}

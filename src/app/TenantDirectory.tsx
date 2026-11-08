@@ -84,14 +84,12 @@ export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; in
           {list.map((t) => (
             <li key={t.slug}>
               <Link href={`/${t.slug}`}
-                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white transition sm:rounded-[20px] hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-14px_rgba(17,17,17,0.28)] focus-visible:border-ink">
+                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white transition sm:rounded-[20px] hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:shadow-[0_12px_32px_-14px_rgba(17,17,17,0.28)] focus-visible:border-ink">
                 <Cover t={t} />
-                <div className="flex flex-1 flex-col gap-0.5 border-t border-line bg-[#fafafa] px-3 py-2.5 sm:gap-1 sm:px-5 sm:py-4">
+                <div className="@container flex flex-1 flex-col gap-0.5 border-t border-line bg-[#fafafa] px-3 py-2.5 sm:gap-1 sm:px-5 sm:py-4">
                   <span className="line-clamp-2 text-[15px] font-semibold leading-snug sm:text-lg">{t.name}</span>
                   {t.address && <span className="line-clamp-1 text-xs text-muted sm:text-sm">{t.address}</span>}
-                  <span className="mt-auto pt-1.5 text-[13px] font-semibold text-brand-deep sm:pt-2 sm:text-sm">
-                    Цаг захиалах <span aria-hidden className="inline-block transition group-hover:translate-x-0.5">→</span>
-                  </span>
+                  <BookCta />
                 </div>
               </Link>
             </li>
@@ -100,6 +98,45 @@ export function TenantDirectory({ tenants, industries }: { tenants: Tenant[]; in
       )}
       </>)}
     </section>
+  );
+}
+
+/**
+ * Картын доод "Цаг захиалах" — товч шиг харагдах span (карт бүхэлдээ нэг Link тул <button> биш).
+ * Нэг өнгөний давхарга: тайван шар-цайвар (brand-tint) дэвсгэр, хар бичиг/icon; hover дээр үндсэн шар.
+ * Олон картын тор дотор шар том блок давтагдаж хашгирахаас сэргийлнэ. Картын өргөнөөр (container query)
+ * ~120px → жижиг бичиг, сумгүй; ≥144px → сум нэмэгдэнэ.
+ */
+function BookCta() {
+  return (
+    <span className="mt-auto pt-2 sm:pt-3">
+      <span className="flex min-h-10 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-brand/40 bg-brand-tint px-3 text-xs font-semibold text-ink transition-colors duration-200 @[8rem]:text-[13px] @[9rem]:justify-between @[12rem]:min-h-11 @[12rem]:text-sm group-hover:border-brand group-hover:bg-brand motion-reduce:transition-none">
+        <span className="flex items-center gap-1.5">
+          <CalendarIcon className="size-4 flex-none" />
+          Цаг захиалах
+        </span>
+        <ArrowIcon className="hidden size-4 flex-none transition-transform duration-200 @[9rem]:block group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0" />
+      </span>
+    </span>
+  );
+}
+
+/** Календарь + чагт — "цаг товлох" утга. Stroke, currentColor */
+function CalendarIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden focusable="false">
+      <rect x="3" y="4.5" width="18" height="16.5" rx="3" />
+      <path d="M8 2.5v4M16 2.5v4M3 9.5h18" />
+      <path d="m9 15 2 2 4-4" />
+    </svg>
+  );
+}
+
+function ArrowIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden focusable="false">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
   );
 }
 

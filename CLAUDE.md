@@ -36,6 +36,8 @@ src/lib/slots.ts               Сул цагийн алгоритм — ЦЭВЭ
 src/lib/time.ts                Цагийн бүс (UTC ↔ Asia/Hovd)
 src/lib/slug.ts                "Хатан Салон" → "hatan-salon"
 src/lib/presets.ts             Салбарын preset (үйлчилгээ, нэр томьёо, бодлого)
+src/lib/site-config.ts         Нүүрний ангилал, хавтан, үндсэн цэс (platform_settings JSON) — цэвэр, тесттэй
+src/app/platform/(panel)/      Super Admin (admin.smartuvs.mn): / нийт самбар; /tsag/* — Цаг захиалга системийн удирдлага
 src/lib/sms.ts                 SMS adapter (console | http)
 src/db/schema.ts               Drizzle schema
 src/db/tenant.ts               Tenant-аар шүүсэн query-ууд

@@ -12,12 +12,14 @@ export function BrandLogo(p: {
   /** Логоны өндөр (Tailwind), жишээ нь "h-8" */
   logoClass?: string;
   priority?: boolean;
+  /** false — системийн нэргүй (Super Admin нь бүх системийнх тул) */
+  caption?: boolean;
 }) {
   return (
     <span className="inline-flex flex-col leading-none">
       <Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={219} height={32} className={`${p.logoClass ?? "h-8"} w-auto`} priority={p.priority} />
       {/* w-0 min-w-full: бичиг контейнерыг өргөсгөхгүй, логоны өргөнийг дагана */}
-      <span className="block w-0 min-w-full">
+      {p.caption !== false && <span className="block w-0 min-w-full">
         <svg
           viewBox={`0 0 ${LOGO_W} 76`}
           className="mt-[3%] block h-auto w-full text-muted"
@@ -35,7 +37,7 @@ export function BrandLogo(p: {
             {SYSTEM_NAME}
           </text>
         </svg>
-      </span>
+      </span>}
     </span>
   );
 }

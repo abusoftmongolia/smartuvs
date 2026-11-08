@@ -1,133 +1,93 @@
 /**
- * Платформын тойм — SmartUvs Super Admin (загвар: админ панел UI).
- * Одоогоор зөвхөн tsag систем холбогдсон; chat, ajil нь "холбогдоогүй" гэж харагдана.
+ * Хяналтын самбар — SmartUvs платформын нийт үзүүлэлт (бүх дэд систем).
+ * Системийн дэлгэрэнгүй удирдлага: картын "Удирдах →" (жишээ нь /tsag).
+ * Одоогоор зөвхөн tsag холбогдсон; chat, ajil нь "холбогдоогүй" гэж харагдана.
  */
 import Link from "next/link";
-import { bookingsOnDay, listTenantsForAdmin, platformStats, recentActivity } from "@/db/admin";
+import { bookingsAllTime, bookingsOnDay, dailyBookings, platformStats, recentActivity } from "@/db/admin";
 import { isTsagMaintenance } from "@/db/platform";
-import { INDUSTRY_PRESETS } from "@/lib/presets";
 import { addDays, localToUtc, todayIn } from "@/lib/time";
-import { ago, fmtDate, maskPhone } from "./fmt";
-import { TenantActions } from "./parts";
-import { SystemsCard } from "./Systems";
+import { ActivityPanel } from "./Activity";
+import { DailyBars, KpiGrid, Panel, pct } from "./dash";
+import { SYSTEMS } from "./system-list";
 
-const ACTIVITY: Record<string, (a: { tenantName: string | null; actorName: string | null }) => string> = {
-  "tenant.create": (a) => `Шинэ байгууллага бүртгэл илгээв — ${a.tenantName ?? "?"} · tsag.smartuvs.mn`,
-  signup: (a) => `Шинэ хэрэглэгч бүртгүүлэв — ${a.actorName ?? "?"}`,
-  "tenant.approve": (a) => `${a.tenantName ?? "?"} батлагдав`,
-  "tenant.reject": (a) => `${a.tenantName ?? "?"}-ийн бүртгэлээс татгалзав`,
-  "tenant.suspend": (a) => `${a.tenantName ?? "?"} хаагдав`,
-  "tenant.activate": (a) => `${a.tenantName ?? "?"} дахин нээгдэв`,
-  "maintenance.on": () => "Цаг захиалга засварын горимд орлоо",
-  "maintenance.off": () => "Цаг захиалга засвараас гарлаа",
-};
+const nf = new Intl.NumberFormat("en-US");
 
-export default async function AdminOverview({ searchParams }: { searchParams: Promise<{ system?: string }> }) {
-  const { system } = await searchParams;
+export default async function AdminDashboard() {
   const tz = "Asia/Ulaanbaatar";
   const today = todayIn(tz);
-  const [stats, tenants, todayCount, activity, maintenance] = await Promise.all([
+  const [stats, allTime, todayCount, daily, activity, maintenance] = await Promise.all([
     platformStats(),
-    listTenantsForAdmin(),
+    bookingsAllTime(),
     bookingsOnDay(localToUtc(today, 0, tz), localToUtc(addDays(today, 1), 0, tz)),
-    recentActivity(10),
+    dailyBookings(14, tz),
+    recentActivity(8),
     isTsagMaintenance(),
   ]);
-  const pending = tenants.filter((t) => t.status === "pending");
-
-  const cards = [
-    { label: "Хэрэглэгч", value: stats.users, sub: `Энэ сард +${stats.usersNew30d}`, dark: true },
-    { label: "Байгууллага", value: stats.tenants.total, sub: `${stats.tenants.pending} баталгаажуулалт хүлээж буй` },
-    { label: "Өнөөдрийн захиалга", value: todayCount, sub: "tsag.smartuvs.mn" },
-    ...(system === "tsag" ? [] : [{ label: "Туслахын асуулт", value: "—", sub: "chat.smartuvs.mn · холбогдоогүй" }]),
-  ];
+  const t = stats.tenants;
 
   return (
     <>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Платформын тойм</h1>
-          <p className="mt-1 text-sm text-muted">{system === "tsag" ? "Цаг захиалга системийн хяналт" : "Бүх дэд системийн нэгдсэн хяналт"}</p>
-        </div>
-        <span title="Дараагийн систем холбогдоход идэвхжинэ"
-          className="inline-flex min-h-12 cursor-not-allowed items-center gap-2 rounded-2xl bg-ink px-5 font-semibold text-white opacity-60" aria-disabled>
-          + Шинэ систем нэмэх
-        </span>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Хяналтын самбар</h1>
+        <p className="mt-1 text-sm text-muted">SmartUvs платформын бүх системийн нийт үзүүлэлт</p>
       </div>
 
-      <ul className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${cards.length === 4 ? "xl:grid-cols-4" : "xl:grid-cols-3"}`} aria-label="Гол тоо">
-        {cards.map((c) => (
-          <li key={c.label} className={`flex flex-col gap-2 rounded-[22px] p-6 ${c.dark ? "bg-ink text-white" : "border border-line bg-white"}`}>
-            <span className={`text-sm font-medium ${c.dark ? "text-white/80" : "text-muted"}`}>{c.label}</span>
-            <span className="text-5xl font-bold tabular-nums tracking-tight">{c.value}</span>
-            <span className={`text-sm font-medium ${c.dark ? "text-brand" : "text-muted"}`}>{c.sub}</span>
-          </li>
-        ))}
-      </ul>
+      {t.pending > 0 && (
+        <Link href="/tsag/tenants?status=pending"
+          className="flex min-h-12 items-center gap-3 rounded-2xl border border-brand/50 bg-brand-tint px-4 py-3 text-sm font-medium sm:text-base">
+          <span className="flex min-w-7 items-center justify-center rounded-full bg-brand px-2 font-semibold text-ink">{t.pending}</span>
+          байгууллага баталгаажуулалт хүлээж байна
+          <span aria-hidden className="ml-auto">→</span>
+        </Link>
+      )}
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_400px]">
-        <section aria-labelledby="h-pending" className="flex min-w-0 flex-col gap-4 rounded-[22px] border border-line bg-white p-6">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 id="h-pending" className="flex items-center gap-2 text-xl font-bold">
-              Баталгаажуулах байгууллага
-              {pending.length > 0 && <span className="flex min-w-7 items-center justify-center rounded-full bg-brand px-2 text-sm font-medium text-ink">{pending.length}</span>}
-            </h2>
-            <Link href="/tenants?status=pending" className="inline-flex min-h-11 items-center font-medium underline">Бүгдийг харах</Link>
-          </div>
-          {pending.length === 0 ? (
-            <p className="rounded-2xl bg-ground p-5 text-muted">Хүлээгдэж буй бүртгэл алга. ✓</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="border-b border-line text-xs font-medium uppercase tracking-wider text-muted">
-                  <tr>
-                    <th className="py-3 pr-3">Байгууллага</th>
-                    <th className="px-3 py-3">Төрөл</th>
-                    <th className="px-3 py-3">Систем</th>
-                    <th className="px-3 py-3">Бүртгүүлсэн</th>
-                    <th className="py-3 pl-3 text-right">Үйлдэл</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pending.slice(0, 8).map((t) => (
-                    <tr key={t.id} className="border-b border-line last:border-b-0">
-                      <td className="py-4 pr-3">
-                        <div className="font-medium">{t.name}</div>
-                        <div className="text-sm text-muted">{t.ownerName ?? "—"} · {maskPhone(t.ownerPhone)}</div>
-                      </td>
-                      <td className="px-3 py-4">
-                        <span className="whitespace-nowrap rounded-lg bg-ground px-2.5 py-1 text-sm font-medium">{INDUSTRY_PRESETS[t.industry].label}</span>
-                      </td>
-                      <td className="px-3 py-4">tsag</td>
-                      <td className="px-3 py-4 tabular-nums">{fmtDate(t.createdAt)}</td>
-                      <td className="py-4 pl-3"><TenantActions id={t.id} name={t.name} status={t.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+      <KpiGrid items={[
+        { label: "Нийт хэрэглэгч", value: nf.format(stats.users), sub: `30 хоногт +${stats.usersNew30d}`, tone: "dark", href: "/users" },
+        { label: "Идэвхтэй байгууллага", value: nf.format(t.active), sub: `Нийт ${t.total} · 7 хоногт +${t.new7d}`, href: "/tsag/tenants?status=active" },
+        { label: "Нийт захиалга", value: nf.format(allTime), sub: "Бүх цаг үеийн", href: "/tsag/bookings" },
+        { label: "Өнөөдрийн захиалга", value: nf.format(todayCount), sub: "Өнөөдөр болох цаг" },
+        { label: "7 хоногийн захиалга", value: nf.format(stats.bookings.last7d), sub: `Сүүлийн 24 цагт ${stats.bookings.last24h}` },
+        { label: "30 хоногийн захиалга", value: nf.format(stats.bookings.last30d), sub: "Шинээр үүссэн" },
+        { label: "Ирээгүй хувь", value: pct(stats.noShowRate30d), sub: "Сүүлийн 30 хоног" },
+        { label: "Хаагдсан байгууллага", value: t.suspended, sub: "Түр хаасан" },
+      ]} />
 
-        <SystemsCard tsagMaintenance={maintenance} />
-      </div>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_380px]">
+        <Panel id="h-trend" title="Захиалгын хандлага">
+          <DailyBars data={daily} caption="Сүүлийн 14 хоногийн шинэ захиалга (өдрөөр)" />
+        </Panel>
 
-      <section aria-labelledby="h-activity" className="flex flex-col gap-2 rounded-[22px] border border-line bg-white p-6">
-        <h2 id="h-activity" className="pb-2 text-xl font-bold">Сүүлийн үйл ажиллагаа</h2>
-        {activity.length === 0 ? (
-          <p className="text-muted">Одоогоор үйл ажиллагаа алга.</p>
-        ) : (
-          <ul>
-            {activity.map((a, i) => (
-              <li key={i} className="flex items-center gap-3 border-b border-line py-3.5 last:border-b-0">
-                <span aria-hidden className="size-2.5 flex-none rounded-full bg-ink" />
-                <span className="min-w-0 flex-1">{ACTIVITY[a.action]?.(a) ?? a.action}</span>
-                <span className="whitespace-nowrap text-sm text-muted">{ago(a.at)}</span>
-              </li>
-            ))}
+        <Panel id="h-systems" title="Дэд системүүд" action={<Link href="/systems" className="inline-flex min-h-11 items-center text-sm font-medium underline">Бүгд</Link>}>
+          <ul className="flex flex-col gap-2.5">
+            {SYSTEMS.map((s) => {
+              const live = s.key === "tsag" && !maintenance;
+              const state = s.key === "tsag" ? (maintenance ? "Засвартай" : `${t.active} байгууллага · өнөөдөр ${todayCount}`) : s.note;
+              const inner = (
+                <>
+                  <span aria-hidden className={`size-2.5 flex-none rounded-full ${live ? "bg-green-600" : s.href ? "bg-brand" : "bg-muted/50"}`} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold">{s.name}</span>
+                    <span className="block truncate text-sm text-muted">{s.host} · {state}</span>
+                  </span>
+                  {s.href
+                    ? <span className="inline-flex min-h-10 flex-none items-center rounded-xl bg-ink px-3 text-sm font-semibold text-white">Удирдах →</span>
+                    : <span className="flex-none text-xs font-medium uppercase text-muted">удахгүй</span>}
+                </>
+              );
+              return (
+                <li key={s.key}>
+                  {s.href
+                    ? <Link href={s.href} className="flex items-center gap-3 rounded-2xl bg-ground p-3.5 transition hover:bg-line/60">{inner}</Link>
+                    : <div className="flex items-center gap-3 rounded-2xl bg-ground p-3.5 opacity-75">{inner}</div>}
+                </li>
+              );
+            })}
           </ul>
-        )}
-      </section>
+        </Panel>
+      </div>
+
+      <ActivityPanel items={activity} />
     </>
   );
 }

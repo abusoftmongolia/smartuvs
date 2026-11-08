@@ -6,12 +6,13 @@ import Link from "next/link";
 import { MobileMenu } from "./MobileMenu";
 import { SearchShortcut } from "./SearchShortcut";
 import { BrandLogo } from "@/components/BrandLogo";
+import type { NavLink } from "@/lib/site-config";
 
-export function HomeHeader({ industries }: { industries: { id: string; label: string }[] }) {
+export function HomeHeader({ industries, nav }: { industries: { id: string; label: string }[]; nav: NavLink[] }) {
   return (
     <header className="border-b border-line bg-white sm:sticky sm:top-0 sm:z-30 sm:bg-white/95 sm:backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2.5 px-4 pb-3 pt-2.5 sm:px-6 sm:py-4">
-        <MobileMenu industries={industries} />
+        <MobileMenu industries={industries} links={nav.filter((l) => !l.key.startsWith("ind-") && l.icon !== "grid")} />
         <Link href="/" aria-label="SmartUvs цаг захиалга — нүүр" className="flex-none">
           <BrandLogo logoClass="h-7 sm:h-8" priority />
         </Link>
@@ -37,20 +38,20 @@ export function HomeHeader({ industries }: { industries: { id: string; label: st
       {/* Салбарын цэс — утсанд хэвтээ гүйлгэнэ */}
       <nav aria-label="Салбар" className="hidden border-t border-line bg-[#f7f7f7] sm:block">
         <ul className="mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <li className="flex-none">
-            <Link href="/#list" className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium hover:bg-white">
-              <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="6" height="6" rx="1.5" /><rect x="14" y="4" width="6" height="6" rx="1.5" /><rect x="4" y="14" width="6" height="6" rx="1.5" /><rect x="14" y="14" width="6" height="6" rx="1.5" /></svg>
-              Бүх салбар
-            </Link>
-          </li>
-          {industries.map((i) => (
-            <li key={i.id} className="flex-none">
-              <Link href={`/?industry=${i.id}#list`} className="inline-flex min-h-11 items-center whitespace-nowrap rounded-lg px-3 text-sm hover:bg-white">{i.label}</Link>
-            </li>
-          ))}
-          <li className="ml-auto flex-none">
-            <Link href="/business" className="inline-flex min-h-11 items-center whitespace-nowrap rounded-lg px-3 text-sm font-medium text-brand-deep hover:bg-white">Байгууллагад</Link>
-          </li>
+          {nav.map((l, i) => {
+            // Онцолсон (accent) мөрүүд баруун тийш шахагдана
+            const pushRight = l.accent && !nav[i - 1]?.accent;
+            return (
+              <li key={l.key} className={`flex-none ${pushRight ? "ml-auto" : ""}`}>
+                <Link href={l.href} className={`inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm hover:bg-white ${l.accent ? "font-medium text-brand-deep" : l.icon ? "font-medium" : ""}`}>
+                  {l.icon === "grid" && (
+                    <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="6" height="6" rx="1.5" /><rect x="14" y="4" width="6" height="6" rx="1.5" /><rect x="4" y="14" width="6" height="6" rx="1.5" /><rect x="14" y="14" width="6" height="6" rx="1.5" /></svg>
+                  )}
+                  {l.label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </nav>
     </header>

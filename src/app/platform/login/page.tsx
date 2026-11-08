@@ -20,7 +20,7 @@ export default async function AdminLoginPage() {
       <main className="flex w-full max-w-sm flex-col gap-6">
         <div className="flex flex-col items-center gap-3 text-center text-white">
           <div className="flex items-center gap-2">
-            <span className="rounded-xl bg-white px-3.5 py-2.5"><BrandLogo logoClass="h-7" priority /></span>
+            <span className="rounded-xl bg-white px-3.5 py-2.5"><BrandLogo logoClass="h-7" caption={false} priority /></span>
             <span className="rounded-md bg-brand px-1.5 py-0.5 text-xs font-medium text-ink">АДМИН</span>
           </div>
           <h1 className="text-2xl font-bold">Платформын удирдлага</h1>

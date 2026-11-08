@@ -1,10 +1,14 @@
 "use client";
-/** Super Admin хүрээ: хар sidebar (утсанд цэсээр нээгдэнэ) + хайлт, систем сонголт, мэдэгдэл. */
+/**
+ * Super Admin хүрээ: хар sidebar (утсанд цэсээр нээгдэнэ) + хайлт, систем сонголт, мэдэгдэл.
+ * Платформын түвшин (/) ба систем бүрийн түвшин (/tsag/...) — систем рүү ороход цэс тухайн системийнх болно.
+ */
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { logoutAdmin } from "@/server/auth-actions";
 import { BrandLogo } from "@/components/BrandLogo";
+import { SYSTEMS, systemOfPath } from "./system-list";
 
 type NavItem = { href: string; label: string; badge?: number; soon?: boolean };
 
@@ -16,35 +20,64 @@ export function AdminShell(p: { userName: string; pending: number; children: Rea
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [path]);
 
-  const groups: { title?: string; items: NavItem[] }[] = [
-    { items: [{ href: "/", label: "Тойм" }] },
-    {
-      title: "Удирдлага",
-      items: [
-        { href: "/tenants", label: "Байгууллагууд", badge: p.pending },
-        { href: "/users", label: "Хэрэглэгчид" },
-        { href: "/bookings", label: "Захиалгууд" },
-        { href: "#", label: "Санал хүсэлт", soon: true },
-      ],
-    },
-    {
-      title: "Систем",
-      items: [
-        { href: "/systems", label: "Дэд системүүд" },
-        { href: "#", label: "Эрх ба үүрэг", soon: true },
-        { href: "#", label: "Тохиргоо", soon: true },
-      ],
-    },
-  ];
-  const isActive = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
+  const system = systemOfPath(path);
+  const current = SYSTEMS.find((x) => x.key === system);
+  const groups: { title?: string; items: NavItem[] }[] = system === "tsag"
+    ? [
+        { items: [{ href: "/tsag", label: "Хяналтын самбар" }] },
+        {
+          title: "Удирдлага",
+          items: [
+            { href: "/tsag/tenants", label: "Байгууллагууд", badge: p.pending },
+            { href: "/tsag/bookings", label: "Захиалгууд" },
+          ],
+        },
+        {
+          title: "Сайтын агуулга",
+          items: [
+            { href: "/tsag/categories", label: "Ангилал" },
+            { href: "/tsag/menu", label: "Үндсэн цэс" },
+          ],
+        },
+      ]
+    : [
+        { items: [{ href: "/", label: "Хяналтын самбар" }] },
+        {
+          title: "Системүүд",
+          items: SYSTEMS.map((x) => (x.href ? { href: x.href, label: x.name, badge: x.key === "tsag" ? p.pending : undefined } : { href: "#", label: x.name, soon: true })),
+        },
+        {
+          title: "Платформ",
+          items: [
+            { href: "/users", label: "Хэрэглэгчид" },
+            { href: "/systems", label: "Дэд системүүд" },
+            { href: "#", label: "Эрх ба үүрэг", soon: true },
+            { href: "#", label: "Тохиргоо", soon: true },
+          ],
+        },
+      ];
+  // Самбарууд (/ ба /tsag) зөвхөн яг тэр замд идэвхтэй; бусад нь доод замуудтайгаа
+  const isActive = (href: string) => (href === "/" || href === current?.href ? path === href : path === href || path.startsWith(`${href}/`));
 
   const sidebar = (
     <nav aria-label="Админ цэс" className="flex h-full flex-col gap-6 bg-ink px-4 py-6 text-white">
       <Link href="/" className="flex items-center gap-2 px-2">
         {/* Лого хар-шар тул хар sidebar дээр цагаан хавтан дотор */}
-        <span className="rounded-lg bg-white px-2.5 py-2"><BrandLogo logoClass="h-6" priority /></span>
+        <span className="rounded-lg bg-white px-2.5 py-2"><BrandLogo logoClass="h-6" caption={false} priority /></span>
         <span className="rounded-md bg-brand px-1.5 py-0.5 text-[11px] font-medium text-ink">АДМИН</span>
       </Link>
+      {current && (
+        <div className="flex flex-col gap-1 rounded-2xl border border-white/10 bg-white/5 p-2">
+          <Link href="/" className="flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-white/70 hover:bg-white/10 hover:text-white">
+            <span aria-hidden>←</span> Бүх систем
+          </Link>
+          <div className="px-2 pb-1">
+            <div className="text-[11px] font-medium uppercase tracking-wider text-white/50">Систем</div>
+            <div className="text-base font-semibold">{current.name}</div>
+            <div className="truncate text-xs text-white/60">{current.host}</div>
+          </div>
+        </div>
+      )}
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto">
         {groups.map((g, i) => (
           <div key={i} className="flex flex-col gap-1">
@@ -107,15 +140,15 @@ export function AdminShell(p: { userName: string; pending: number; children: Rea
           </form>
           <label className="ml-auto hidden items-center gap-2 text-sm font-medium text-muted md:flex">
             Систем
-            <select value={sp.get("system") ?? "all"} onChange={(e) => router.push(e.target.value === "all" ? "/" : `/?system=${e.target.value}`)}
+            <select value={current?.href ?? "/"} onChange={(e) => router.push(e.target.value)}
               className="min-h-11 rounded-xl border border-line bg-white px-3 text-base font-medium text-ink">
-              <option value="all">Бүх систем</option>
-              <option value="tsag">Цаг захиалга</option>
-              <option value="chat" disabled>Ухаалаг туслах (холбогдоогүй)</option>
-              <option value="ajil" disabled>Цагийн ажил (хөгжүүлэлтэд)</option>
+              <option value="/">Бүх систем</option>
+              {SYSTEMS.map((x) => (
+                <option key={x.key} value={x.href ?? x.key} disabled={!x.href}>{x.name}{x.href ? "" : ` (${x.note.toLowerCase()})`}</option>
+              ))}
             </select>
           </label>
-          <Link href="/tenants?status=pending" aria-label={`Мэдэгдэл: ${p.pending} байгууллага хүлээгдэж буй`}
+          <Link href="/tsag/tenants?status=pending" aria-label={`Мэдэгдэл: ${p.pending} байгууллага хүлээгдэж буй`}
             className="relative inline-flex size-11 flex-none items-center justify-center rounded-xl border border-line bg-white">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></svg>
             {p.pending > 0 && <span className="absolute right-2 top-2 size-2.5 rounded-full bg-danger ring-2 ring-white" />}
