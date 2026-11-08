@@ -6,7 +6,7 @@ import { todayIn, utcToLocalMinute } from "@/lib/time";
 import { requireMember } from "@/server/auth";
 import type { Info, Off, Owner, Svc } from "./types";
 
-export const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL ?? "https://tsag.smartuvs.mn").replace(/\/$/, "");
+export { siteUrl } from "@/lib/site";
 
 export async function manageContext(slug: string) {
   const { tenant } = await requireMember(slug, "manager");
