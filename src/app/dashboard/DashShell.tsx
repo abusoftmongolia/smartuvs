@@ -3,11 +3,11 @@
  * Байгууллагын самбарын хүрээ: дээд мөр (лого, байгууллага, хэрэглэгч) + зүүн цэс.
  * Утсанд цэс товчоор нээгдэнэ. Хэвлэхэд (QR постер) цэс нуугдана.
  */
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { logout } from "@/server/auth-actions";
+import { BrandLogo } from "@/components/BrandLogo";
 
 type Item = { href: string; label: string; icon: keyof typeof ICONS; badge?: number; exact?: boolean };
 
@@ -103,7 +103,7 @@ export function DashShell(p: {
           {open ? ICONS.close : ICONS.menu}
         </button>
         <Link href={base} aria-label="Хянах самбар" className="flex items-center">
-          <Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={165} height={24} className="h-6 w-auto" priority />
+          <BrandLogo logoClass="h-6" priority />
         </Link>
         <span aria-hidden className="hidden h-6 w-px bg-line sm:block" />
         <span className="hidden truncate text-sm font-medium sm:block">{p.tenantName}</span>

@@ -1,10 +1,10 @@
 /**
  * A4 QR постер — үүдэнд, тоолуур дээр наана. Хөтчийн "Хэвлэх → PDF болгох"-оор PDF болгоно.
  */
-import Image from "next/image";
 import { qrSvg } from "@/lib/qr";
 import { requireMember } from "@/server/auth";
 import { PrintButton } from "./PrintButton";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export default async function PosterPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -20,7 +20,7 @@ export default async function PosterPage({ params }: { params: Promise<{ slug: s
         <PrintButton />
       </div>
       <article className="flex aspect-[210/297] w-full max-w-[210mm] flex-col items-center justify-between bg-white p-[12mm] text-center shadow-lg print:h-[297mm] print:w-[210mm] print:max-w-none print:shadow-none">
-        <Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={1200} height={175} className="h-10 w-auto" priority />
+        <BrandLogo logoClass="h-10" priority />
         <div className="flex flex-col items-center gap-[6mm]">
           <p className="text-[clamp(18px,4vw,30px)] font-medium">{tenant.name}</p>
           <h1 className="text-[clamp(28px,7vw,56px)] font-bold leading-tight">Онлайнаар<br />цаг захиалаарай</h1>

@@ -1,6 +1,6 @@
 /** Footer — uvsmarket.mn-тэй ижил 4 багана */
-import Image from "next/image";
 import Link from "next/link";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const CONTACT = { email: "info@smartuvs.mn", phone: "+97695866262", phoneLabel: "9586 6262" };
 
@@ -9,7 +9,7 @@ export function SiteFooter() {
     <footer className="mt-16 border-t border-line bg-white">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         <div className="flex flex-col gap-3">
-          <Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={192} height={28} className="h-7 w-auto self-start" />
+          <span className="self-start"><BrandLogo logoClass="h-7" /></span>
           <p className="text-sm text-muted">Увс аймгийн онлайн цаг захиалгын төв. Үсчин, эмнэлэг, авто угаалга — сул цагаа хараад утаснаасаа захиална.</p>
         </div>
         <FooterCol title="Хаяг">

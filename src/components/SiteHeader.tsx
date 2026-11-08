@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { TenantLogo } from "./TenantLogo";
+import { BrandLogo } from "@/components/BrandLogo";
 
 /** Толгой: SmartUvs лого | байгууллагын нэр. Лого хар-шар тул үргэлж цагаан дэвсгэр дээр. */
 export function SiteHeader(p: { tenantName?: string; tenantSlug?: string; tenantLogo?: string | null; subtitle?: string; phone?: string }) {
@@ -9,7 +9,7 @@ export function SiteHeader(p: { tenantName?: string; tenantSlug?: string; tenant
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
         <div className="flex items-center gap-3">
           <Link href="/" aria-label="SmartUvs цаг захиалга — нүүр">
-            <Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={219} height={32} className="h-8 w-auto" priority />
+            <BrandLogo logoClass="h-8" priority />
           </Link>
           {p.tenantName && (
             <>

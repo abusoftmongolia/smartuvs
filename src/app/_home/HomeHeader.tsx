@@ -2,10 +2,10 @@
  * Нүүр хуудасны толгой (uvsmarket.mn-тэй нэг загвар): лого · хайлт · Нэвтрэх / Бүртгүүлэх,
  * доор нь салбарын цэс. Хайлт нь энгийн GET form — JS-гүй ч ажиллана (/?q=).
  */
-import Image from "next/image";
 import Link from "next/link";
 import { MobileMenu } from "./MobileMenu";
 import { SearchShortcut } from "./SearchShortcut";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export function HomeHeader({ industries }: { industries: { id: string; label: string }[] }) {
   return (
@@ -13,7 +13,7 @@ export function HomeHeader({ industries }: { industries: { id: string; label: st
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2.5 px-4 pb-3 pt-2.5 sm:px-6 sm:py-4">
         <MobileMenu industries={industries} />
         <Link href="/" aria-label="SmartUvs цаг захиалга — нүүр" className="flex-none">
-          <Image src="/smartuvs-logo.png" alt="SmartUvs.mn" width={219} height={32} className="h-7 w-auto sm:h-8" priority />
+          <BrandLogo logoClass="h-7 sm:h-8" priority />
         </Link>
 
         <form action="/" role="search" className="order-last w-full sm:order-none sm:max-w-md sm:flex-1">
